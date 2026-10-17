@@ -197,6 +197,7 @@ reports/             committed evidence for the published numbers
 tests/               unit tests
 docs/dev/            planning, audits and benchmark policy (development history)
 ```
+Full project context (problem, objectives, solution, build, benchmarks): [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
 Challenge requirements and how each is met: [SUBMISSION.md](SUBMISSION.md) · email draft: [SUBMISSION_EMAIL.md](SUBMISSION_EMAIL.md).
 Policies: [SOURCES.md](SOURCES.md) (source rights, licences) · [SECURITY.md](SECURITY.md) (outbound URL policy,
 console) · [docs/dev/benchmark_plan.md](docs/dev/benchmark_plan.md)
