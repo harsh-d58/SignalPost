@@ -16,7 +16,7 @@ def money(value: Any, unit: str | None) -> str:
         v = float(value)
     except (TypeError, ValueError):
         return str(value)
-    unit = unit or "NOK"
+    unit = unit or "currency unspecified"
     a = abs(v)
     if a >= 1e9:
         s = f"{v / 1e9:.1f} bn"
@@ -35,7 +35,7 @@ def money_no(value: Any, unit: str | None) -> str:
         v = float(value)
     except (TypeError, ValueError):
         return str(value)
-    unit = unit or "NOK"
+    unit = unit or "valuta ikke oppgitt"
     a = abs(v)
     if a >= 1e9:
         s = f"{v / 1e9:.1f} mrd."
@@ -85,7 +85,7 @@ def previous_accounts(claims: list[dict], latest_to: str, account_type: str) -> 
 
 
 def build_brief(envelope: dict[str, Any]) -> dict[str, Any]:
-    claims = envelope.get("claims", [])
+    claims = [c for c in envelope.get("claims", []) if c.get("availability", "available") == "available" and not c.get("stale_since")]
     by = lambda fam: [c for c in claims if c["family"] == fam]  # noqa: E731
     sentences: list[dict[str, Any]] = []
 
@@ -135,7 +135,7 @@ def build_brief(envelope: dict[str, Any]) -> dict[str, Any]:
         rev, res, eq, assets = (latest.get(k) for k in ("revenue", "net_result", "equity", "total_assets"))
         anchor = rev or res or eq or assets
         period = anchor["period"]["to"][:4] if anchor else ""
-        scope = "group" if "KONSERN" in (anchor.get("note") or "") else "company"
+        scope = "group" if anchor and "KONSERN" in (anchor.get("note") or "") else "company"
         bits, bits_no = [], []
         if rev:
             bits.append(f"operating revenue of {money(rev['value'], rev.get('unit'))}")
@@ -152,7 +152,7 @@ def build_brief(envelope: dict[str, Any]) -> dict[str, Any]:
         if rev:
             prev = previous_accounts(claims, rev["period"]["to"], "KONSERN" if scope == "group" else "SELSKAP").get("revenue")
             try:
-                if prev and float(prev["value"]) > 0:
+                if prev and prev.get("unit") == rev.get("unit") and rev.get("unit") and float(prev["value"]) > 0:
                     pct = (float(rev["value"]) - float(prev["value"])) / float(prev["value"]) * 100
                     say(f"Revenue {'grew' if pct >= 0 else 'fell'} {abs(pct):.0f}% versus {prev['period']['to'][:4]} (derived from the two filings).", rev, prev, derived=True,
                         no=f"Driftsinntektene {'økte' if pct >= 0 else 'falt'} {abs(pct):.0f} % fra {prev['period']['to'][:4]} (avledet av de to regnskapene).")
@@ -200,8 +200,8 @@ def build_brief(envelope: dict[str, Any]) -> dict[str, Any]:
             no=f"Bekreftet offisielt nettsted er {site['value']}" + (f", som lenker til {len(socials)} {'egne profiler' if len(socials) != 1 else 'egen profil'} ({profile_kinds})" if socials else "") + ".")
     if jobs:
         titles = [str(c["value"]["title"]) for c in jobs if isinstance(c["value"], dict) and c["value"].get("title")][:3]  # an ad without a title must not break the brief
-        say(f"It currently advertises {len(jobs)} active job posting{'s' if len(jobs) != 1 else ''} on NAV" + (f", e.g. {', '.join(titles)}" if titles else "") + ".", *jobs,
-            no=f"Selskapet har nå {len(jobs)} aktive stillingsannonse{'r' if len(jobs) != 1 else ''} hos NAV" + (f", for eksempel {', '.join(titles)}" if titles else "") + ".")
+        say(f"It currently advertises {len(jobs)} active job posting{'s' if len(jobs) != 1 else ''} in the checked sources" + (f", e.g. {', '.join(titles)}" if titles else "") + ".", *jobs,
+            no=f"Selskapet har nå {len(jobs)} aktive stillingsannonse{'r' if len(jobs) != 1 else ''} i de kontrollerte kildene" + (f", for eksempel {', '.join(titles)}" if titles else "") + ".")
     acts = sorted(by("activity"), key=lambda c: c.get("effective_date") or "", reverse=True)
     if acts:
         a = acts[0]
@@ -261,7 +261,7 @@ def build_signals(claims: list[dict]) -> list[dict]:
         out.append({"kind": "risk", "label": c["label"], "text": f"Registry flag: {c['label'].lower()}.", "claim_ids": [c["id"]]})
     jobs = [c for c in claims if c["family"] == "jobs"]
     if jobs:
-        out.append({"kind": "growth", "label": "Hiring", "text": f"{len(jobs)} active job posting(s) verified on NAV.", "claim_ids": [c["id"] for c in jobs][:6]})
+        out.append({"kind": "growth", "label": "Hiring", "text": f"{len(jobs)} active job posting(s) verified in the checked sources.", "claim_ids": [c["id"] for c in jobs]})
     recent = sorted((c for c in claims if c["family"] == "activity" and c.get("effective_date")), key=lambda c: c["effective_date"], reverse=True)
     moves = [c for c in recent if "address" in str(c["value"]).lower()][:1]
     board = [c for c in recent if "Roles" in str(c["value"])][:1]

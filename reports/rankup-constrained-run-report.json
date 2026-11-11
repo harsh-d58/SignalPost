@@ -1,0 +1,154 @@
+{
+  "run_id": "rankup-constrained",
+  "agent_version": "4d3a4523acbc-dirty",
+  "code_sha256": "8d31a22bc644bcf5afac168bb35da40b267dfffe34a2baaa2e04640a2c5dc49d",
+  "started_at": "2026-11-10T07:10:51Z",
+  "completed_at": "2026-11-10T07:10:51Z",
+  "input_count": 100,
+  "emitted_envelopes": 100,
+  "validation": {
+    "passed": false,
+    "checks": {
+      "one_envelope_per_input": true,
+      "unique_organisation_numbers": true,
+      "all_family_states_valid": true,
+      "every_claim_has_evidence": true,
+      "no_null_values_published": true,
+      "all_families_present": true,
+      "snapshot_references_resolve": true,
+      "within_execution_limits": false,
+      "no_failed_terminal_envelopes": true
+    },
+    "invalid_states": []
+  },
+  "mode": "baseline",
+  "changes_detected": 0,
+  "family_states": {
+    "identity": {
+      "failed": 100
+    },
+    "status": {
+      "failed": 100
+    },
+    "industry": {
+      "failed": 100
+    },
+    "financials": {
+      "failed": 100
+    },
+    "leadership": {
+      "failed": 100
+    },
+    "locations": {
+      "failed": 100
+    },
+    "group": {
+      "failed": 100
+    },
+    "website": {
+      "failed": 100
+    },
+    "social_profiles": {
+      "failed": 100
+    },
+    "contact": {
+      "failed": 100
+    },
+    "description": {
+      "failed": 100
+    },
+    "jobs": {
+      "failed": 100
+    },
+    "activity": {
+      "failed": 100
+    }
+  },
+  "family_coverage": {
+    "identity": 0.0,
+    "status": 0.0,
+    "industry": 0.0,
+    "financials": 0.0,
+    "leadership": 0.0,
+    "locations": 0.0,
+    "group": 0.0,
+    "website": 0.0,
+    "social_profiles": 0.0,
+    "contact": 0.0,
+    "description": 0.0,
+    "jobs": 0.0,
+    "activity": 0.0
+  },
+  "claims_total": 1300,
+  "identity_gate": {},
+  "identity_gate_by_source": {},
+  "jobs_feed": {
+    "pages": 0,
+    "ads_indexed": 0,
+    "window_days": 60,
+    "error": "blocked: NAV_FEED_TOKEN required; public token is experimental only"
+  },
+  "operations": {
+    "requests": 0,
+    "max_requests": 1,
+    "elapsed_seconds": 0.2,
+    "max_seconds": 1.2,
+    "third_party_cost_usd": 0.0,
+    "max_cost_usd": 10.0,
+    "requests_by_host": {},
+    "requests_by_phase": {},
+    "phase_caps": {
+      "registry": 5,
+      "activity": 6,
+      "jobs": 40,
+      "accounts": 107,
+      "roles": 0,
+      "locations": 0,
+      "group": 0,
+      "jobs_verify": 0,
+      "history": 102,
+      "web": 0,
+      "web_news": 0
+    },
+    "refused_by_budget": {
+      "registry": 1
+    },
+    "p50_company_ms": null,
+    "p95_company_ms": null
+  },
+  "phase_seconds": {
+    "bulk_snapshot": 0.0,
+    "registry": 0.0,
+    "activity": 0.0,
+    "companies": 0.0,
+    "jobs": 0.0,
+    "tail": 0.0,
+    "finalise": 0.0
+  },
+  "budget_plan": {
+    "registry": 5,
+    "activity": 6,
+    "jobs": 40,
+    "accounts": 107,
+    "roles": 0,
+    "locations": 0,
+    "group": 0,
+    "jobs_verify": 0,
+    "history": 102,
+    "web": 0,
+    "web_news": 0
+  },
+  "bulk_snapshot": {
+    "note": "no bulk snapshot supplied; live registry API only"
+  },
+  "registry_snapshot": {},
+  "evidence_cutoff": null,
+  "source_policy_version": "signalpost-sources/2",
+  "nav_access": "credential_required",
+  "input_sha256": "d020e45ece4232ee76b8e8597d5ed603c99b951dfe7c0093e1f6e7d2d7409d48",
+  "notes": [
+    "large batch (100); per-company official sources scaled to fit 0 requests"
+  ],
+  "third_party_cost_usd": 0.0,
+  "models": []
+}

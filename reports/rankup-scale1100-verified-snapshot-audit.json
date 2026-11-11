@@ -1,0 +1,12 @@
+{
+  "evidence": 75475,
+  "source_locators_verified": 75154,
+  "excerpt_artifacts_verified": 321,
+  "missing_references": 0,
+  "invalid_objects": 0,
+  "invalid_locators": 0,
+  "unique_objects": 3458,
+  "passed": true,
+  "errors": [],
+  "limitation": "Excerpt integrity does not independently establish full-page support or exact-company precision."
+}

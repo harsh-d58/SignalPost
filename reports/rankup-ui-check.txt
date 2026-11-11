@@ -1,0 +1,36 @@
+overview                             5366 Run rankup-smoke100-verified · 2026-11-10Norwegian company profiles yo
+explorer                             7032 CompaniesFilter, sort and export. Filters are saved in the address, so
+explorer sort -> hash: #/companies?sort=rev
+explorer filtered                    1227 CompaniesFilter, sort and export. Filters are saved in the address, so
+explorer empty                        707 CompaniesFilter, sort and export. Filters are saved in the address, so
+explorer legacy link                 7033 CompaniesFilter, sort and export. Filters are saved in the address, so
+profile (richest)                    9261 SummarySignals and checksWhat we foundLegal identity and public brandA
+drawer via citation: true | focus in drawer: true | Legal identity · Legal nameNORXE ASFirst seen 2026-11-10Official regis
+drawer closed by Esc: true
+drawer via chart bar: true | Revenue 2023
+account toggle -> group charts: 3
+count fact opens claims: 1
+drawer via source button: true
+profile 835254372                    7471 SummarySignals and checksWhat we foundLegal identity and public brandA
+profile 927683105                    7854 SummarySignals and checksWhat we foundLegal identity and public brandA
+profile 933411362                    7812 SummarySignals and checksWhat we foundLegal identity and public brandA
+compare (3)                          1691 Compare companiesUp to four companies side by side. Tap any value for 
+compare columns: 3 | diff rows: 18
+drawer via compare cell: true
+compare (stored)                     1691 Compare companiesUp to four companies side by side. Tap any value for 
+changes                               276 Changes since the previous runTyped changes detected by diffing stable
+changes material                      276 Changes since the previous runTyped changes detected by diffing stable
+method                               3119 How Signalpost worksDeterministic, registry-anchored and evidence-firs
+lang NO -> html lang: nb | nav: OversiktSelskaperEndringerSammenlign3Metode
+overview (NO)                        5557 Kjøring rankup-smoke100-verified · 2026-11-10Norske selskapsprofiler d
+profile (NO)                         9334 SammendragSignaler og sjekkerHva vi fantJuridisk identitet og merkenav
+theme -> dark
+theme -> light
+g m -> #/method
+? opens shortcuts: true Keyboard shortcuts
+/ focuses search: true
+typeahead options: 1
+typeahead Enter -> #/c/835254372
+profile (unknown org)                  46 No profile for 000000000 in this run.Companies
+errors: []
+problems: []

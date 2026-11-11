@@ -23,7 +23,7 @@ CHANGE_TYPES = {
     ("description", "changed"): "changed_description", ("description", "added"): "new_description",
     ("social_profiles", "added"): "new_profile", ("social_profiles", "removed"): "removed_profile", ("social_profiles", "changed"): "changed_profile",
 }
-UNREADABLE = {"failed", "blocked"}
+UNREADABLE = {"failed", "blocked", "ambiguous"}
 FIELD_TYPES = {"business_address": "address_change", "postal_address": "address_change", "legal_name": "name_change",
                "employees": "employee_count_change", "share_capital": "capital_change", "legal_form": "legal_form_change",
                "industry_code": "industry_change", "official_website": "website_change", "ceo": "ceo_change"}
@@ -64,6 +64,7 @@ def diff(previous: dict[str, Any] | None, current: dict[str, Any], *, detected_a
     cur_claims = _index(current)
     prev_evidence = {e["id"]: e for e in previous.get("evidence", [])}
     states = current.get("availability", {})
+    incomplete = current.get("incomplete_families", {})
     prev_started = previous.get("run", {}).get("started_at") or previous.get("run", {}).get("completed_at")
     for key, claim in cur_claims.items():
         old = prev_claims.get(key)
@@ -81,31 +82,41 @@ def diff(previous: dict[str, Any] | None, current: dict[str, Any], *, detected_a
     families = sorted({f for f, _ in prev_claims} | {f for f, _ in cur_claims})
     for family in families:
         state = (states.get(family) or {}).get("state")
-        if state in UNREADABLE or ((states.get(family) or {}).get("reason", "").startswith("request budget")):
+        expired = {key for (fam, key), c in prev_claims.items() if fam == "jobs" and isinstance(c.get("value"), dict)
+                   and c["value"].get("expires") and c["value"]["expires"] < detected_at[:10]}
+        if state in UNREADABLE or family in incomplete or ((states.get(family) or {}).get("reason", "").startswith("request budget")):
             not_compared.append(family)
             # carry forward last supported values with their original evidence
             for (fam, key), claim in prev_claims.items():
                 if fam == family and (fam, key) not in cur_claims:
+                    if family == "jobs" and key in expired:
+                        continue
+                    if family == "jobs" and any("pam-stilling-feed.nav.no" in prev_evidence.get(eid, {}).get("source_url", "") for eid in claim.get("evidence_ids", [])):
+                        continue  # NAV requires current active status; an unreadable ad cannot remain published
                     carried = dict(claim)
-                    carried["stale_since"] = claim.get("stale_since") or previous.get("run", {}).get("completed_at")
+                    carried["stale_since"] = claim.get("stale_since") or detected_at
                     carried["availability"] = "available"
                     current["claims"].append(carried)
                     for eid in claim.get("evidence_ids", []):
                         if eid in prev_evidence and all(e["id"] != eid for e in current["evidence"]):
                             current["evidence"].append(prev_evidence[eid])
-            continue
+            # Compare positively observed values, but never infer removals from an incomplete crawl.
+            if state in UNREADABLE and not expired and not any(f == family for f, _ in cur_claims):
+                continue
         compared.append(family)
         keys = {k for f, k in prev_claims if f == family} | {k for f, k in cur_claims if f == family}
         for key in sorted(keys):
             old = prev_claims.get((family, key))
             new = cur_claims.get((family, key))
             if old and new:
-                if json.dumps(old.get("value"), sort_keys=True, ensure_ascii=False) == json.dumps(new.get("value"), sort_keys=True, ensure_ascii=False):
+                if all(old.get(k) == new.get(k) for k in ("value", "unit", "period")):
                     continue
                 kind = "changed"
             elif new:
                 kind = "added"
             else:
+                if (family in incomplete or state in UNREADABLE) and key not in expired:
+                    continue
                 kind = "removed"
             if family == "activity" and kind == "removed":
                 continue  # activity items age out of the window; not a material change
@@ -122,6 +133,10 @@ def diff(previous: dict[str, Any] | None, current: dict[str, Any], *, detected_a
                 "label": ref.get("label"),
                 "previous": old.get("value") if old else None,
                 "current": new.get("value") if new else None,
+                "previous_unit": old.get("unit") if old else None,
+                "current_unit": new.get("unit") if new else None,
+                "previous_period": old.get("period") if old else None,
+                "current_period": new.get("period") if new else None,
                 "evidence_ids": (new or {}).get("evidence_ids") or [],
                 "previous_evidence_ids": (old or {}).get("evidence_ids") or [],
                 "detected_at": detected_at,

@@ -1,0 +1,163 @@
+{
+  "evidence": 64749,
+  "source_locators_verified": 64167,
+  "excerpt_artifacts_verified": 294,
+  "missing_references": 0,
+  "invalid_objects": 0,
+  "invalid_locators": 288,
+  "unique_objects": 2252,
+  "passed": false,
+  "errors": [
+    [
+      "916373899",
+      "ev-e8780fa921a3acec",
+      "locator does not match retained source"
+    ],
+    [
+      "916373899",
+      "ev-a775a5a27a66afc1",
+      "locator does not match retained source"
+    ],
+    [
+      "919276029",
+      "ev-003a8884b44d115a",
+      "locator does not match retained source"
+    ],
+    [
+      "817378072",
+      "ev-6185e5672305f0f7",
+      "locator does not match retained source"
+    ],
+    [
+      "921149077",
+      "ev-483033ed0eea677a",
+      "locator does not match retained source"
+    ],
+    [
+      "927049317",
+      "ev-fbf4c5954051ccd6",
+      "locator does not match retained source"
+    ],
+    [
+      "988186678",
+      "ev-230b85f8e8785a0f",
+      "locator does not match retained source"
+    ],
+    [
+      "988186678",
+      "ev-7783e221b6f76694",
+      "locator does not match retained source"
+    ],
+    [
+      "929385144",
+      "ev-d655e07d1c164a42",
+      "locator does not match retained source"
+    ],
+    [
+      "991235787",
+      "ev-4fcc7e8faf174ecb",
+      "locator does not match retained source"
+    ],
+    [
+      "999093701",
+      "ev-673b908b38912e28",
+      "locator does not match retained source"
+    ],
+    [
+      "912631532",
+      "ev-83563d4268d7c3c3",
+      "locator does not match retained source"
+    ],
+    [
+      "990868948",
+      "ev-03046882fe3ef421",
+      "locator does not match retained source"
+    ],
+    [
+      "917812438",
+      "ev-73db8b30dee35486",
+      "locator does not match retained source"
+    ],
+    [
+      "926943030",
+      "ev-b6bfcc676f29e1e3",
+      "locator does not match retained source"
+    ],
+    [
+      "919007184",
+      "ev-c7e4f43dd752e0f3",
+      "locator does not match retained source"
+    ],
+    [
+      "919604794",
+      "ev-5392b65987d12905",
+      "locator does not match retained source"
+    ],
+    [
+      "927610000",
+      "ev-4c9e670a883e6df8",
+      "locator does not match retained source"
+    ],
+    [
+      "927610000",
+      "ev-5a05d181087789f9",
+      "locator does not match retained source"
+    ],
+    [
+      "916835043",
+      "ev-ec818e0c4ba72631",
+      "locator does not match retained source"
+    ],
+    [
+      "922582572",
+      "ev-69503d1234501a34",
+      "locator does not match retained source"
+    ],
+    [
+      "926340980",
+      "ev-61728557ceb30f04",
+      "locator does not match retained source"
+    ],
+    [
+      "946706523",
+      "ev-e0391cc9e9c2c685",
+      "locator does not match retained source"
+    ],
+    [
+      "982004152",
+      "ev-5a44cfa1a385c920",
+      "locator does not match retained source"
+    ],
+    [
+      "982004152",
+      "ev-2fcb706a7fa79cd0",
+      "locator does not match retained source"
+    ],
+    [
+      "935704804",
+      "ev-7497aab5ffba71ee",
+      "locator does not match retained source"
+    ],
+    [
+      "983770339",
+      "ev-e74d9db85b453485",
+      "locator does not match retained source"
+    ],
+    [
+      "983770339",
+      "ev-def9dd81c6863ae1",
+      "locator does not match retained source"
+    ],
+    [
+      "990396469",
+      "ev-8224145bca618c92",
+      "locator does not match retained source"
+    ],
+    [
+      "933090949",
+      "ev-508dd79b7193ba7f",
+      "locator does not match retained source"
+    ]
+  ],
+  "limitation": "Excerpt integrity does not independently establish full-page support or exact-company precision."
+}

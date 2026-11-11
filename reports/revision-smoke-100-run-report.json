@@ -1,0 +1,280 @@
+{
+  "run_id": "audit-20261109-complete100",
+  "agent_version": "4d3a4523acbc-dirty",
+  "started_at": "2026-11-09T03:12:15Z",
+  "completed_at": "2026-11-09T03:15:53Z",
+  "input_count": 100,
+  "emitted_envelopes": 100,
+  "validation": {
+    "passed": true,
+    "checks": {
+      "one_envelope_per_input": true,
+      "unique_organisation_numbers": true,
+      "all_family_states_valid": true,
+      "every_claim_has_evidence": true,
+      "no_null_values_published": true,
+      "all_families_present": true
+    },
+    "invalid_states": []
+  },
+  "mode": "baseline",
+  "changes_detected": 0,
+  "family_states": {
+    "identity": {
+      "available": 99,
+      "not_available": 1
+    },
+    "status": {
+      "available": 99,
+      "not_available": 1
+    },
+    "industry": {
+      "available": 99,
+      "not_available": 1
+    },
+    "financials": {
+      "available": 99,
+      "not_available": 1
+    },
+    "leadership": {
+      "available": 99,
+      "not_available": 1
+    },
+    "locations": {
+      "not_available": 23,
+      "available": 77
+    },
+    "group": {
+      "not_applicable": 90,
+      "available": 9,
+      "not_available": 1
+    },
+    "website": {
+      "not_available": 58,
+      "ambiguous": 24,
+      "available": 10,
+      "blocked": 8
+    },
+    "social_profiles": {
+      "not_available": 65,
+      "ambiguous": 24,
+      "available": 3,
+      "blocked": 8
+    },
+    "contact": {
+      "not_available": 60,
+      "available": 16,
+      "ambiguous": 17,
+      "blocked": 7
+    },
+    "description": {
+      "not_available": 61,
+      "ambiguous": 24,
+      "available": 7,
+      "blocked": 8
+    },
+    "jobs": {
+      "not_available": 99,
+      "available": 1
+    },
+    "activity": {
+      "available": 99,
+      "not_available": 1
+    }
+  },
+  "family_coverage": {
+    "identity": 0.99,
+    "status": 0.99,
+    "industry": 0.99,
+    "financials": 0.99,
+    "leadership": 0.99,
+    "locations": 0.77,
+    "group": 0.09,
+    "website": 0.1,
+    "social_profiles": 0.03,
+    "contact": 0.16,
+    "description": 0.07,
+    "jobs": 0.01,
+    "activity": 0.99
+  },
+  "claims_total": 8467,
+  "identity_gate": {
+    "unreachable": 4,
+    "rejected": 15,
+    "blocked": 10,
+    "accepted": 10,
+    "ambiguous": 14
+  },
+  "identity_gate_by_source": {
+    "name_slug_guess": {
+      "ambiguous": 7,
+      "rejected": 5,
+      "blocked": 9,
+      "accepted": 4
+    },
+    "registry_declared": {
+      "accepted": 3,
+      "rejected": 2,
+      "unreachable": 1,
+      "ambiguous": 3
+    },
+    "registry_email_domain": {
+      "accepted": 2,
+      "rejected": 7,
+      "ambiguous": 3,
+      "unreachable": 1
+    },
+    "subunit_declared": {
+      "unreachable": 1,
+      "accepted": 1
+    },
+    "subunit_email_domain": {
+      "unreachable": 1,
+      "rejected": 1,
+      "blocked": 1,
+      "ambiguous": 1
+    }
+  },
+  "jobs_feed": {
+    "pages": 14,
+    "ads_indexed": 6311,
+    "window_days": 7,
+    "error": null
+  },
+  "operations": {
+    "requests": 660,
+    "max_requests": 2000,
+    "elapsed_seconds": 217.8,
+    "max_seconds": 720.0,
+    "third_party_cost_usd": 0.0,
+    "max_cost_usd": 10.0,
+    "requests_by_host": {
+      "data.brreg.no": 408,
+      "pam-stilling-feed.nav.no": 16,
+      "www.kappahl.com": 15,
+      "www.usbl.no": 10,
+      "vestbo.no": 10,
+      "www.hotelaak.no": 7,
+      "www.northsea.no": 7,
+      "www.sandcatch.com": 7,
+      "www.panprosjekt.no": 7,
+      "www.benders.se": 6,
+      "prospecta.no": 6,
+      "www.baarmantransport.no": 6,
+      "trygg-bil.no": 6,
+      "www.brommeland.no": 6,
+      "www.bakeriet.as": 6,
+      "www.vardund.no": 5,
+      "www.cleancarbon.eu": 5,
+      "tomasskolen.no": 5,
+      "www.bonord.no": 5,
+      "www.bakernordby.no": 5,
+      "muzet.no": 5,
+      "frost.no": 5,
+      "spenst.no": 5,
+      "bonitas.no": 5,
+      "www.va-systemer.no": 5,
+      "www.kappahl.no": 4,
+      "ragde.no": 4,
+      "www.s2m-bemanning.no": 4,
+      "automatikkmontasje.no": 4,
+      "www.bsoas.no": 4,
+      "hotelaak.no": 2,
+      "vardund.no": 2,
+      "kappahl.no": 2,
+      "kappahl.com": 2,
+      "www.tomasskolen.no": 2,
+      "usbl.no": 2,
+      "www.vestbo.no": 2,
+      "cleancarbon.eu": 2,
+      "polarlys.no": 2,
+      "nimbusinnregulering.no": 2,
+      "bakernordby.no": 2,
+      "styretmitt.no": 2,
+      "gislegaard.no": 2,
+      "benders.no": 2,
+      "northsea.no": 2,
+      "www.muzet.no": 2,
+      "sandcatch.no": 2,
+      "pivotal.no": 2,
+      "panprosjekt.no": 2,
+      "vestrem.no": 2,
+      "baarmantransport.no": 2,
+      "jblogistikk.no": 2,
+      "s2m-bemanning.no": 2,
+      "comethockey.no": 2,
+      "trikumadebela.rs": 2,
+      "brommeland.no": 2,
+      "bsoas.no": 2,
+      "bakeriet.as": 2,
+      "query.wikidata.org": 1,
+      "palmenbar.no": 1,
+      "komtekhardanger.no": 1,
+      "krsokonomi.no": 1,
+      "tryggbil.no": 1,
+      "superbruker.no": 1,
+      "winnerplus.no": 1,
+      "detechtiv.no": 1,
+      "treningssenteret-kristiansund.no": 1,
+      "mossglassfasade.no": 1,
+      "hywind.no": 1
+    },
+    "requests_by_phase": {
+      "registry": 2,
+      "jobs": 15,
+      "activity": 2,
+      "accounts": 99,
+      "history": 99,
+      "roles": 99,
+      "locations": 99,
+      "web": 224,
+      "web_news": 11,
+      "group": 9,
+      "jobs_verify": 1
+    },
+    "phase_caps": {
+      "registry": 5,
+      "activity": 6,
+      "jobs": 23,
+      "accounts": 107,
+      "roles": 107,
+      "locations": 107,
+      "group": 37,
+      "jobs_verify": 60,
+      "history": 102,
+      "web": 1161,
+      "web_news": 204
+    },
+    "refused_by_budget": {},
+    "p50_company_ms": 48561,
+    "p95_company_ms": 56452
+  },
+  "phase_seconds": {
+    "bulk_snapshot": 0.0,
+    "registry": 2.6,
+    "activity": 1.3,
+    "companies": 207.4,
+    "jobs": 4.4,
+    "tail": 0.0,
+    "finalise": 0.1
+  },
+  "budget_plan": {
+    "registry": 5,
+    "activity": 6,
+    "jobs": 23,
+    "accounts": 107,
+    "roles": 107,
+    "locations": 107,
+    "group": 37,
+    "jobs_verify": 60,
+    "history": 102,
+    "web": 1366,
+    "web_news": 0
+  },
+  "bulk_snapshot": {
+    "note": "no bulk snapshot supplied; live registry API only"
+  },
+  "notes": [],
+  "third_party_cost_usd": 0.0,
+  "models": []
+}

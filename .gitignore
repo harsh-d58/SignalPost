@@ -5,6 +5,9 @@ __pycache__/
 build/
 dist/
 .venv/
+.venv-audit/
+.uv-cache/
+.test-tmp/
 venv/
 
 # Tool caches
@@ -26,6 +29,11 @@ data/
 # Run outputs (committed evidence lives in reports/ instead)
 out/
 out-*/
+# Private evidence remains local even when a custom output directory is used.
+snapshots/
+# Generated Pages build and release archive; rebuild from the submitted commit.
+/_site/
+/signalpost-code.zip
 *.tmp
 *.log
 

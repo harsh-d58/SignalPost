@@ -7,6 +7,7 @@ reported as drift, not hidden.
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import random
 import re
@@ -19,7 +20,45 @@ from signalpost.http import Fetcher  # noqa: E402
 
 
 def compact(text: str) -> str:
-    return re.sub(r"[\s\"'\\]+", "", text).casefold()
+    return re.sub(r"\s+", "", html.unescape(text))
+
+
+def span_present(body: str, span: str) -> bool:
+    """Require the claimed excerpt, not unrelated occurrences of value words."""
+    if not isinstance(span, str) or not span.strip():
+        return False
+    probe = compact(span)
+    if probe in compact(body):
+        return True
+    try:
+        # JSON object formatting and escaping may differ, but field/value structure must agree.
+        parsed = json.loads(body)
+        normalized = json.dumps(parsed, ensure_ascii=False, sort_keys=True)
+        if probe in compact(normalized):
+            return True
+        try:
+            fragment = json.loads(span)
+        except ValueError:
+            fragment = json.loads("{" + span + "}")
+        def contains(actual, expected):
+            if isinstance(expected, dict):
+                return isinstance(actual, dict) and all(k in actual and contains(actual[k], v) for k, v in expected.items())
+            return actual == expected and type(actual) is type(expected)
+        def walk(value):
+            if contains(value, fragment):
+                return True
+            children = value.values() if isinstance(value, dict) else value if isinstance(value, list) else []
+            return any(walk(child) for child in children)
+        if isinstance(fragment, dict) and fragment and walk(parsed):
+            return True
+    except (ValueError, TypeError):
+        pass
+    try:
+        from lxml import html as lhtml
+        doc = lhtml.fromstring(body)
+        return probe in compact(doc.text_content())
+    except (ValueError, TypeError):
+        return False
 
 
 def main() -> None:
@@ -32,10 +71,19 @@ def main() -> None:
     for line in open(args.envelopes, encoding="utf-8"):
         e = json.loads(line)
         ev = {x["id"]: x for x in e["evidence"]}
+        snapshots = {x["id"]: x for x in e.get("source_snapshots", [])}
         for c in e["claims"]:
             if c.get("availability", "available") == "available" and c["evidence_ids"]:
                 x = ev.get(c["evidence_ids"][0])
-                if x and "replay.invalid" not in x["source_url"] and not x["source_url"].endswith(".csv"):
+                if x and "replay.invalid" not in x["source_url"]:
+                    x = dict(x)
+                    provenance = snapshots.get(x.get("snapshot_id"), {}).get("provenance", {})
+                    if str(provenance.get("kind", "")).startswith("bulk_selected"):
+                        from signalpost.registry import ROLES_URL, SUBUNITS_URL
+                        template = ROLES_URL if c["family"] == "leadership" else SUBUNITS_URL if c["family"] == "locations" else None
+                        if not template:
+                            continue
+                        x["verification_url"] = template.format(org=e["organisation_number"])
                     pool.append((e["organisation_number"], c, x))
     sample = random.Random(args.seed).sample(pool, min(args.sample, len(pool)))
     fetcher = Fetcher(Budget(max_requests=args.sample * 4 + 50))
@@ -43,20 +91,14 @@ def main() -> None:
     rows = []
     for org, claim, ev in sample:
         api = ev["source_class"] in ("official_registry", "public_api")
-        snap = fetcher.get_json(ev["source_url"], phase="verify") if api else fetcher.get(ev["source_url"], phase="verify")
+        url = ev.get("verification_url", ev["source_url"])
+        snap = fetcher.get_json(url, phase="verify") if api else fetcher.get(url, phase="verify")
         if not snap.ok:
             errors += 1
             rows.append(("error", org, claim["field"], snap.status))
             continue
-        body = compact(snap.text())
         span = ev["claim_span"]
-        probe = [compact(p) for p in re.split(r"\s[—-]\s|: ", span) if len(compact(p)) >= 6][:3] or [compact(span)]
-        value = claim["value"]
-        core = value.get("year") or value.get("title") or value.get("name") if isinstance(value, dict) else value
-        if claim["field"] == "registry_event":
-            core = ev["claim_span"].split('"dato": "')[-1][:19]  # the event timestamp must exist at the source
-        tokens = [compact(t) for t in re.findall(r"[\wæøåÆØÅ.-]{2,}", str(core))]
-        ok = any(p in body for p in probe) or (bool(tokens) and all(t in body for t in tokens))
+        ok = span_present(snap.text(), span)
         found += ok
         drift += not ok
         if not ok:

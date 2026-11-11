@@ -53,10 +53,11 @@ class Evidence:
     identity_reason: str | None = None
     reporting_period: dict[str, str] | None = None
     id: str = ""
+    locator: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         if not self.id:
-            self.id = stable_id("ev", self.source_url, self.content_sha256, self.claim_span[:300])
+            self.id = stable_id("ev", self.source_url, self.content_sha256, self.claim_span, self.extraction_method, self.reporting_period)
 
     def to_dict(self) -> dict[str, Any]:
         out = {
@@ -74,6 +75,8 @@ class Evidence:
             out["identity_reason"] = self.identity_reason
         if self.reporting_period:
             out["reporting_period"] = self.reporting_period
+        if self.locator:
+            out["locator"] = self.locator
         return out
 
 
@@ -98,7 +101,7 @@ class Claim:
         if self.key is None:
             self.key = self.field
         if not self.id:
-            self.id = stable_id("c", self.family, self.key, self.value, self.period)
+            self.id = stable_id("c", self.family, self.key, self.value, self.period, self.unit)
 
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {

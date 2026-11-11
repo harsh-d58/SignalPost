@@ -1,0 +1,204 @@
+{
+  "run_id": "rankup-smoke100-verified",
+  "code_version": "4d3a4523acbc-dirty",
+  "companies": 100,
+  "terminal_completion": 1.0,
+  "validation": {
+    "passed": true,
+    "checks": {
+      "one_envelope_per_input": true,
+      "unique_organisation_numbers": true,
+      "all_family_states_valid": true,
+      "every_claim_has_evidence": true,
+      "no_null_values_published": true,
+      "all_families_present": true,
+      "snapshot_references_resolve": true,
+      "within_execution_limits": true,
+      "no_failed_terminal_envelopes": true
+    },
+    "invalid_states": []
+  },
+  "families": {
+    "activity": {
+      "companies_with_current_claims": 99,
+      "company_coverage": 0.99,
+      "distinct_claims": 384,
+      "availability": {
+        "available": 99,
+        "not_available": 1
+      }
+    },
+    "contact": {
+      "companies_with_current_claims": 26,
+      "company_coverage": 0.26,
+      "distinct_claims": 28,
+      "availability": {
+        "blocked": 7,
+        "ambiguous": 15,
+        "not_available": 52,
+        "available": 26
+      }
+    },
+    "description": {
+      "companies_with_current_claims": 2,
+      "company_coverage": 0.02,
+      "distinct_claims": 2,
+      "availability": {
+        "blocked": 9,
+        "ambiguous": 24,
+        "not_available": 65,
+        "available": 2
+      }
+    },
+    "financials": {
+      "companies_with_current_claims": 100,
+      "company_coverage": 1.0,
+      "distinct_claims": 5426,
+      "availability": {
+        "available": 100
+      }
+    },
+    "group": {
+      "companies_with_current_claims": 5,
+      "company_coverage": 0.05,
+      "distinct_claims": 6,
+      "availability": {
+        "not_applicable": 95,
+        "available": 5
+      }
+    },
+    "identity": {
+      "companies_with_current_claims": 100,
+      "company_coverage": 1.0,
+      "distinct_claims": 1362,
+      "availability": {
+        "available": 100
+      }
+    },
+    "industry": {
+      "companies_with_current_claims": 100,
+      "company_coverage": 1.0,
+      "distinct_claims": 102,
+      "availability": {
+        "available": 100
+      }
+    },
+    "jobs": {
+      "companies_with_current_claims": 0,
+      "company_coverage": 0.0,
+      "distinct_claims": 0,
+      "availability": {
+        "blocked": 100
+      }
+    },
+    "leadership": {
+      "companies_with_current_claims": 100,
+      "company_coverage": 1.0,
+      "distinct_claims": 408,
+      "availability": {
+        "available": 100
+      }
+    },
+    "locations": {
+      "companies_with_current_claims": 79,
+      "company_coverage": 0.79,
+      "distinct_claims": 92,
+      "availability": {
+        "available": 79,
+        "not_available": 21
+      }
+    },
+    "social_profiles": {
+      "companies_with_current_claims": 1,
+      "company_coverage": 0.01,
+      "distinct_claims": 1,
+      "availability": {
+        "blocked": 9,
+        "ambiguous": 24,
+        "not_available": 66,
+        "available": 1
+      }
+    },
+    "status": {
+      "companies_with_current_claims": 100,
+      "company_coverage": 1.0,
+      "distinct_claims": 100,
+      "availability": {
+        "available": 100
+      }
+    },
+    "website": {
+      "companies_with_current_claims": 4,
+      "company_coverage": 0.04,
+      "distinct_claims": 4,
+      "availability": {
+        "blocked": 9,
+        "ambiguous": 24,
+        "not_available": 63,
+        "available": 4
+      }
+    }
+  },
+  "requests": 647,
+  "requests_per_company": 6.47,
+  "elapsed_seconds": 215.8,
+  "p50_company_ms": 8250,
+  "p95_company_ms": 15906,
+  "external_cost_usd": 0.0,
+  "external_cost_per_company_usd": 0.0,
+  "snapshot_retention_counts": {
+    "privacy_minimized_json": 654,
+    "excerpt_only": 38
+  },
+  "models": [],
+  "code_sha256": "c90eb3f4b47e260c653557cf9d7ae1627b72b0e95872170fab43960873960147",
+  "published_current_claims": 7915,
+  "specific_fields": {
+    "company_news": {
+      "companies": 1,
+      "claims": 3
+    },
+    "registry_event": {
+      "companies": 99,
+      "claims": 381
+    },
+    "job_posting": {
+      "companies": 0,
+      "claims": 0
+    },
+    "filed_annual_accounts": {
+      "companies": 100,
+      "claims": 950
+    }
+  },
+  "precision": null,
+  "wrong_company_publications": null,
+  "official_score": null,
+  "reason_unmeasured": "No independent per-claim attribution audit or Builderr reference collection supplied. Coverage and artifact integrity do not establish precision or recall.",
+  "score_scenarios_not_predictions": [
+    {
+      "name": "qualification_sensitivity",
+      "recall": 24,
+      "evidence": 28,
+      "synthesis": 8,
+      "ux": 5,
+      "total": 65
+    },
+    {
+      "name": "posted_leader_sensitivity",
+      "recall": 28,
+      "evidence": 29,
+      "synthesis": 9,
+      "ux": 5,
+      "total": 71
+    },
+    {
+      "name": "planning_target",
+      "recall": 32,
+      "evidence": 29,
+      "synthesis": 10,
+      "ux": 6,
+      "total": 77
+    }
+  ]
+}

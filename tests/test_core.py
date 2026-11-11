@@ -69,7 +69,7 @@ def test_contract_validation():
 def test_blank_registry_fields_are_skipped_not_fatal():
     from signalpost.registry import entity_claims
     pb = ProfileBuilder("923609016")
-    entity_claims(pb, {"navn": "TEST AS", "vedtektsfestetFormaal": [" "], "hjemmeside": "", "kapital": {}},
+    entity_claims(pb, {"organisasjonsnummer": "923609016", "navn": "TEST AS", "vedtektsfestetFormaal": [" "], "hjemmeside": "", "kapital": {}},
                   retrieved_at="t", source_class="official_registry", method="m")
     assert [c.field for c in pb.claims.values()] == ["legal_name"]
 

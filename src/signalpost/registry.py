@@ -10,6 +10,7 @@ import gzip
 import hashlib
 import io
 import json
+import math
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -62,7 +63,9 @@ def _get(obj: Any, *path: str) -> Any:
 def fmt_address(addr: dict[str, Any] | None) -> str | None:
     if not isinstance(addr, dict):
         return None
-    lines = [line for line in (addr.get("adresse") or []) if line]
+    # CSV joins address lines with newlines; JSON returns an array. Render both identically.
+    lines = [part.strip() for line in (addr.get("adresse") or []) if isinstance(line, str)
+             for part in line.splitlines() if part.strip()]
     tail = " ".join(x for x in [addr.get("postnummer"), addr.get("poststed")] if x)
     parts = lines + ([tail] if tail else [])
     if addr.get("land") and addr.get("landkode") not in (None, "NO"):
@@ -146,22 +149,29 @@ def load_bulk(path: str | Path, orgs: Iterable[str]) -> tuple[dict[str, dict[str
             digest.update(block)
     with _open_text(path) as text:
         first = text.read(1)
+        while first and first.isspace():
+            first = text.read(1)
         text_rest = text
         if first in ("[", "{"):
-            data = json.loads(first + text_rest.read())
-            rows = data if isinstance(data, list) else (_get(data, "_embedded", "enheter") or [])
+            if path.name.removesuffix(".gz").endswith(".jsonl"):
+                rows = (json.loads(line) for line in _chain(first, text_rest) if line.strip())
+            else:
+                data = json.loads(first + text_rest.read())
+                rows = data if isinstance(data, list) else ([data] if "organisasjonsnummer" in data else _get(data, "_embedded", "enheter") or [])
             for row in rows:
                 org = str(row.get("organisasjonsnummer", ""))
                 if org in wanted:
+                    if org in found and found[org] != row:
+                        raise ValueError(f"conflicting frozen identity records: {org}")
                     found[org] = row
         else:
             reader = csv.DictReader(_chain(first, text_rest))
             for row in reader:
                 org = (row.get("organisasjonsnummer") or "").strip()
                 if org in wanted:
+                    if org in found:
+                        raise ValueError(f"duplicate frozen identity record: {org}")
                     found[org] = bulk_entity(_unflatten(row))
-                    if len(found) == len(wanted):
-                        break
     return found, {"path": path.name, "sha256": digest.hexdigest(), "matched": len(found), "requested": len(wanted)}
 
 
@@ -195,20 +205,54 @@ def fetch_entities(fetcher: Fetcher, orgs: list[str], phase: str = "registry") -
         if not snap.ok:
             errors.append(f"HTTP {snap.status} {snap.error or ''}")
             continue
-        for entity in _get(snap.json(), "_embedded", "enheter") or []:
-            result[str(entity.get("organisasjonsnummer"))] = (entity, snap)
+        try:
+            body = snap.json()
+            if not isinstance(body, dict):
+                raise ValueError("registry response is not an object")
+            rows = _get(body, "_embedded", "enheter") or []
+            if not isinstance(rows, list):
+                raise ValueError("registry entities are not a list")
+            for entity in rows:
+                if isinstance(entity, dict) and str(entity.get("organisasjonsnummer")) in chunk:
+                    result[str(entity["organisasjonsnummer"])] = (entity, snap)
+        except (ValueError, TypeError) as exc:
+            errors.append(f"invalid registry response: {type(exc).__name__}")
     return result, errors
 
 
 def entity_claims(pb: ProfileBuilder, entity: dict[str, Any], *, retrieved_at: str, source_class: str,
-                  method: str, source_url: str | None = None) -> None:
+                  method: str, source_url: str | None = None, snapshot: Snapshot | None = None) -> None:
     org = pb.org
-    url = source_url or ENTITY_URL.format(org=org)
-    digest = canonical_hash(entity)
+    if str(entity.get("organisasjonsnummer") or "") != org:
+        pb.set_state("identity", "ambiguous", "registry entity key does not match requested organisation")
+        return
+    url = snapshot.final_url if snapshot else source_url or ENTITY_URL.format(org=org)
+    digest = snapshot.sha256 if snapshot else canonical_hash(entity)
+    prefix = ""
+    if snapshot:
+        source_rows = _get(snapshot.json(), "_embedded", "enheter")
+        if isinstance(source_rows, list):
+            index = next((i for i, row in enumerate(source_rows) if str(row.get("organisasjonsnummer")) == org), None)
+            if index is None:
+                raise ValueError("identity record absent from source snapshot")
+            prefix = f"/_embedded/enheter/{index}"
 
     def ev(key: str, value: Any, period: dict | None = None) -> str:
-        return pb.add_evidence(Evidence(url, source_class, retrieved_at, digest, span(key, value), f"{method}:{key}", NLOD,
-                                        identity_reason="exact organisation-number key", reporting_period=period))
+        pointer = prefix + "/" + key.replace("~", "~0").replace("/", "~1")
+        raw = entity.get(key)
+        quote = span(key, value)
+        if key == "kommune":
+            address_key = "forretningsadresse" if _get(entity, "forretningsadresse", "kommune") else "postadresse"
+            pointer = prefix + f"/{address_key}/kommune"
+            raw = _get(entity, address_key, "kommune")
+        if key == "historiskeNavn" and isinstance(raw, list) and value in raw:
+            pointer += "/" + str(raw.index(value))
+            raw = value
+            quote = json.dumps(value, ensure_ascii=False)
+        return pb.add_evidence(Evidence(url, source_class, retrieved_at, digest, quote, f"{method}:{key}", NLOD,
+                                        identity_reason="exact organisation-number key", reporting_period=period,
+                                        locator={"type": "json_pointer", "pointer": pointer, "value": raw,
+                                                 "organisation_number": org, "parent_pointer": prefix + "/organisasjonsnummer"}))
 
     def add(family: str, field: str, label: str, value: Any, key_name: str, raw: Any = None, **kw: Any) -> None:
         if value in (None, "", []):
@@ -223,8 +267,11 @@ def entity_claims(pb: ProfileBuilder, entity: dict[str, Any], *, retrieved_at: s
     add("identity", "founded_date", "Founded", entity.get("stiftelsesdato"), "stiftelsesdato")
     add("identity", "registration_date", "Registered in Enhetsregisteret", entity.get("registreringsdatoEnhetsregisteret"), "registreringsdatoEnhetsregisteret")
     if entity.get("registrertIForetaksregisteret"):
-        add("identity", "business_register_date", "Registered in Foretaksregisteret", entity.get("registreringsdatoForetaksregisteret") or "yes",
-            "registreringsdatoForetaksregisteret")
+        if entity.get("registreringsdatoForetaksregisteret"):
+            add("identity", "business_register_date", "Registered in Foretaksregisteret", entity["registreringsdatoForetaksregisteret"],
+                "registreringsdatoForetaksregisteret")
+        else:
+            add("identity", "business_register_registered", "Registered in Foretaksregisteret", "yes", "registrertIForetaksregisteret", True)
     if entity.get("registrertIMvaregisteret") is not None:
         add("identity", "vat_registered", "VAT registered", "yes" if entity.get("registrertIMvaregisteret") else "no", "registrertIMvaregisteret",
             entity.get("registrertIMvaregisteret"), effective_date=entity.get("registreringsdatoMerverdiavgiftsregisteret"))
@@ -240,7 +287,7 @@ def entity_claims(pb: ProfileBuilder, entity: dict[str, Any], *, retrieved_at: s
     capital = entity.get("kapital") or {}
     if capital.get("belop") is not None:
         add("identity", "share_capital", f"{capital.get('type') or 'Share capital'}", capital.get("belop"), "kapital", capital,
-            unit=capital.get("valuta") or "NOK", effective_date=capital.get("innfortDato"))
+            unit=capital.get("valuta"), effective_date=capital.get("innfortDato"))
     for item in entity.get("historiskeNavn") or []:
         if item.get("navn"):
             pb.add(Claim("identity", "former_name", item["navn"], [ev("historiskeNavn", item)], label="Former name",
@@ -275,7 +322,7 @@ def entity_claims(pb: ProfileBuilder, entity: dict[str, Any], *, retrieved_at: s
         add("status", "deleted", "Deleted from registry", entity["slettedato"], "slettedato")
     if all(entity.get(k) is not None for k in flags) or entity.get("konkurs") is not None:
         add("status", "registry_status", "Registry status", "active" if active else "inactive/winding up",
-            "konkurs", {k: entity.get(k) for k in flags})
+            "konkurs", entity.get("konkurs"))
     if entity.get("sisteInnsendteAarsregnskap"):
         add("identity", "latest_filed_year", "Latest submitted annual accounts (year)", str(entity["sisteInnsendteAarsregnskap"]), "sisteInnsendteAarsregnskap")
 
@@ -323,7 +370,13 @@ def accounts_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
         pb.set_state("financials", "not_available", "Regnskapsregisteret returned no annual-account records", snap.url)
         return
     url = snap.url
-    for rec in records:
+    for record_index, rec in enumerate(records):
+        if not isinstance(rec, dict):
+            continue
+        owner = rec.get("organisasjonsnummer") or _get(rec, "virksomhet", "organisasjonsnummer")
+        if owner and str(owner) != pb.org:
+            pb.candidates.append({"family": "financials", "decision": "rejected", "reason": "account record has a different organisation number"})
+            continue
         period = rec.get("regnskapsperiode") or {}
         p = {"from": period.get("fraDato"), "to": period.get("tilDato")}
         account_type = (rec.get("regnskapstype") or "SELSKAP").upper()
@@ -331,12 +384,14 @@ def accounts_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
         scope = "company" if account_type == "SELSKAP" else "group (consolidated)"
         for field, label, path in FIN_FIELDS:
             value = _get(rec, *path)
-            if value is None:
+            if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value):
                 continue  # missing stays missing — never zero
             value = _num(value)
             ev = pb.add_evidence(Evidence(url, "official_registry", snap.retrieved_at, snap.sha256, span(path[-1], value),
                                           f"regnskapsregisteret_api:{'.'.join(path)}", NLOD, identity_reason="exact organisation-number key",
-                                          reporting_period=p))
+                                          reporting_period=p, locator={"type": "json_pointer", "pointer": f"/{record_index}/" + "/".join(path),
+                                                                       "value": value, "record_pointer": f"/{record_index}", "organisation_number": pb.org,
+                                                                       "currency": currency, "period": p}))
             pb.add(Claim("financials", field, value, [ev], label=f"{label} ({scope})", period=p, unit=currency,
                          key=f"{field}:{account_type}:{p['to']}", note=f"account_type={account_type}"))
         audit = rec.get("revisjon") or {}
@@ -378,14 +433,20 @@ ROLE_FIELDS = {
 
 def roles_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
     body = snap.json() if snap.ok else {}
+    if isinstance(body, dict):
+        declared = body.get("organisasjonsnummer")
+        href = _get(body, "_links", "self", "href")
+        if (declared and str(declared) != pb.org) or (href and f"/enheter/{pb.org}/roller" not in href):
+            pb.set_state("leadership", "ambiguous", "role response belongs to a different organisation", snap.url)
+            return
     groups = body.get("rollegrupper") if isinstance(body, dict) else None
     if not groups:
         pb.set_state("leadership", "not_available", "no public roles registered", snap.url)
         return
     count = 0
-    for group in groups:
+    for group_index, group in enumerate(groups):
         changed = group.get("sistEndret")
-        for item in group.get("roller") or []:
+        for role_index, item in enumerate(group.get("roller") or []):
             if item.get("avregistrert") or item.get("fratraadt"):
                 continue
             person = item.get("person") or {}
@@ -403,9 +464,11 @@ def roles_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
             if not name:
                 continue
             value = f"{name} (org. {holder_org})" if holder_org else name
-            redacted = {"type": item.get("type", {}).get("kode"), "navn": name, **({"organisasjonsnummer": holder_org} if holder_org else {})}
-            ev = pb.add_evidence(Evidence(snap.url, "official_registry", snap.retrieved_at, snap.sha256, json.dumps(redacted, ensure_ascii=False),
-                                          "brreg_roller_api:rollegrupper.roller", NLOD, identity_reason="exact organisation-number key"))
+            name_span = span("navn", name_parts) if name_parts else span("navn", entity.get("navn"))
+            ev = pb.add_evidence(Evidence(snap.url, "official_registry", snap.retrieved_at, snap.sha256, name_span,
+                                          "brreg_roller_api:rollegrupper.roller", NLOD, identity_reason="exact organisation-number key",
+                                          locator={"type": "json_pointer", "pointer": f"/rollegrupper/{group_index}/roller/{role_index}/" + ("person/navn" if name_parts else "enhet/navn"),
+                                                   "value": name_parts if name_parts else entity.get("navn"), "organisation_number": pb.org, "role_code": code}))
             field = ROLE_FIELDS.get(code, "role_" + code.lower())
             pb.add(Claim("leadership", field, value, [ev], label=desc, effective_date=changed, key=f"role:{code}:{name}"))
             count += 1
@@ -419,10 +482,14 @@ def roles_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
 def subunit_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
     body = snap.json() if snap.ok else {}
     units = _get(body, "_embedded", "underenheter") or []
+    if len(units) > 200 or int((_get(body, "page", "totalPages") or 1)) > 1:
+        pb.extra.setdefault("incomplete_families", {})["locations"] = "workplace inventory truncated; absence cannot establish closure"
     if not units:
         pb.set_state("locations", "not_available", "no registered sub-units (workplaces)", snap.url)
         return
-    for unit in units[:200]:
+    for unit_index, unit in enumerate(units[:200]):
+        if str(unit.get("overordnetEnhet") or "") != pb.org:
+            continue
         if unit.get("nedleggelsesdato") or unit.get("slettedato"):
             continue
         cands = pb.extra.setdefault("site_candidates", [])
@@ -443,9 +510,11 @@ def subunit_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
             "opened": unit.get("oppstartsdato"),
         }
         value = {k: v for k, v in value.items() if v not in (None, "")}
-        ev = pb.add_evidence(Evidence(ENTITY_URL.format(org=org).replace("/enheter/", "/underenheter/"), "official_registry", snap.retrieved_at,
-                                      canonical_hash(unit), json.dumps({k: unit.get(k) for k in ("organisasjonsnummer", "navn", "beliggenhetsadresse", "antallAnsatte")}, ensure_ascii=False)[:600],
-                                      "brreg_underenheter_api:overordnetEnhet", NLOD, identity_reason="sub-unit registered under this organisation number (overordnetEnhet)"))
+        ev = pb.add_evidence(Evidence(snap.final_url, "official_registry", snap.retrieved_at,
+                                      snap.sha256, span("organisasjonsnummer", org),
+                                      "brreg_underenheter_api:overordnetEnhet", NLOD, identity_reason="sub-unit registered under this organisation number (overordnetEnhet)",
+                                      locator={"type": "json_pointer", "pointer": f"/_embedded/underenheter/{unit_index}/organisasjonsnummer", "value": org,
+                                               "parent_pointer": f"/_embedded/underenheter/{unit_index}/overordnetEnhet", "organisation_number": pb.org}))
         pb.add(Claim("locations", "workplace", value, [ev], label="Registered workplace", key=f"workplace:{org}", effective_date=unit.get("oppstartsdato")))
     pb.set_state("locations", "available", f"{len(units)} registered sub-units", snap.url)
 
@@ -552,6 +621,8 @@ def fetch_activity(fetcher: Fetcher, orgs: list[str], *, days: int = 730, phase:
                     errors.append(f"entity updates HTTP {snap.status}")
                     break
                 body = snap.json()
+                if not isinstance(body, dict) or not isinstance(body.get("_embedded", {}), dict) or "enheter" in body.get("_embedded", {}):
+                    raise ValueError("unexpected activity response schema")
                 for item in _get(body, "_embedded", "oppdaterteEnheter") or []:
                     entity_events.setdefault(str(item.get("organisasjonsnummer")), []).append((item, snap))
                 info = body.get("page") or {}
@@ -561,6 +632,8 @@ def fetch_activity(fetcher: Fetcher, orgs: list[str], *, days: int = 730, phase:
             snap = fetcher.get_json(ROLE_UPDATES_URL.format(orgs=chunk, since=since, size=5000), phase=phase, retries=1, timeout=60)
             if snap.ok:
                 body = snap.json()
+                if not isinstance(body, list):
+                    raise ValueError("unexpected role updates response schema")
                 for item in body if isinstance(body, list) else []:
                     org = str(_get(item, "data", "organisasjonsnummer"))
                     role_events.setdefault(org, []).append((item, snap))
@@ -569,6 +642,8 @@ def fetch_activity(fetcher: Fetcher, orgs: list[str], *, days: int = 730, phase:
         except BudgetExhausted:
             errors.append("budget")
             break
+        except (ValueError, TypeError, AttributeError, KeyError) as exc:
+            errors.append(f"invalid activity response: {type(exc).__name__}")
     return entity_events, role_events, errors
 
 
@@ -596,8 +671,8 @@ def activity_claims(pb: ProfileBuilder, entity_events: list[tuple[dict, Snapshot
         day = str(when)[:10]
         link = snap.url.split("?")[0] + f"?organisasjonsnummer={pb.org}" + (f"&dato={day}T00:00:00.000Z&includeChanges=true&size=100" if "oppdateringer/enheter" in snap.url
                                                                            else f"&afterTime={day}T00:00:00.000Z&size=100")
-        ev = pb.add_evidence(Evidence(link, "official_registry", snap.retrieved_at,
-                                      canonical_hash({"id": uid, "detail": detail}), json.dumps({"dato": when, **detail}, ensure_ascii=False)[:600],
+        ev = pb.add_evidence(Evidence(snap.final_url, "official_registry", snap.retrieved_at,
+                                      snap.sha256, span("time" if uid.startswith("role:") else "dato", when),
                                       "brreg_oppdateringer_api", NLOD, identity_reason="exact organisation-number key"))
         pb.add(Claim("activity", "registry_event", label, [ev], label="Official registry event", effective_date=str(when)[:10], key=f"event:{uid}",
                      note=json.dumps(detail.get("endringer"), ensure_ascii=False)[:300] if detail.get("endringer") else None))

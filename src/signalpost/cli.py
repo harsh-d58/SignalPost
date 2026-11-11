@@ -9,6 +9,8 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
+import hashlib
+import re
 import random
 import shutil
 import sys
@@ -18,6 +20,23 @@ from pathlib import Path
 
 def _log(msg: str) -> None:
     print(msg, file=sys.stderr, flush=True)
+
+
+def archive_previous(out: Path) -> tuple[str, Path]:
+    """Archive each distinct prior snapshot, even when a run ID is reused."""
+    prior = out / "envelopes.jsonl"
+    with prior.open(encoding="utf-8") as handle:
+        first = handle.readline()
+    prior_id = str((json.loads(first).get("run", {}).get("run_id") if first.strip() else None) or "previous")
+    safe_id = re.sub(r"[^A-Za-z0-9_.-]", "_", prior_id).strip(".")[:60] or "previous"
+    digest = hashlib.sha256(prior.read_bytes()).hexdigest()[:12]
+    hist = out / "history"
+    hist.mkdir(exist_ok=True)
+    archived = hist / f"{safe_id}-{digest}.jsonl.gz"
+    if not archived.exists():
+        with prior.open("rb") as src, gzip.open(archived, "wb") as dst:
+            shutil.copyfileobj(src, dst)
+    return prior_id, archived
 
 
 def cmd_run(args: argparse.Namespace) -> int:
@@ -30,26 +49,20 @@ def cmd_run(args: argparse.Namespace) -> int:
     previous = args.previous
     if not previous and not args.fresh and (out / "envelopes.jsonl").exists():
         # automatic refresh: archive the last run in <out>/history/ and diff against it
-        import gzip
-        prior = out / "envelopes.jsonl"
-        first = prior.open(encoding="utf-8").readline()
-        prior_id = (json.loads(first).get("run", {}).get("run_id") if first.strip() else None) or "previous"
-        hist = out / "history"
-        hist.mkdir(exist_ok=True)
-        archived = hist / f"{prior_id}.jsonl.gz"
-        if not archived.exists():
-            with prior.open("rb") as src, gzip.open(archived, "wb") as dst:
-                shutil.copyfileobj(src, dst)
+        prior_id, archived = archive_previous(out)
         previous = str(archived)
         _log(f"[refresh] previous run {prior_id} found in {out}; archived to {archived} and used for change detection (use --fresh to skip)")
     run_id = args.run_id or datetime.now(timezone.utc).strftime("run-%Y%m%dT%H%M%SZ")
     _log(f"[signalpost] run {run_id}: {len(orgs)} organisations -> {out}")
     runner = Runner(orgs, out_dir=out, run_id=run_id, bulk=args.bulk, previous=previous, max_requests=args.max_requests,
                     max_minutes=args.max_minutes, max_cost=args.max_cost, workers=args.workers, job_days=args.job_days,
-                    web=not args.no_web, bulk_files=args.bulk_files, events=args.events, log=_log)
+                    web=not args.no_web, bulk_files=args.bulk_files, events=args.events, log=_log,
+                    registry_snapshot=args.registry_snapshot, registry_snapshot_at=args.registry_snapshot_at,
+                    evidence_cutoff=args.evidence_cutoff, allow_public_nav_token=args.allow_public_nav_token)
     try:
         report = runner.run()
     finally:
+        runner.finished.set()
         runner.fetcher.close()
     # optional legacy output paths (starter-kit compatible flags)
     if args.output:
@@ -113,7 +126,11 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--out", default="out", help="output directory (envelopes.jsonl, run-report.json, site/)")
     run.add_argument("--previous", help="previous output directory or envelopes.jsonl(.gz) for refresh diffs (default: the last run in --out)")
     run.add_argument("--fresh", action="store_true", help="baseline run: ignore any previous run in --out")
-    run.add_argument("--bulk", help="optional frozen Brreg entity snapshot (CSV/JSON, gz ok); adds e-mail domains + fallback identity")
+    run.add_argument("--bulk", help="optional declared discovery cache (Brreg CSV/JSON/JSONL, gzip supported); never overrides identity")
+    run.add_argument("--registry-snapshot", help="authoritative evaluator identity snapshot (Brreg CSV, JSON or JSONL, optionally gzip)")
+    run.add_argument("--registry-snapshot-at", help="snapshot observation time, ISO 8601 with timezone (required with --registry-snapshot)")
+    run.add_argument("--evidence-cutoff", help="latest eligible observation timestamp, ISO 8601 with timezone")
+    run.add_argument("--allow-public-nav-token", action="store_true", help="private development only: use NAV experimental public token")
     run.add_argument("--run-id")
     run.add_argument("--expected-count", type=int)
     run.add_argument("--max-requests", type=int, default=2000)
@@ -121,7 +138,7 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--max-cost", type=float, default=10.0)
     run.add_argument("--workers", type=int, default=24)
     run.add_argument("--job-days", type=int, default=60, help="NAV feed look-back window in days")
-    run.add_argument("--bulk-files", action="store_true", help="experimental: roles/workplaces from Brreg bulk files for large batches")
+    run.add_argument("--bulk-files", action="store_true", help="roles/workplaces from Brreg bulk files; recommended for large batches, with bounded direct fallback")
     run.add_argument("--events", action="store_true", help="emit @event JSON progress lines (used by the live console)")
     run.add_argument("--no-web", action="store_true", help="skip website discovery (registry-only run)")
     run.add_argument("--showcase", help="where to write the static showcase site (default: <out>/site)")

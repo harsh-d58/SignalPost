@@ -303,6 +303,11 @@ dl.kv dd>span:first-child{flex:1 1 16ch;min-width:0;overflow-wrap:break-word}
 .cmp td:first-child,.cmp th:first-child{min-width:150px;color:var(--ink-2);font-size:13px;position:sticky;left:0;background:var(--surface);z-index:1}
 .cmp tr.diff td:not(:first-child){background:color-mix(in srgb,var(--accent-soft) 45%,transparent)}
 .cmp .chead{display:flex;justify-content:space-between;gap:6px;align-items:flex-start}
+.review-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.actions [hidden],.compare-scroll-hint{display:none}
+.evidence-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.evidence-meta summary{cursor:pointer;color:var(--accent);font-size:13px;margin:8px 0}
+.evidence-meta code{overflow-wrap:anywhere}
 .chg{display:grid;grid-template-columns:96px 1fr auto;gap:14px;padding:12px 0;border-top:1px solid var(--line);align-items:start}
 .chg:first-child{border-top:0}
 .chg .d{font:12.5px var(--mono);color:var(--ink-3);padding-top:2px}
@@ -488,6 +493,9 @@ thead th{background:color-mix(in srgb,var(--surface) 88%,transparent)}
   .cols text{font-size:15px}
   .dlegend{width:100%}
   .specimen dl{grid-template-columns:84px 1fr}
+  .cmp td,.cmp th{min-width:144px}
+  .cmp td:first-child,.cmp th:first-child{min-width:100px;width:100px;white-space:normal}
+  .compare-scroll-hint{display:block}
 }
 @media (pointer:coarse){
   .btn,.input,select.input,.iconbtn,.seg button{min-height:44px}
@@ -574,7 +582,9 @@ const D = {
   // overview
   hero_eyebrow:["Run","Kjøring"], hero_title:["Norwegian company profiles you can verify","Norske selskapsprofiler du kan etterprøve"],
   hero_lede:["{0} companies researched from nothing but their organisation number. Every published fact carries its source link, retrieval time, content hash and, where relevant, its reporting period. Where identity could not be proven, the profile says so instead of guessing.","{0} selskaper undersøkt med bare organisasjonsnummeret som utgangspunkt. Hvert publisert faktum har kildelenke, hentetidspunkt, innholdshash og, der det er relevant, rapportperiode. Der identiteten ikke kunne bevises, sier profilen det i stedet for å gjette."],
-  hero_try:["Try","Prøv"], specimen_title:["What a published fact looks like","Slik ser et publisert faktum ut"], specimen_open:["Open profile","Åpne profil"], specimen_ev:["Show evidence","Vis kildebevis"],
+  hero_try:["Try","Prøv"], specimen_title:["What a published fact looks like","Slik ser et publisert faktum ut"], specimen_open:["Open profile","Åpne profil"],
+  review_pair:["Compare two sample companies","Sammenlign to eksempelselskaper"],
+  review_evidence:["Inspect a sample claim","Se kildebevis for et eksempel"],
   kpi_companies:["companies profiled","selskaper profilert"], kpi_facts:["evidence-backed facts","fakta med kildebevis"], kpi_sites:["websites passed the identity gate","nettsteder bestod identitetskontrollen"], kpi_held:["website candidates held back","nettstedskandidater holdt tilbake"],
   trust_title:["Trust","Tillit"], trust_sub:["Counted from this run's envelopes. Abstaining is a result, not a gap.","Telt fra denne kjøringens konvolutter. Å avstå er et resultat, ikke et hull."],
   trust_evidence:["evidence complete","komplette kildebevis"], trust_evidence_d:["{0} of {1} facts have URL, retrieval time, SHA-256 and span","{0} av {1} fakta har URL, hentetid, SHA-256 og utdrag"],
@@ -654,10 +664,18 @@ const D = {
   ev_hash:["SHA-256","SHA-256"], ev_copy:["Copy","Kopier"], ev_none:["No claims referenced.","Ingen fakta referert."], ev_period_c:["Reporting period {0} → {1}","Rapportperiode {0} → {1}"], ev_effective:["Effective {0}","Gjelder fra {0}"],
   ev_first:["First seen {0}","Først sett {0}"], ev_stale:["Carried forward (source unreadable since {0})","Videreført (kilden uleselig siden {0})"], ev_derived:["Derived value","Avledet verdi"], ev_span_none:["(no span)","(intet utdrag)"],
   ev_exact:["Exact value","Eksakt verdi"], sentence_src:["Source for this sentence","Kilde for setningen"], change_ev:["Change evidence","Kildebevis for endringen"],
+  ev_open_source:["Open original source ↗","Åpne originalkilden ↗"], ev_share_claim:["Copy claim link","Kopier lenke til faktum"],
+  ev_live_registry:["Open live registry ↗","Åpne det aktive registeret ↗"],
+  ev_details:["Provenance details","Kildedetaljer"], ev_locator:["Location in source","Plassering i kilden"],
+  ev_retained:["Retained evidence","Bevart kildebevis"], ev_excerpt:["Published excerpt","Publisert utdrag"],
+  ev_registry:["Registry JSON with private fields removed","Registerdata uten private felt"],
+  ev_before:["Previous value","Tidligere verdi"], ev_after:["Current value","Gjeldende verdi"],
   // compare
   cmp_title:["Compare companies","Sammenlign selskaper"], cmp_sub:["Up to four companies side by side. Tap any value for its evidence. Rows that differ are tinted.","Opptil fire selskaper side om side. Trykk på en verdi for kildebevis. Rader som er ulike er farget."],
   cmp_add:["Add a company","Legg til selskap"], cmp_empty_t:["Nothing to compare yet","Ingenting å sammenligne ennå"], cmp_empty_d:["Search above, or use “Add” in the company list or “Compare” on a profile.","Søk over, eller bruk «Legg til» i listen eller «Sammenlign» på en profil."],
   cmp_share:["Copy share link","Kopier delingslenke"], cmp_full:["Comparing up to 4 companies","Sammenligner opptil 4 selskaper"], remove:["Remove {0}","Fjern {0}"],
+  cmp_open:["Open comparison ({0})","Åpne sammenligning ({0})"], cmp_table:["Company comparison table","Sammenligningstabell"],
+  cmp_scroll:["Scroll the table sideways to see every company.","Rull tabellen sidelengs for å se alle selskaper."],
   r_form:["Legal form","Organisasjonsform"], r_muni:["Municipality","Kommune"], r_founded:["Founded","Stiftet"], r_industry:["Industry","Bransje"], r_emp:["Employees","Ansatte"], r_rev:["Revenue","Driftsinntekter"],
   r_op:["Operating result","Driftsresultat"], r_net:["Net result","Årsresultat"], r_eq:["Equity","Egenkapital"], r_assets:["Total assets","Sum eiendeler"], r_ceo:["CEO","Daglig leder"], r_chair:["Board chair","Styreleder"],
   r_work:["Workplaces","Arbeidssteder"], r_site:["Website","Nettsted"], r_jobs:["Active jobs","Aktive stillinger"], r_facts:["Facts published","Publiserte fakta"],
@@ -765,15 +783,16 @@ function showTip(e, text){ tip.textContent = text; tip.classList.add("on"); cons
 function hideTip(){ tip.classList.remove("on"); }
 
 // ================================================================ data loading
-window.SP_LOAD = function(org, data){ data.claims = (data.claims||[]).filter(c => (c.availability||"available") === "available"); cache[org] = data; (waiters[org]||[]).forEach(f => f(data)); delete waiters[org]; };
+window.SP_LOAD = function(org, data){ data.claims = (data.claims||[]).filter(c => (c.availability||"available") === "available"); cache[org] = data; (waiters[org]||[]).forEach(w => w.resolve(data)); delete waiters[org]; };
 function load(org){
   if (cache[org]) return Promise.resolve(cache[org]);
   return new Promise((resolve, reject) => {
     const first = !waiters[org];
-    (waiters[org] = waiters[org] || []).push(resolve);
+    (waiters[org] = waiters[org] || []).push({resolve, reject});
     if (!first) return;
     const s = document.createElement("script"); s.src = "data/" + org + ".js"; s.async = true;
-    s.onerror = () => { delete waiters[org]; reject(new Error("missing profile")); };
+    s.onerror = () => { const pending = waiters[org] || []; delete waiters[org]; s.remove(); pending.forEach(w => w.reject(new Error("missing profile"))); };
+    s.onload = () => { if (waiters[org]) s.onerror(); else s.remove(); };
     document.head.append(s);
   });
 }
@@ -790,8 +809,9 @@ function latestFin(env){
 }
 
 // ================================================================ compare set
-let CMP = (store("sp-compare") || []).filter(o => BYORG[o]);
-function setCmp(list){ CMP = [...new Set(list)].filter(o => BYORG[o]).slice(0,4); store("sp-compare", CMP); renderNav(); }
+const savedCmp = store("sp-compare");
+let CMP = [...new Set(Array.isArray(savedCmp) ? savedCmp : [])].filter(o => typeof o === "string" && Object.hasOwn(BYORG, o)).slice(0,4);
+function setCmp(list){ CMP = [...new Set(list)].filter(o => typeof o === "string" && Object.hasOwn(BYORG, o)).slice(0,4); store("sp-compare", CMP); renderNav(); }
 function toggleCmp(o){ if (!CMP.includes(o) && CMP.length >= 4) { toast(t("cmp_full")); return; } setCmp(CMP.includes(o) ? CMP.filter(x => x !== o) : CMP.concat(o)); }
 
 // ================================================================ drawer (evidence + shortcuts), focus-trapped
@@ -814,7 +834,7 @@ document.getElementById("dclose").onclick = () => closeDrawer();
 scrim.onclick = () => closeDrawer();
 drawer.addEventListener("keydown", e => {
   if (e.key !== "Tab") return;
-  const f = [...drawer.querySelectorAll("a[href],button:not([disabled]),input,select,[tabindex]:not([tabindex='-1'])")].filter(x => x.offsetParent !== null || x === document.activeElement);
+  const f = [...drawer.querySelectorAll("a[href],button:not([disabled]),input,select,summary,[tabindex]:not([tabindex='-1'])")].filter(x => x.offsetParent !== null || x === document.activeElement);
   if (!f.length) return;
   const a = f[0], z = f[f.length-1];
   if (e.shiftKey && document.activeElement === a){ e.preventDefault(); z.focus(); }
@@ -834,9 +854,9 @@ function highlight(span, claim){
   }
   return [span];
 }
-function evidenceNodes(env, claimIds){
-  const claims = env.claims.filter(c => claimIds.includes(c.id));
+function evidenceNodes(env, claims, share = true){
   const evs = Object.fromEntries((env.evidence||[]).concat(env.prior_evidence || []).map(e => [e.id, e]));
+  const snapshots = Object.fromEntries((env.source_snapshots || []).map(s => [s.id, s]));
   const out = [];
   claims.forEach((c, ci) => {
     const meta = [];
@@ -849,25 +869,42 @@ function evidenceNodes(env, claimIds){
       el("div",{class:"eyebrow"}, famL(c.family) + " · " + (c.label || c.field)),
       el("div",{class:"v"}, claimText(c)),
       typeof c.value === "number" && c.unit ? el("div",{class:"small muted"}, t("ev_exact") + ": ", el("span",{class:"mono"}, exactMoney(c.value, c.unit))) : null,
-      meta.length ? el("div",{class:"small faint",style:"margin-top:4px"}, meta.join(" · ")) : null);
+      meta.length ? el("div",{class:"small faint",style:"margin-top:4px"}, meta.join(" · ")) : null,
+      share ? el("button",{class:"btn quiet",type:"button",onclick:()=>copy(location.href.split("#")[0] + "#/c/" + env.organisation_number + "?claim=" + encodeURIComponent(c.id))}, t("ev_share_claim")) : null);
     (c.evidence_ids||[]).forEach(id => {
       const e = evs[id]; if (!e) return;
+      const retained = snapshots[e.snapshot_id]?.retention;
+      const retainedLabel = retained === "excerpt_only" ? t("ev_excerpt") : retained === "privacy_minimized_json" ? t("ev_registry") : null;
       box.append(el("div",{class:"evitem"},
         el("div",{style:"display:flex;justify-content:space-between;gap:8px;align-items:center"}, el("span",{class:"eyebrow"}, srcL(e.source_class)), e.license ? el("span",{class:"tag"}, e.license) : null),
+        /^https?:\/\//i.test(e.source_url || "") ? el("div",{class:"evidence-actions"},
+          el("a",{class:"btn primary",href:e.source_url,target:"_blank",rel:"noopener noreferrer nofollow"}, t(e.source_identifier ? "ev_live_registry" : "ev_open_source"))) : null,
         el("div",{class:"span"}, e.claim_span ? highlight(e.claim_span, c) : t("ev_span_none")),
-        el("div",{class:"evrow"}, el("span",null,t("ev_source")), ext(e.source_url, e.source_url.length > 90 ? e.source_url.slice(0,90)+"…" : e.source_url)),
+        el("div",{class:"evrow"}, el("span",null,t("ev_source")), el("span",null,e.source_identifier || e.source_url || "—")),
         el("div",{class:"evrow"}, el("span",null,t("ev_retrieved")), el("span",{class:"mono"}, e.retrieved_at)),
         e.reporting_period && e.reporting_period.to ? el("div",{class:"evrow"}, el("span",null,t("ev_period")), el("span",{class:"mono"}, (e.reporting_period.from||"")+" → "+e.reporting_period.to)) : null,
-        el("div",{class:"evrow"}, el("span",null,t("ev_method")), el("span",{class:"mono"}, e.extraction_method)),
         e.identity_reason ? el("div",{class:"evrow"}, el("span",null,t("ev_identity")), el("span",null, e.identity_reason)) : null,
-        el("div",{class:"evrow"}, el("span",null,t("ev_hash")), el("span",{class:"hash"}, el("code",null, e.content_sha256), el("button",{class:"src",type:"button",onclick:()=>copy(e.content_sha256),"aria-label":t("ev_copy")+" SHA-256"}, t("ev_copy"))))));
+        el("details",{class:"evidence-meta"}, el("summary",null,t("ev_details")),
+          retainedLabel ? el("div",{class:"evrow"}, el("span",null,t("ev_retained")), retainedLabel) : null,
+          e.locator?.pointer ? el("div",{class:"evrow"}, el("span",null,t("ev_locator")), el("code",null,e.locator.pointer)) : null,
+          el("div",{class:"evrow"}, el("span",null,t("ev_method")), el("span",{class:"mono"}, e.extraction_method)),
+          el("div",{class:"evrow"}, el("span",null,t("ev_hash")), el("span",{class:"hash"}, el("code",null, e.content_sha256), el("button",{class:"src",type:"button",onclick:()=>copy(e.content_sha256),"aria-label":t("ev_copy")+" SHA-256"}, t("ev_copy")))))));
     });
     out.push(box);
   });
   if (!claims.length) out.push(el("p",{class:"muted"}, t("ev_none")));
   return out;
 }
-function openEvidence(env, claimIds, title){ openDrawer(title || t("ev_title"), evidenceNodes(env, claimIds)); }
+function openEvidence(env, claimIds, title){
+  openDrawer(title || t("ev_title"), evidenceNodes(env, env.claims.filter(c => claimIds.includes(c.id))));
+}
+function openChangeEvidence(env, change){
+  const sides = [
+    {label:t("ev_before"), value:change.previous, unit:change.previous_unit, period:change.previous_period, evidence_ids:change.previous_evidence_ids},
+    {label:t("ev_after"), value:change.current, unit:change.current_unit, period:change.current_period, evidence_ids:change.evidence_ids},
+  ].filter(side => side.value != null && side.evidence_ids?.length);
+  openDrawer(t("change_ev"), evidenceNodes(env, sides.map(side => ({...side, family:change.family})), false));
+}
 function srcBtn(env, claim, label){
   const e = (env.evidence||[]).concat(env.prior_evidence||[]).find(x => x.id === (claim.evidence_ids||[])[0]) || {};
   return el("button",{class:"src",type:"button","aria-label":t("ev_title")+": "+(label || claim.label || claim.field),onclick:()=>openEvidence(env,[claim.id], label || claim.label)}, ico(ICO_DOC), srcL(e.source_class, true) + " · " + fmtDate(e.retrieved_at));
@@ -877,11 +914,12 @@ function valBtn(env, claim, text, title){ return el("button",{class:"linkbtn",ty
 
 // ================================================================ typeahead (search, compare picker)
 let taSeq = 0;
-function searchIndex(q, limit){
+function searchIndex(q, limit, include = () => true){
   q = q.trim().toLowerCase(); if (!q) return [];
   const d = q.replace(/\s/g,"");
   const out = [];
   for (const r of INDEX){
+    if (!include(r)) continue;
     const name = (r.n + " " + (r.b||"")).toLowerCase();
     let score = -1;
     if (/^\d{3,9}$/.test(d) && r.o.includes(d)) score = r.o.startsWith(d) ? 3 : 1;
@@ -893,7 +931,7 @@ function searchIndex(q, limit){
   }
   return out.sort((a,b) => b[0]-a[0] || b[1].k - a[1].k).slice(0, limit || 8).map(x => x[1]);
 }
-function typeahead(input, onPick, onSubmit){
+function typeahead(input, onPick, onSubmit, include){
   const id = "ta" + (++taSeq);
   const list = el("ul",{class:"ta",role:"listbox",id,hidden:true});
   input.setAttribute("role","combobox"); input.setAttribute("aria-autocomplete","list"); input.setAttribute("aria-expanded","false"); input.setAttribute("aria-controls", id);
@@ -902,9 +940,9 @@ function typeahead(input, onPick, onSubmit){
   function render(){
     list.replaceChildren();
     if (!input.value.trim()) { hide(); return; }
-    items = searchIndex(input.value, 8);
+    items = searchIndex(input.value, 8, include);
     if (!items.length) list.append(el("li",{class:"none",role:"option","aria-disabled":"true"}, t("no_match")));
-    items.forEach((r,i) => list.append(el("li",{role:"option",id:id+"-"+i,"aria-selected":String(i===act),onmousedown:e=>{e.preventDefault(); pick(i);}},
+    items.forEach((r,i) => list.append(el("li",{role:"option",id:id+"-"+i,"aria-selected":String(i===act),onmousedown:e=>e.preventDefault(),onclick:()=>pick(i)},
       el("span",null, r.n, r.b && r.b.toLowerCase() !== r.n.toLowerCase() ? el("span",{class:"faint"}," · "+r.b) : null), el("span",{class:"o"}, fmtOrg(r.o)))));
     list.hidden = false; input.setAttribute("aria-expanded","true");
     if (act >= 0) input.setAttribute("aria-activedescendant", id+"-"+act); else input.removeAttribute("aria-activedescendant");
@@ -983,7 +1021,9 @@ function parseHash(){
   const raw = location.hash.replace(/^#\/?/,"");
   const [path, query] = [raw.split("?")[0], raw.split("?").slice(1).join("?")];
   const parts = path.split("/");
-  return {r: parts[0], arg: decodeURIComponent(parts.slice(1).join("/")), params: new URLSearchParams(query || "")};
+  let arg = parts.slice(1).join("/");
+  try { arg = decodeURIComponent(arg); } catch(e) { /* Keep malformed shared URLs navigable. */ }
+  return {r: parts[0], arg, params: new URLSearchParams(query || "")};
 }
 let SILENT = null;
 function replaceHash(h){
@@ -997,7 +1037,7 @@ function route(){
   renderNav();
   closeDrawer(false); hideTip(); app.replaceChildren();
   document.title = (r === "c" && BYORG[arg] ? BYORG[arg].n + " · " : "") + "Signalpost";
-  if (r === "c" && arg) return viewCompany(arg);
+  if (r === "c" && arg) return viewCompany(arg, params.get("claim"));
   if (r === "companies") return viewCompanies(arg, params);
   if (r === "compare") return viewCompare(arg);
   if (r === "changes") return viewChanges(params);
@@ -1272,6 +1312,8 @@ function viewOverview(){
   const held = (gate.ambiguous||0) + (gate.rejected||0) + (gate.related_site||0);
   const examples = INDEX.slice().sort((a,b) => b.k - a.k).slice(0,3);
   const specimenOrg = (INDEX.find(r => r.w) || examples[0] || {}).o;
+  const lead = examples[0];
+  const peer = lead && (lead.ru && lead.ry && INDEX.find(r => r.o !== lead.o && r.ru === lead.ru && r.ry === lead.ry) || examples[1]);
   const spec = el("aside",{class:"specimen","aria-label":t("specimen_title")}, el("div",{class:"eyebrow"}, t("specimen_title")), el("div",{class:"skel",style:"height:28px;margin:10px 0 14px;width:70%"}), el("div",{class:"skel",style:"height:90px"}));
   const form = el("form",{role:"search",onsubmit:e=>{e.preventDefault(); const v = e.target.elements.s.value.trim(); if (v) goSearch(v, searchIndex(v, 2));}},
     el("input",{name:"s",type:"search",autocomplete:"off",placeholder:t("search_ph"),"aria-label":t("search_label")}), el("button",{class:"btn primary",type:"submit"}, t("search")));
@@ -1281,6 +1323,9 @@ function viewOverview(){
       el("h1",null, t("hero_title")),
       el("p",{class:"lede"}, t("hero_lede", nf(n))),
       el("div",{class:"bezel rel"}, form),
+      el("div",{class:"review-actions"},
+        el("a",{class:"btn secondary",href:"#/companies"}, t("nav_companies")),
+        peer ? el("a",{class:"btn secondary",href:"#/compare/"+lead.o+","+peer.o}, t("review_pair")) : null),
       examples.length ? el("div",{class:"examples"}, el("span",{class:"small faint"}, t("hero_try")+":"), examples.map(r => el("a",{href:"#/c/"+r.o}, r.n))) : null),
     spec));
   typeahead(form.elements.s, r => { location.hash = "#/c/" + r.o; }, (v, items) => v && goSearch(v, items));
@@ -1296,7 +1341,7 @@ function viewOverview(){
         el("dt",null,t("ev_retrieved")), el("dd",{class:"mono",style:"font-size:12px"}, e.retrieved_at || ""),
         e.identity_reason ? [el("dt",null,t("ev_identity")), el("dd",null, e.identity_reason)] : null,
         el("dt",null,t("ev_hash")), el("dd",{class:"mono",style:"font-size:12px"}, (e.content_sha256||"").slice(0,24)+"…")),
-      el("div",{style:"display:flex;gap:6px;margin-top:14px;flex-wrap:wrap"}, el("button",{class:"btn secondary",type:"button",onclick:()=>openEvidence(env,[c.id], c.label)}, t("specimen_ev")), el("a",{class:"btn quiet",href:"#/c/"+env.organisation_number}, t("specimen_open")+" →")));
+      el("div",{class:"review-actions"}, el("button",{class:"btn primary",type:"button",onclick:()=>openEvidence(env,[c.id], c.label)}, t("review_evidence")), el("a",{class:"btn quiet",href:"#/c/"+env.organisation_number}, t("specimen_open")+" →")));
   }).catch(() => spec.remove());
   app.append(el("div",{class:"kpis"},
     kpiCell(nf(n), t("kpi_companies")), kpiCell(nf(claims), t("kpi_facts")), kpiCell(nf(sites), t("kpi_sites")), kpiCell(nf(held), t("kpi_held"))));
@@ -1316,7 +1361,8 @@ const COLS = [
 function viewCompanies(arg, params){
   const P = {q: params.get("q") || (arg && !arg.startsWith("has:") ? arg : ""), fam: params.get("fam") || (arg && arg.startsWith("has:") ? arg.slice(4) : ""), st: params.get("st") || "",
     form: params.get("form") || "", county: params.get("county") || "", web: params.get("web") === "1", jobs: params.get("jobs") === "1", changed: params.get("changed") === "1",
-    since: params.get("since") || "", sort: params.get("sort") || "name", dir: params.get("dir") || "asc", p: Math.max(1, +params.get("p") || 1)};
+    since: params.get("since") || "", sort: params.get("sort") || "name", dir: params.get("dir") || "asc", p: Math.max(1, Math.floor(Number(params.get("p"))) || 1)};
+  if (!Number.isFinite(P.p)) P.p = 1;
   if (P.fam && !P.st) P.st = "available";
   const forms = [...new Set(INDEX.map(r=>r.f).filter(Boolean))].sort();
   const counties = [...new Set(INDEX.map(r=>r.co).filter(Boolean))].sort((a,b)=>a.localeCompare(b, "nb"));
@@ -1340,11 +1386,11 @@ function viewCompanies(arg, params){
       (!P.since || (r.ch||[]).some(c => fmtDate(c.d) >= P.since)));
   }
   function render(){
-    save();
     rows = filtered();
     const col = COLS.find(c => c[0] === P.sort) || COLS[0], sgn = P.dir === "desc" ? -1 : 1;
     rows.sort((a,b) => { const x = col[2](a), y = col[2](b); return (x < y ? -1 : x > y ? 1 : a.n.localeCompare(b.n)) * sgn; });
     const pages = Math.max(1, Math.ceil(rows.length / PAGE)); P.p = Math.min(P.p, pages);
+    save();
     const start = (P.p - 1) * PAGE, slice = rows.slice(start, start + PAGE);
     count.textContent = rows.length ? t("shown", nf(start+1), nf(start+slice.length), nf(rows.length)) : t("shown0", nf(INDEX.length));
     if (!rows.length){ wrap.replaceChildren(el("div",{class:"panel empty"}, el("h3",null,t("none_match_t")), el("p",null,t("none_match_d")), el("button",{class:"btn secondary",type:"button",onclick:clearAll}, t("f_clear")))); return; }
@@ -1534,12 +1580,13 @@ function limited(items, limit, render){ // first `limit` items, then "Show all N
   draw(false); return box;
 }
 function sectHead(id, n, title){ return el("div",{class:"secthead",id}, n ? el("span",{class:"n"}, String(n).padStart(2,"0")) : null, el("h2",null, title)); }
-async function viewCompany(org){
+async function viewCompany(org, claimId){
   const idx = BYORG[org];
   if (!idx){ app.append(el("div",{class:"panel empty"}, el("h3",null, t("no_profile", org)), el("a",{class:"btn secondary",href:"#/companies"}, t("nav_companies")))); return; }
-  app.append(el("div",{class:"panel","aria-busy":"true"}, el("span",{class:"sr"}, t("loading")), el("div",{class:"skel",style:"height:14px;width:120px"}), el("div",{class:"skel",style:"height:32px;width:55%;margin:12px 0"}), el("div",{class:"skel",style:"height:70px"})));
-  let env; try { env = await load(org); } catch(e){ app.replaceChildren(el("div",{class:"panel empty"}, el("h3",null, t("load_fail")))); return; }
-  if (parseHash().arg !== org) return; // user navigated away while loading
+  const loading = el("div",{class:"panel","aria-busy":"true"}, el("span",{class:"sr"}, t("loading")), el("div",{class:"skel",style:"height:14px;width:120px"}), el("div",{class:"skel",style:"height:32px;width:55%;margin:12px 0"}), el("div",{class:"skel",style:"height:70px"}));
+  app.append(loading);
+  let env; try { env = await load(org); } catch(e){ if (loading.isConnected) loading.replaceWith(el("div",{class:"panel empty"}, el("h3",null, t("load_fail")))); return; }
+  if (!loading.isConnected) return;
   app.replaceChildren();
   const fin = latestFin(env), emp = first(env,"employees"), site = first(env,"official_website"), status = first(env,"registry_status"), brand = first(env,"public_brand"), muni = first(env,"municipality");
   const brief = env.brief || {};
@@ -1547,7 +1594,17 @@ async function viewCompany(org){
   const tocNav = el("nav",{class:"toc","aria-label":"Profile sections"}, toc.map(([id,l]) => el("button",{type:"button",onclick:()=>{ const n = document.getElementById(id); if (n) { n.scrollIntoView({block:"start"}); const h = n.querySelector("h2"); if (h){ h.setAttribute("tabindex","-1"); h.focus({preventScroll:true}); } } }}, l)));
   const content = el("div",{style:"min-width:0"});
   // header
-  const cmpBtn = el("button",{class:"btn secondary",type:"button","aria-pressed":String(CMP.includes(org)),onclick:e=>{ toggleCmp(org); e.currentTarget.setAttribute("aria-pressed", String(CMP.includes(org))); e.currentTarget.textContent = CMP.includes(org) ? "✓ " + t("in_compare") : "+ " + t("to_compare"); }}, CMP.includes(org) ? "✓ " + t("in_compare") : "+ " + t("to_compare"));
+  const cmpBtn = el("button",{class:"btn secondary",type:"button",onclick:()=>{ toggleCmp(org); updateCompareActions(); }});
+  const cmpLink = el("a",{class:"btn primary"});
+  function updateCompareActions(){
+    const selected = CMP.includes(org);
+    cmpBtn.setAttribute("aria-pressed", String(selected));
+    cmpBtn.textContent = selected ? "✓ " + t("in_compare") : "+ " + t("to_compare");
+    cmpLink.hidden = !CMP.length;
+    cmpLink.href = "#/compare/" + CMP.join(",");
+    cmpLink.textContent = t("cmp_open", CMP.length);
+  }
+  updateCompareActions();
   content.append(el("section",{class:"panel"},
     el("div",{class:"cohead"},
       el("div",null, el("div",{class:"eyebrow"}, (first(env,"legal_form")||{}).value || ""),
@@ -1558,7 +1615,7 @@ async function viewCompany(org){
           status ? chip(status.value === "active" ? "available" : "blocked", status.value === "active" ? t("active") : t("inactive")) : null,
           muni ? el("span",{class:"tag"}, muni.value + (idx.co ? ", " + idx.co : "")) : null,
           site ? ext(site.value, host(site.value) + " ↗") : null)),
-      el("div",{class:"actions"}, cmpBtn,
+      el("div",{class:"actions"}, cmpBtn, cmpLink,
         el("button",{class:"btn secondary",type:"button",onclick:()=>copy(location.href)}, t("copy_link")),
         el("button",{class:"btn secondary",type:"button",onclick:()=>window.print()}, t("print")),
         el("a",{class:"btn quiet",href:"data/"+org+".js",download:org+".js"}, t("raw")))),
@@ -1616,12 +1673,11 @@ async function viewCompany(org){
   // 6 changes
   const ch = env.changes || [];
   const seen = {}; env.claims.forEach(c => { if (c.first_seen){ const d = c.first_seen.slice(0,16).replace("T"," "); seen[d] = (seen[d]||0) + 1; } });
-  const findIds = c => env.claims.filter(x => (x.evidence_ids||[]).some(e => (c.evidence_ids||[]).includes(e))).map(x => x.id);
   content.append(sectHead("s6", 6, t("s6")), el("section",{class:"panel"},
     ch.length ? el("div",{class:"rows"}, ch.map(c => el("div",{class:"chg",style:"grid-template-columns:1fr auto"},
       el("div",null, el("div",{style:"font-weight:550"}, ctL(c.type), " ", el("span",{class:"tag " + (c.material === false ? "" : "accent")}, c.material === false ? t("minor") : t("material")), el("span",{class:"faint small"}, " · " + famL(c.family) + " · " + fmtDate(c.detected_at))),
         el("div",{class:"delta"}, (c.label || c.field) + ": ", c.previous != null ? [el("s",null, valueText(c.previous)), " → "] : null, c.current != null ? valueText(c.current) : t("removed"))),
-      (c.evidence_ids||[]).length && findIds(c).length ? el("button",{class:"src",type:"button",onclick:()=>openEvidence(env, findIds(c), t("change_ev"))}, ico(ICO_DOC), t("evidence")) : el("span"))))
+      (c.evidence_ids?.length || c.previous_evidence_ids?.length) ? el("button",{class:"src",type:"button",onclick:()=>openChangeEvidence(env, c)}, ico(ICO_DOC), t("evidence")) : el("span"))))
       : el("p",{class:"reason"}, env.refresh && env.refresh.mode === "refresh" ? t("ch_none_ref", fmtDate(env.refresh.previous_completed_at)) : t("ch_none_base")),
     Object.keys(seen).length ? el("div",{style:"margin-top:14px"}, el("h3",{style:"margin-bottom:4px"}, t("first_seen_title")), el("ul",{class:"trust-list"}, Object.entries(seen).sort().reverse().map(([d,c]) => el("li",null, el("span",null, t("first_seen_n", nf(c), d)), el("span")))) ) : null));
   // 7 unknowns + audit
@@ -1636,6 +1692,8 @@ async function viewCompany(org){
   const ops = env.operations || {};
   content.append(el("p",{class:"foot"}, t("ops_line", (env.run||{}).run_id || "", (env.run||{}).completed_at || "", nf(ops.requests||0), ((ops.runtime_ms||0)/1000).toFixed(1), (ops.third_party_cost_usd||0).toFixed(2))));
   app.append(el("div",{class:"profile"}, tocNav, content));
+  const linkedClaim = claimId && env.claims.find(c => c.id === claimId);
+  if (linkedClaim) openEvidence(env, [linkedClaim.id], linkedClaim.label || t("ev_title"));
   if (typeof IntersectionObserver === "function"){
     const btns = [...tocNav.querySelectorAll("button")];
     const io = new IntersectionObserver(entries => entries.forEach(en => { if (en.isIntersecting){ const i = toc.findIndex(x => x[0] === en.target.id); btns.forEach((b,j) => b.setAttribute("aria-current", String(i === j))); } }), {rootMargin:"-80px 0px -70% 0px"});
@@ -1652,41 +1710,46 @@ function fact(env, claim, v, l){ // claim: one claim, or the list of claims a co
 // ================================================================ compare
 async function viewCompare(arg){
   if (arg) setCmp(arg.split(",").filter(o => BYORG[o]));
+  const selected = [...CMP];
   const pickIn = el("input",{class:"input",type:"search",autocomplete:"off",placeholder:t("search_ph"),"aria-label":t("cmp_add"),disabled:CMP.length >= 4 || null});
   app.append(el("div",{class:"page-head"}, el("div",null, el("h1",null, t("cmp_title")), el("p",{class:"muted"}, t("cmp_sub"))),
     CMP.length ? el("button",{class:"btn secondary",type:"button",onclick:()=>copy(location.href.split("#")[0] + "#/compare/" + CMP.join(","))}, t("cmp_share")) : null),
     el("div",{class:"panel",style:"margin-bottom:16px"}, el("label",{class:"field rel",style:"max-width:420px"}, el("span",null, t("cmp_add")), pickIn)));
-  typeahead(pickIn, r => { toggleCmp(r.o); location.hash = "#/compare/" + CMP.join(","); }, null);
+  typeahead(pickIn, r => { setCmp([...selected, r.o]); location.hash = "#/compare/" + CMP.join(","); }, null, r => !selected.includes(r.o));
   if (!CMP.length){ app.append(el("div",{class:"panel empty"}, el("h3",null, t("cmp_empty_t")), el("p",null, t("cmp_empty_d")), el("a",{class:"btn secondary",href:"#/companies"}, t("nav_companies")))); return; }
   if (!arg || arg !== CMP.join(",")) replaceHash("#/compare/" + CMP.join(","));
   const holder = el("div",{class:"panel"}, el("div",{class:"skel",style:"height:200px"}));
   app.append(holder);
-  const envs = await Promise.all(CMP.map(o => load(o).catch(() => null)));
-  if (parseHash().r !== "compare") return;
+  const envs = await Promise.all(selected.map(o => load(o).catch(() => null)));
+  if (!holder.isConnected) return;
   const fin = (f) => e => latestFin(e)[f] || null;
+  const countFamily = (e, family) => {
+    const claims = claimsOf(e, family);
+    return claims.length ? {count: claims.length, claims} : null;
+  };
   const rows = [
     ["r_form", e => first(e,"legal_form")], ["r_muni", e => first(e,"municipality")], ["r_founded", e => first(e,"founded_date")], ["r_industry", e => first(e,"industry_code")],
     ["r_emp", e => first(e,"employees")], ["r_rev", fin("revenue"), true], ["r_op", fin("operating_result"), true], ["r_net", fin("net_result"), true], ["r_eq", fin("equity"), true], ["r_assets", fin("total_assets"), true],
     ["r_ceo", e => first(e,"ceo")], ["r_chair", e => first(e,"board_chair")], ["r_site", e => first(e,"official_website")],
-    ["r_work", e => ({count: claimsOf(e,"locations").length, c: claimsOf(e,"locations")[0]})], ["r_jobs", e => ({count: claimsOf(e,"jobs").length, c: claimsOf(e,"jobs")[0]})], ["r_facts", e => ({count: e.claims.length})],
+    ["r_work", e => countFamily(e,"locations")], ["r_jobs", e => countFamily(e,"jobs")], ["r_facts", e => ({count: e.claims.length})],
   ];
   const cell = (e, val, isFin) => {
     if (!e) return el("td",null,"—");
-    if (val && val.count !== undefined) return el("td",{class:"tnum"}, val.c ? valBtn(e, val.c, nf(val.count)) : nf(val.count));
+    if (val && val.count !== undefined) return el("td",{class:"tnum"}, val.claims ? el("button",{class:"linkbtn",type:"button",onclick:()=>openEvidence(e,val.claims.map(c=>c.id),famL(val.claims[0].family))}, nf(val.count)) : nf(val.count));
     if (!val) return el("td",{class:"faint"},"—");
     const text = val.field === "official_website" ? host(val.value) : claimText(val);
     return el("td",{class:isFin ? "tnum" : null}, valBtn(e, val, text), isFin && val.period ? el("div",{class:"sub"}, val.period.to.slice(0,4) + (acctType(val) === "KONSERN" ? " · " + t("group_acc") : "")) : null);
   };
-  const keyOf = v => v == null ? "" : v.count !== undefined ? String(v.count) : JSON.stringify(v.value);
+  const keyOf = v => v == null ? "" : v.count !== undefined ? String(v.count) : JSON.stringify([v.value, v.unit, v.period, acctType(v)]);
   const tb = el("tbody");
   rows.forEach(([k, f, isFin]) => {
     const vals = envs.map(e => e ? f(e) : null);
     const diff = envs.length > 1 && new Set(vals.map(keyOf)).size > 1;
-    tb.append(el("tr",{class:diff ? "diff" : null}, el("td",{scope:"row"}, t(k)), envs.map((e,i) => cell(e, vals[i], isFin))));
+    tb.append(el("tr",{class:diff ? "diff" : null}, el("th",{scope:"row"}, t(k)), envs.map((e,i) => cell(e, vals[i], isFin))));
   });
   FAMS.forEach(fam => {
     const sts = envs.map(e => e ? ((e.availability||{})[fam]||{}).state || "failed" : null);
-    tb.append(el("tr",{class:new Set(sts).size > 1 ? "diff" : null}, el("td",{scope:"row"}, famL(fam)), sts.map(s => el("td",null, s ? chip(s) : "—"))));
+    tb.append(el("tr",{class:new Set(sts).size > 1 ? "diff" : null}, el("th",{scope:"row"}, famL(fam)), sts.map(s => el("td",null, s ? chip(s) : "—"))));
   });
   const metrics = [["revenue","fin.revenue"],["net_result","fin.net_result"],["equity","fin.equity"]].map(([f,k]) => {
     const rows = envs.map((e,i) => { const c = e && latestFin(e)[f]; return c && typeof c.value === "number" ? {label: e.name, value: c.value, unit: c.unit, cls: "s" + (i+1),
@@ -1703,10 +1766,11 @@ async function viewCompare(arg){
   if (metrics.length) holder.before(el("section",{class:"panel",style:"margin-bottom:16px"},
     el("div",{class:"ph"}, el("h2",null, t("cmp_charts")), el("div",{class:"small"}, envs.map((e,i) => e ? el("span",{style:"margin-left:12px;white-space:nowrap"}, el("i",{class:"ckey k"+(i+1)}), e.name) : null))),
     el("p",{class:"small faint",style:"margin:-6px 0 12px"}, t("cmp_charts_d")), el("div",{class:"cmpcharts"}, metrics)));
-  holder.replaceChildren(el("div",{class:"tablewrap",style:"border:0"}, el("table",{class:"cmp"},
+  holder.replaceChildren(selected.length > 1 ? el("p",{class:"small muted compare-scroll-hint"}, t("cmp_scroll")) : null,
+    el("div",{class:"tablewrap",style:"border:0",tabindex:"0",role:"region","aria-label":t("cmp_table")}, el("table",{class:"cmp"},
     el("thead",null, el("tr",null, el("th",{scope:"col"}, el("span",{class:"sr"}, t("line"))), envs.map((e,i) => el("th",{scope:"col"}, el("div",{class:"chead"},
-      el("div",null, el("a",{href:"#/c/"+CMP[i],class:"coname"}, e ? e.name : CMP[i]), el("div",{class:"sub mono"}, fmtOrg(CMP[i]))),
-      el("button",{class:"iconbtn",type:"button","aria-label":t("remove", e ? e.name : CMP[i]),onclick:()=>{ toggleCmp(CMP[i]); location.hash = "#/compare/" + CMP.join(","); if (!CMP.length) route(); }}, el("span",{"aria-hidden":"true"},"✕"))))))),
+      el("div",null, el("a",{href:"#/c/"+selected[i],class:"coname"}, e ? e.name : selected[i]), el("div",{class:"sub mono"}, fmtOrg(selected[i]))),
+      el("button",{class:"iconbtn",type:"button","aria-label":t("remove", e ? e.name : selected[i]),onclick:()=>{ setCmp(selected.filter(o=>o!==selected[i])); location.hash = CMP.length ? "#/compare/" + CMP.join(",") : "#/compare"; }}, el("span",{"aria-hidden":"true"},"✕"))))))),
     tb)));
 }
 

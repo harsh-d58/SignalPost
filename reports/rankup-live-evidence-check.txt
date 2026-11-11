@@ -1,0 +1,1 @@
+{"sampled": 100, "span_refound": 100, "drift_or_changed": 0, "fetch_errors": 0, "refound_rate": 1.0}

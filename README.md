@@ -8,6 +8,25 @@ every run produces a static **showcase site** where each fact is one tap from it
 **Precision first:** anything that cannot be tied to the exact legal entity is returned as `ambiguous` /
 `not_available`, never published. Missing values are never turned into zero.
 
+The [revision audit](reports/revision-audit.md) records the publication fixes, fresh-batch benchmarks, and remaining coverage gaps. The generated metrics later in this README describe the original submission.
+
+The [rank-up implementation report](reports/rankup-implementation.md) tracks the current revision. Current scoring is **50 recall, 30 evidence, 12 synthesis, 8 UX**. Local coverage is not the evaluator's pooled recall, and the score scenarios are not measured scores.
+
+### Evaluator command
+
+```bash
+uv run --frozen signalpost run --organisations official-batch.jsonl --registry-snapshot official-registry.jsonl --registry-snapshot-at 2026-11-09T00:00:00Z --evidence-cutoff 2026-11-10T00:00:00Z --bulk-files --workers 8 --job-days 7 --max-requests 2000 --max-minutes 45 --max-cost 10 --out out-official
+```
+
+Replace the filenames, observation time, cutoff and limits with Builderr's supplied values. Snapshot rows use Brreg's `organisasjonsnummer` and `navn` fields, in JSONL, JSON array/HAL or CSV, optionally gzip. Without an evaluator snapshot, omit the two registry snapshot options for a live local run. Do not use the public universe as an authoritative current identity snapshot. `--bulk-files` explicitly enables the roles/workplaces inventory route measured on 1,100 companies; omit it for small batches or direct-mode comparison. NAV requires a suitably authorized `NAV_FEED_TOKEN`; without it that source is blocked and company-owned careers discovery continues.
+
+```bash
+uv run --frozen python eval/snapshot_audit.py out-official --output reports/snapshot-audit.json
+uv run --frozen python eval/metrics.py out-official --output reports/metrics.json
+```
+
+Snapshot files remain private under the output directory. `--previous` preserves their references on refresh. Full source JSON checks and excerpt-only artifact checks are reported separately. See [source access and retention](SOURCES.md).
+
 ---
 
 ## 1. Quick start
@@ -36,6 +55,22 @@ open out-ui/site/index.html        # Linux: xdg-open out-ui/site/index.html
 Your own batch: any JSONL (`{"organisation_number": "923609016"}` per line), JSON list, or plain text with one
 number per line works as `--organisations`.
 
+### Optional environment configuration
+
+Registry, Wikidata and company-site discovery need no credentials. The only application credential is
+`NAV_FEED_TOKEN`, which must be approved for your deployment. Without it, NAV is reported as `blocked`.
+The agent does not automatically load `.env` files. To use the optional example in PowerShell:
+
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+# Edit .env locally, then start the backend with its environment loaded explicitly.
+uv run --frozen --group dev --env-file .env signalpost serve --port 8765
+```
+
+Restart the backend after changing the token. Child runs inherit the backend's environment. Keep actual
+credentials in `.env` or the process environment; `.env.example` contains only an empty placeholder.
+Inputs, output paths, budgets and snapshot timestamps are CLI options. No LLM or search API key is used.
+
 ---
 
 ## 2. Launch the dashboard (backend + UI)
@@ -47,10 +82,12 @@ of any run.
 **Start it in your own PowerShell** (this window *is* the backend; keep it open):
 ```powershell
 cd "<path to>\SignalPost"
-uv run --group dev signalpost serve              # add --port <n> if the default port is taken
+uv run --frozen --group dev signalpost serve --port 8765
 ```
 It prints the local address of the console; open it in your browser. A run's showcase is served by the same backend
 under `/files/out-<name>/site/index.html`. Press **Ctrl+C** in that PowerShell window to stop the backend.
+The default console URL is `http://127.0.0.1:8765/`; for the quick-start run, open
+`http://127.0.0.1:8765/files/out-ui/site/index.html`. If port 8765 is occupied, choose another `--port`.
 
 ### Connecting the UI's terminal to your PowerShell
 The showcase home page has a **"Run it locally"** panel with the setup steps and an embedded **PowerShell-style
@@ -86,7 +123,7 @@ the backend.
 | Force a baseline / diff against a specific run | `--fresh` / `--previous out-<other>` |
 | Registry only (no websites) | `--no-web` |
 | NAV job look-back window | `--job-days 7` (default 60) |
-| Limits (defaults = official limits) | `--max-requests 2000 --max-minutes 45 --max-cost 10` |
+| Local limits (override with evaluator-supplied limits) | `--max-requests 2000 --max-minutes 45 --max-cost 10` |
 | Rebuild a run's showcase | `uv run signalpost showcase --envelopes out-x/envelopes.jsonl --report out-x/run-report.json --output out-x/site` |
 | Draw a random test batch from a universe file | `uv run signalpost select --universe data/signalpost-universe.jsonl.gz --count 100 --output batch.jsonl` |
 | Live console | `uv run --group dev signalpost serve [--port <n>]` |
@@ -96,6 +133,23 @@ the backend.
 | Refresh replay (idempotency, typed changes, carry-forward) | `uv run python eval/refresh_replay.py out-x/envelopes.jsonl out-x/refresh-replay.json` |
 | Write measured numbers into README/SUBMISSION | `uv run python eval/write_docs.py` |
 | Headless UI checks (optional, needs Node) | `npm install --no-save jsdom@24.1.3` → `node eval/ui_check.cjs "<abs path>\out-x\site"` · `node eval/console_check.cjs <console address>` |
+| Frontend failure-path checks (same jsdom setup) | `node --test eval/ui_resilience_check.cjs` |
+
+### Manual verification
+
+From the repository root, run the backend and code-only frontend checks:
+
+```powershell
+uv run --frozen --group dev pytest -q -p no:cacheprovider
+npm install --no-save --package-lock=false jsdom@24.1.3
+node --test eval/ui_resilience_check.cjs
+# After the quick-start batch has produced out-ui/envelopes.jsonl:
+uv run --frozen signalpost showcase --envelopes out-ui/envelopes.jsonl --report out-ui/run-report.json --output out-ui/site
+node eval/ui_check.cjs "$((Get-Location).Path)/out-ui/site"
+```
+
+The Python suite currently has 164 tests; frontend failure-path checks have 14. These checks do not measure
+official recall or precision. Run the snapshot audit and metrics commands above against each new batch.
 
 **Outputs** in `out-<name>/`: `envelopes.jsonl` (one per input, input order), `run-report.json` (validation,
 coverage, identity gate per source, requests by host and phase, p50/p95, cost), `identity-audit.md`, `site/`
@@ -147,7 +201,7 @@ Design system for both UIs: [`DESIGN.md`](DESIGN.md).
 | dated activity | Brreg change log (`oppdateringer`, field-level, dated) + verified-site news/RSS | org.nr key / verified site |
 | official website | registry site (company or workplace), registry e-mail domain, Wikidata P856 matched by org.nr (P2333), `<name>.no` → **identity gate** | see below |
 | social profiles, role e-mail, self-description | outbound links / text on the verified site only | verified site |
-| active job postings | NAV pam-stilling-feed | ad `employer.orgnr` ∈ {company, its sub-units} |
+| active job postings | approved NAV feed; individual company-site `JobPosting` pages | exact employer/subunit, publication date and active status/deadline |
 
 ### Identity gate (website)
 Published only with: (1) the exact org.nr printed on the site (not merely among several companies' numbers), or
@@ -163,10 +217,22 @@ Requests are planned per phase; in large batches exact-key official lookups come
 unused are spent in a final *tail pass* on families that failed only for budget (still within the global cap).
 
 ## 6. Models, APIs, cost
-* No LLM, no paid API, no API keys. **Third-party cost per official run: $0.00.**
-* NAV feed uses NAV's published public token (override with `NAV_FEED_TOKEN`).
+* No LLM or paid API. **Recorded external API cost: $0.00 per run**, excluding compute, bandwidth and development tools.
+* NAV requires an approved `NAV_FEED_TOKEN`. Without it, the feed is blocked. The public token is available only
+  through the explicit `--allow-public-nav-token` private-development option; it is not the official-run default.
+* Credential setup is documented in [.env.example](.env.example) and the environment section above.
 
-## 7. Measured results (generated from `reports/` by `eval/write_docs.py`)
+## 7. Measured results
+
+The current revision's 1,100-company collection returned 1,100 envelopes using 1,920 requests in 407.4 seconds
+at $0 external API cost. Identity and leadership coverage were 99.82%, financials 99.18%, workplaces 76.27%,
+websites 2.55%, social profiles 0.91%, company news 0.45% and jobs 0%. These are company coverage rates.
+Official recall, precision, F1 and competition score remain unmeasured. The retained-source replay repairs
+locators without representing a new live run. See [the current report](reports/rankup-implementation.md).
+
+### Historical submission results
+
+The generated block below records the original submission, not the current revision.
 <!-- metrics:start -->
 - **100 random companies (smoke test)** (dev-rev18f @ `318dd62b4ff9`): 100/100 valid envelopes (validation passed), 899 requests, 4.1 min, $0.00. Coverage: identity 100%, status 100%, industry 100%, financials 100%, leadership 100%, locations 78%, group 5%, website 17%, social_profiles 8%, contact 31%, description 9%, jobs 0%, activity 100%.
 - **1,000 random companies (official limits)** (run-1000-rev18b @ `318dd62b4ff9`): 1000/1000 valid envelopes (validation passed), 1920 requests, 2.9 min, $0.00. Coverage: identity 100%, status 100%, industry 100%, financials 100%, leadership 37%, locations 28%, group 5%, website 0%, social_profiles 0%, contact 17%, description 0%, jobs 0%, activity 100%.

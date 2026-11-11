@@ -12,6 +12,7 @@ A watchdog stops new work before the time limit and still emits every envelope (
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import subprocess
 import sys
@@ -26,7 +27,8 @@ from typing import Any
 from . import __version__
 from .budget import Budget, BudgetExhausted
 from .bulk import bulk_roles, bulk_subunits
-from .http import Fetcher, utc_now
+from .http import Fetcher, Snapshot, utc_now
+from .evidence import SnapshotStore, instant
 from .jobs import JobFeed, job_claims
 from .model import FAMILIES, STATES, ProfileBuilder
 from .refresh import diff, load_previous
@@ -44,9 +46,13 @@ def read_inputs(path: str | Path) -> list[str]:
     stripped = text.strip()
     if stripped.startswith("["):
         values = json.loads(stripped)
-    elif stripped.startswith("{") and "\n" not in stripped:
-        body = json.loads(stripped)
-        values = body.get("organisation_numbers") or body.get("organisations") or [body]
+    elif stripped.startswith("{"):
+        try:
+            body = json.loads(stripped)
+        except json.JSONDecodeError:
+            values = [json.loads(line) for line in text.splitlines() if line.strip()]
+        else:
+            values = body.get("organisation_numbers", body.get("organisations", [body]))
     else:
         values = []
         for line in text.splitlines():
@@ -59,6 +65,8 @@ def read_inputs(path: str | Path) -> list[str]:
                 values.append(line)  # lines without any digit (e.g. a CSV header) are not inputs
     orgs: list[str] = []
     seen: set[str] = set()
+    if not isinstance(values, list):
+        raise ValueError("company input must be a list or JSONL records")
     for value in values:
         raw = value.get("organisation_number") or value.get("organisasjonsnummer") or value.get("orgnr") if isinstance(value, dict) else value
         org = "".join(ch for ch in str(raw or "") if ch.isdigit())
@@ -80,14 +88,41 @@ def git_version() -> str:
         return __version__
 
 
+def code_digest() -> str:
+    """Trace a dirty working-tree run without pretending it is an exact commit."""
+    root = Path(__file__).resolve().parents[2]
+    digest = hashlib.sha256()
+    files = sorted(p for p in (root / "src").rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix not in {".pyc", ".pyo"})
+    files.extend(root / name for name in ("pyproject.toml", "uv.lock", "SOURCES.md") if (root / name).exists())
+    for path in files:
+        digest.update(path.relative_to(root).as_posix().encode() + b"\0")
+        digest.update(hashlib.sha256(path.read_bytes()).digest())
+    return digest.hexdigest()
+
+
 class Runner:
     def __init__(self, orgs: list[str], *, out_dir: Path, run_id: str, bulk: str | None, previous: str | None,
                  max_requests: int, max_minutes: float, max_cost: float, workers: int, job_days: int, web: bool = True, bulk_files: bool = False, events: bool = False,
+                 registry_snapshot: str | None = None, registry_snapshot_at: str | None = None,
+                 evidence_cutoff: str | None = None, allow_public_nav_token: bool = False,
                  log=print):
         self.orgs = orgs
         self.out_dir = out_dir
         self.run_id = run_id
         self.bulk_path = bulk
+        self.registry_snapshot = registry_snapshot
+        self.registry_snapshot_at = registry_snapshot_at
+        self.evidence_cutoff = evidence_cutoff
+        if registry_snapshot and not registry_snapshot_at:
+            raise ValueError("--registry-snapshot requires --registry-snapshot-at (source observation time)")
+        if registry_snapshot_at:
+            instant(registry_snapshot_at)
+        if evidence_cutoff:
+            instant(evidence_cutoff)
+        self.store = SnapshotStore(out_dir)
+        self.bulk_meta = {}
+        self.snapshot_meta = {}
+        self.write_lock = threading.Lock()
         self.previous_path = previous
         self.workers = workers
         self.web_enabled = web
@@ -97,7 +132,7 @@ class Runner:
         n = max(1, len(orgs))
         self.budget = Budget(max_requests=max_requests, max_seconds=max_minutes * 60, max_cost_usd=max_cost,
                              safety_requests=max(25, int(max_requests * 0.04)), safety_seconds=max(60.0, min(240.0, max_minutes * 60 * 0.08)))
-        self.fetcher = Fetcher(self.budget, api_concurrency=8, web_concurrency=2)
+        self.fetcher = Fetcher(self.budget, api_concurrency=8, web_concurrency=2, store=self.store)
         self.fetcher.set_min_interval("pam-stilling-feed.nav.no", 0.05)
         self.started_at = utc_now()
         self.builders: dict[str, ProfileBuilder] = {o: ProfileBuilder(o) for o in orgs}
@@ -107,7 +142,9 @@ class Runner:
         self.company_ms: dict[str, int] = {}
         self.stop = threading.Event()
         self.finished = threading.Event()
-        self.job_feed = JobFeed(self.fetcher, days=job_days, max_pages=max(20, min(130, int(job_days * 2.6))))
+        self.agent_version = git_version()
+        self.code_sha256 = code_digest()
+        self.job_feed = JobFeed(self.fetcher, days=job_days, max_pages=max(20, min(130, int(job_days * 2.6))), allow_public_token=allow_public_nav_token)
         self.notes: list[str] = []
         self._plan(n)
 
@@ -127,12 +164,12 @@ class Runner:
             "jobs_verify": max(10, int(n * 0.6)),
             "history": n + 2 if n <= 200 else 0,  # paced endpoint (~30/min): only for small batches
         }
-        self.bulk_mode = self.bulk_files and n * 3 > usable * 0.6
+        self.bulk_mode = self.bulk_files
         self.bulk: dict[str, dict | None] = {"roles": None, "locations": None}
         if self.bulk_mode:
             # large batch: roles and workplaces come from Brreg's nightly bulk files (1 request each)
             self.notes.append(f"large batch ({n}): roles and workplaces from Brreg bulk files")
-            plan["roles"] = plan["locations"] = 2
+            plan["roles"] = plan["locations"] = 4
         fixed = sum(plan.values())
         if fixed > usable * 0.75:
             # large batch: keep identity + accounts first, scale the rest down proportionally
@@ -142,7 +179,7 @@ class Runner:
             plan["jobs"] = min(plan["jobs"], 40)
             self.job_feed.max_pages = plan["jobs"] - 3
             core = plan["registry"] + plan["activity"] + plan["jobs"] + plan["accounts"]
-            rest = max(0, int(usable * 0.97) - core)
+            rest = max(0, int(usable * (0.72 if self.web_enabled else 0.97)) - core)
             for key in (("group", "jobs_verify") if self.bulk_mode else ("roles", "locations", "group", "jobs_verify")):
                 plan[key] = int(rest * {"roles": 0.46, "locations": 0.42, "group": 0.07, "jobs_verify": 0.05}[key])
             fixed = sum(plan.values())
@@ -199,6 +236,7 @@ class Runner:
         pre = self.bulk.get(phase) if self.bulk_mode else None
         if pre is not None:
             if org in pre:
+                self.store.capture(pre[org])
                 handler(pb, pre[org])
             else:
                 pb.set_state(family, "not_available", "no record for this organisation number in Brreg's bulk file")
@@ -219,6 +257,7 @@ class Runner:
             pb.error(family, f"HTTP {snap.status} {snap.error or ''}", snap.url)
         else:
             try:
+                self.store.capture(snap)
                 handler(pb, snap)
             except (ValueError, KeyError, TypeError) as exc:
                 pb.set_state(family, "failed", f"could not parse source response: {type(exc).__name__}", snap.url)
@@ -226,11 +265,11 @@ class Runner:
 
     def _website_step(self, pb: ProfileBuilder, org: str, entity: dict) -> None:
         related = {c.value.get("organisation_number") for c in pb.family_claims("group") if isinstance(c.value, dict)}
-        related |= {c.value.split("org. ")[-1].rstrip(")") for c in pb.family_claims("leadership") if "org. " in str(c.value)}
         if self.budget.phase_remaining("web") < 4:
             pb.set_state("website", "failed", "request budget: website phase exhausted")
         else:
-            research_website(pb, self.fetcher, entity, self.bulk_rows.get(org), {r for r in related if r})
+            research_website(pb, self.fetcher, entity, self.bulk_rows.get(org), {r for r in related if r},
+                             max_candidates=2 if len(self.orgs) > 200 else 4)
 
     def tail_pass(self, known: list[str]) -> None:
         """Spend requests the fixed per-phase caps left unused on families that failed *only* for budget.
@@ -359,22 +398,44 @@ class Runner:
             self.bulk_meta = {"note": "no bulk snapshot supplied; live registry API only"}
         self.phase("bulk_snapshot", t)
 
+        frozen = {}
+        if self.registry_snapshot:
+            # An invalid official anchor is an execution error, never silently replaced by live data.
+            frozen, self.snapshot_meta = load_bulk(self.registry_snapshot, self.orgs)
+            self.snapshot_meta.update(observed_at=self.registry_snapshot_at, policy="frozen_identity_authoritative")
+
         t = time.monotonic()
-        live, errors = fetch_entities(self.fetcher, [o for o in self.orgs if valid_orgnr(o)])
+        live, errors = fetch_entities(self.fetcher, [o for o in self.orgs if valid_orgnr(o)]) if not self.registry_snapshot else ({}, [])
         self.log(f"[registry] live entities {len(live)}/{len(self.orgs)} errors={errors}")
         for org in self.orgs:
             pb = self.builders[org]
             try:
+                if self.registry_snapshot:
+                    if org not in frozen:
+                        for fam in FAMILIES:
+                            pb.set_state(fam, "failed", "organisation absent from supplied frozen identity snapshot")
+                        continue
+                    entity = frozen[org]
+                    self.entities[org] = entity
+                    body = json.dumps(entity, ensure_ascii=False, sort_keys=True).encode("utf-8")
+                    url = "https://data.brreg.no/enhetsregisteret/api/enheter/" + org
+                    snap = Snapshot(url, url, 200, self.registry_snapshot_at, body=body, content_type="application/json",
+                                    provenance={"kind": "supplied_registry_row", "input_sha256": self.snapshot_meta["sha256"],
+                                                "organisation_number": org, "transformation": "selected_row_json"})
+                    self.store.capture(snap)
+                    entity_claims(pb, entity, retrieved_at=snap.retrieved_at, source_class="official_registry_bulk", method="frozen_registry_row", snapshot=snap)
+                    pb.set_state("identity", "available", "supplied frozen identity snapshot")
+                    continue
                 if org in live:
                     entity, snap = live[org]
+                    self.store.capture(snap)
                     self.entities[org] = entity
-                    entity_claims(pb, entity, retrieved_at=snap.retrieved_at, source_class="official_registry", method="brreg_enheter_api")
+                    entity_claims(pb, entity, retrieved_at=snap.retrieved_at, source_class="official_registry", method="brreg_enheter_api", snapshot=snap)
                     pb.set_state("identity", "available", "live Enhetsregisteret record", snap.url.split("?")[0])
                     continue
                 if org in self.bulk_rows:
-                    entity_claims(pb, self.bulk_rows[org], retrieved_at=self.started_at, source_class="official_registry_bulk",
-                                  method="brreg_bulk_snapshot", source_url="https://data.brreg.no/enhetsregisteret/api/enheter/lastned/csv")
-                    pb.set_state("identity", "available", "frozen registry snapshot (live lookup unavailable)")
+                    # Legacy --bulk is a discovery cache without an observation date.
+                    pb.set_state("identity", "failed", "live identity unavailable; use --registry-snapshot with its observation time for a frozen anchor")
                     continue
             except Exception as exc:  # a malformed record must not stop the batch
                 pb.error("identity", f"{type(exc).__name__}: {exc}")
@@ -390,26 +451,30 @@ class Runner:
         self.phase("registry", t)
 
         bulk_threads = []
+        bulk_frozen = threading.Event()
         if self.bulk_mode:
             wanted = {o for o in self.orgs if valid_orgnr(o)}
             for key, fn in (("roles", bulk_roles), ("locations", bulk_subunits)):
                 def job(key=key, fn=fn):
                     t1 = time.monotonic()
                     try:
-                        self.bulk[key] = fn(wanted, self.budget)
-                        self.log(f"[bulk] {key}: {len(self.bulk[key])} companies in {time.monotonic() - t1:.0f}s")
+                        result = fn(wanted, self.budget)
+                        if not bulk_frozen.is_set():
+                            self.bulk[key] = result
+                        self.log(f"[bulk] {key}: {len(result)} companies in {time.monotonic() - t1:.0f}s")
                     except Exception as exc:  # fall back to per-company requests
                         self.notes.append(f"bulk {key} failed: {type(exc).__name__}")
                         self.log(f"[bulk] {key} failed: {exc}")
-                        self.budget.set_phase_cap(key, self.budget.phase_remaining("web") // 3)
                 bulk_threads.append(threading.Thread(target=job, daemon=True))
                 bulk_threads[-1].start()
 
         t = time.monotonic()
-        known = [o for o in self.orgs if o in self.entities or o in self.bulk_rows]
+        known = [o for o in self.orgs if o in self.entities]
         ent_events, role_events, act_errors = fetch_activity(self.fetcher, known)
         for org in known:
             try:
+                for _, snap in ent_events.get(org, []) + role_events.get(org, []):
+                    self.store.capture(snap)
                 n = activity_claims(self.builders[org], ent_events.get(org, []), role_events.get(org, []))
             except Exception as exc:
                 self.builders[org].error("activity", f"{type(exc).__name__}: {exc}")
@@ -420,7 +485,7 @@ class Runner:
         self.log(f"[activity] events for {sum(1 for o in known if ent_events.get(o) or role_events.get(o))} companies; errors={act_errors}")
         self.phase("activity", t)
         try:
-            wd = wikidata_websites(self.fetcher, known)
+            wd = wikidata_websites(self.fetcher, known) if self.web_enabled else {}
             for org, sites in wd.items():
                 self.builders[org].extra.setdefault("site_candidates", []).extend((u, "wikidata_p856") for u in sites)
             self.log(f"[wikidata] websites for {len(wd)} companies")
@@ -428,13 +493,21 @@ class Runner:
             self.log(f"[wikidata] skipped: {exc}")
 
         for th in bulk_threads:
-            th.join(timeout=max(0.0, min(900.0, self.budget.time_left() - 600)))
+            th.join(timeout=max(0.0, min(610.0, self.budget.time_left() - 90)))
+        bulk_frozen.set()
+        if self.bulk_mode:
+            for key in ("roles", "locations"):
+                if self.bulk[key] is None:
+                    self.budget.set_phase_cap(key, self.budget.per_phase[key] + min(100, self.budget.phase_remaining("web") // 3))
+                    self.notes.append(f"bulk {key} incomplete: bounded direct fallback, absence not inferred")
         # per-company pool with watchdog
         t = time.monotonic()
         hard_stop = self.budget.deadline_seconds - 45
         done = 0
         pool = ThreadPoolExecutor(max_workers=self.workers, thread_name_prefix="co")
-        futures = {pool.submit(self.company, org): org for org in known}
+        # Spend limited website requests on registry-declared candidates before speculative name guesses.
+        ordered = sorted(known, key=lambda o: (not bool((self.entities.get(o) or self.bulk_rows.get(o) or {}).get("hjemmeside")), o))
+        futures = {pool.submit(self.company, org): org for org in ordered}
         pending = set(futures)
         last_log = 0
         while pending:
@@ -499,19 +572,22 @@ class Runner:
             "organisation_number": org,
             "name": identity.get("legal_name"),
             "run": {"run_id": self.run_id, "started_at": self.started_at, "completed_at": completed_at,
-                    "terminal_status": "completed" if not self.stop.is_set() else "completed_partial", "agent_version": git_version()},
+                    "terminal_status": "completed" if not self.stop.is_set() else "completed_partial", "agent_version": self.agent_version, "code_sha256": self.code_sha256},
             "identity": identity,
             "availability": {fam: {"state": st.state, "reason": st.reason, **({"checked_sources": st.checked_sources[:5]} if st.checked_sources else {})}
                              for fam, st in sorted(pb.families.items(), key=lambda kv: list(FAMILIES).index(kv[0]) if kv[0] in FAMILIES else 99)},
             "claims": [c.to_dict() for c in pb.claims.values()],
             "evidence": [e.to_dict() for e in pb.evidence.values()],
+            "source_snapshots": [],
             "changes": [],
             "refresh": {},
+            "incomplete_families": pb.extra.get("incomplete_families", {}),
             "brief": {},
             "unpublished_candidates": pb.candidates[:20],
             "errors": pb.errors[:20],
             "operations": {"requests": pb.requests, "runtime_ms": self.company_ms.get(org, 0), "third_party_cost_usd": 0.0},
         }
+        self.bind_evidence(env)
         changes, meta = diff(previous, env, detected_at=completed_at)
         env["changes"] = changes
         env["refresh"] = meta
@@ -520,6 +596,7 @@ class Runner:
             current_ids = {e["id"] for e in env["evidence"]}
             keep = {eid for ch in changes for eid in ch.get("previous_evidence_ids", []) if eid not in current_ids}
             env["prior_evidence"] = [prev_ev[eid] for eid in sorted(keep) if eid in prev_ev]
+            self.carry_snapshots(env, previous)
         env["brief"] = build_brief(env)
         state_counts: dict[str, int] = {}
         for st in env["availability"].values():
@@ -532,6 +609,47 @@ class Runner:
                                       "label": FAMILIES.get(fam, {}).get("label", fam), "value": None, "availability": st["state"],
                                       "reason": st.get("reason"), "confidence": None, "evidence_ids": []})
         return env
+
+    def bind_evidence(self, env: dict) -> None:
+        retained = []
+        snapshots = {}
+        for ev in env["evidence"]:
+            if self.evidence_cutoff and instant(ev["retrieved_at"]) > instant(self.evidence_cutoff):
+                continue
+            record = self.store.bind(ev)
+            if record:
+                retained.append(ev)
+                snapshots[record["id"]] = record
+        ids = {e["id"] for e in retained}
+        claims = []
+        dropped = set()
+        for claim in env["claims"]:
+            dates = [claim.get("effective_date"), (claim.get("period") or {}).get("to")]
+            future = self.evidence_cutoff and any(str(d)[:10] > self.evidence_cutoff[:10] for d in dates if d)
+            if all(eid in ids for eid in claim["evidence_ids"]) and not future:
+                claims.append(claim)
+            else:
+                dropped.add(claim["family"])
+        env["claims"], env["evidence"] = claims, retained
+        env["source_snapshots"] = list(snapshots.values())
+        for family in dropped:
+            env["incomplete_families"][family] = "unretained evidence or evidence beyond cutoff"
+            if not any(c["family"] == family for c in claims):
+                env["availability"][family] = {"state": "failed", "reason": "no eligible retained evidence before cutoff"}
+        # Identity and the display name must follow the same eligibility policy as claims.
+        env["identity"] = {c["field"]: c["value"] for c in claims if c["family"] == "identity" and c["field"] in {"legal_name", "legal_form", "municipality", "public_brand"}}
+        env["name"] = env["identity"].get("legal_name")
+
+    def carry_snapshots(self, env: dict, previous: dict) -> None:
+        needed = {e.get("snapshot_id") for e in env["evidence"] + env.get("prior_evidence", [])}
+        existing = {s["id"] for s in env["source_snapshots"]}
+        path = Path(self.previous_path) if self.previous_path else self.out_dir
+        root = path if path.is_dir() else path.parent
+        if root.name == "history":
+            root = root.parent
+        for record in previous.get("source_snapshots", []):
+            if record["id"] in needed - existing:
+                env["source_snapshots"].append(self.store.import_record(record, root))
 
     def _hard_watchdog(self) -> None:
         """Last line of defence: if the run is not finished 30 s before the limit, write every envelope and exit."""
@@ -546,23 +664,28 @@ class Runner:
                 envelopes.append(self.envelope(org, completed_at, None))
             except Exception as exc:
                 envelopes.append(self.fallback_envelope(org, completed_at, exc))
+        code = 1
         try:
             self.write(envelopes, completed_at, {})
         finally:
-            os._exit(0)
+            os._exit(code)  # watchdog termination is never a successful official run
 
     def fallback_envelope(self, org: str, completed_at: str, exc: Exception) -> dict[str, Any]:
         return {
             "organisation_number": org, "name": None,
-            "run": {"run_id": self.run_id, "started_at": self.started_at, "completed_at": completed_at, "terminal_status": "failed", "agent_version": git_version()},
+            "run": {"run_id": self.run_id, "started_at": self.started_at, "completed_at": completed_at, "terminal_status": "failed", "agent_version": self.agent_version},
             "identity": {}, "availability": {fam: {"state": "failed", "reason": f"envelope assembly error: {type(exc).__name__}"} for fam in FAMILIES},
-            "claims": [], "evidence": [], "changes": [], "refresh": {"mode": "baseline"}, "brief": {"sentences": [], "unknowns": []},
+            "claims": [], "evidence": [], "source_snapshots": [], "changes": [], "refresh": {"mode": "baseline"}, "brief": {"sentences": [], "unknowns": []},
             "unpublished_candidates": [], "errors": [{"family": "run", "message": f"{type(exc).__name__}: {exc}"}],
             "operations": {"requests": 0, "runtime_ms": 0, "third_party_cost_usd": 0.0}, "summary": {"claims": 0, "families_available": 0, "states": {"failed": len(FAMILIES)}},
         }
 
     # ------------------------------------------------------------------ outputs
     def write(self, envelopes: list[dict], completed_at: str, previous: dict) -> dict[str, Any]:
+        with self.write_lock:
+            return self._write(envelopes, completed_at, previous)
+
+    def _write(self, envelopes: list[dict], completed_at: str, previous: dict) -> dict[str, Any]:
         out = self.out_dir
         tmp = out / "envelopes.jsonl.tmp"
         with tmp.open("w", encoding="utf-8") as handle:
@@ -574,6 +697,10 @@ class Runner:
         except OSError:
             pass
         validation = validate(envelopes, self.orgs)
+        validation["checks"]["within_execution_limits"] = (not self.stop.is_set() and self.budget.elapsed() < self.budget.max_seconds
+            and self.budget.requests <= self.budget.max_requests and self.budget.cost_usd <= self.budget.max_cost_usd)
+        validation["checks"]["no_failed_terminal_envelopes"] = all(e["run"]["terminal_status"] != "failed" for e in envelopes)
+        validation["passed"] = all(validation["checks"].values())
         fam_states: dict[str, dict[str, int]] = {}
         for env in envelopes:
             for fam, st in env["availability"].items():
@@ -603,6 +730,7 @@ class Runner:
         report = {
             "run_id": self.run_id,
             "agent_version": git_version(),
+            "code_sha256": self.code_sha256,
             "started_at": self.started_at,
             "completed_at": completed_at,
             "input_count": len(self.orgs),
@@ -621,6 +749,11 @@ class Runner:
             "phase_seconds": self.timings,
             "budget_plan": self.plan,
             "bulk_snapshot": self.bulk_meta,
+            "registry_snapshot": self.snapshot_meta,
+            "evidence_cutoff": self.evidence_cutoff,
+            "source_policy_version": "signalpost-sources/2",
+            "nav_access": "experimental_public_token" if self.job_feed.allow_public_token else "credential_required",
+            "input_sha256": hashlib.sha256("\n".join(self.orgs).encode()).hexdigest(),
             "notes": self.notes,
             "third_party_cost_usd": round(self.budget.cost_usd, 4),
             "models": [],
@@ -636,6 +769,7 @@ def validate(envelopes: list[dict], orgs: list[str]) -> dict[str, Any]:
     bad_states = [(e["organisation_number"], f, s["state"]) for e in envelopes for f, s in e["availability"].items() if s["state"] not in STATES]
     claims_without_evidence = 0
     zero_for_missing = 0
+    missing_snapshot_refs = 0
     for e in envelopes:
         ev_ids = {x["id"] for x in e["evidence"]} | {x["id"] for x in e.get("prior_evidence", [])}
         for c in e["claims"]:
@@ -648,8 +782,11 @@ def validate(envelopes: list[dict], orgs: list[str]) -> dict[str, Any]:
             if c["value"] is None:
                 zero_for_missing += 1
         for x in e["evidence"]:
-            if not (x.get("source_url") and x.get("retrieved_at") and x.get("content_sha256")):
+            if not (x.get("source_url") and x.get("retrieved_at") and x.get("content_sha256") and x.get("claim_span") and x.get("extraction_method")):
                 claims_without_evidence += 1
+        if "source_snapshots" in e:
+            snapshot_ids = {s["id"] for s in e["source_snapshots"] if s.get("object") and s.get("retrieved_at") and s.get("content_sha256")}
+            missing_snapshot_refs += sum(x.get("snapshot_id") not in snapshot_ids for x in e["evidence"] + e.get("prior_evidence", []))
     checks = {
         "one_envelope_per_input": emitted == orgs,
         "unique_organisation_numbers": len(set(emitted)) == len(emitted),
@@ -657,6 +794,7 @@ def validate(envelopes: list[dict], orgs: list[str]) -> dict[str, Any]:
         "every_claim_has_evidence": claims_without_evidence == 0,
         "no_null_values_published": zero_for_missing == 0,
         "all_families_present": all(set(FAMILIES) <= set(e["availability"]) for e in envelopes),
+        "snapshot_references_resolve": missing_snapshot_refs == 0,
     }
     return {"passed": all(checks.values()), "checks": checks, "invalid_states": bad_states[:20]}
 
@@ -672,7 +810,7 @@ def identity_audit(envelopes: list[dict], run_id: str) -> str:
             if c.get("field") == "official_website" and c.get("availability", "available") == "available":
                 ev = evidence.get(c["evidence_ids"][0], {})
                 proof = (ev.get("identity_reason") or "") + " — " + (ev.get("claim_span") or "")[:140]
-                lines.append(f"| {e.get('name')} | {e['organisation_number']} | {c['value']} | {proof.replace('|', '/')} |")
+                lines.append(f"| {e.get('name')} | {e['organisation_number']} | {c['value']} | {' '.join(proof.replace('|', '/').split())} |")
         for cand in e.get("unpublished_candidates", []):
             if cand.get("family") == "website":
                 held.append(f"| {e.get('name')} | {e['organisation_number']} | {cand.get('candidate')} | {cand.get('source')} | "

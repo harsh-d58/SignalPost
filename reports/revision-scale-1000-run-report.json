@@ -1,0 +1,342 @@
+{
+  "run_id": "audit-20261108-verified1000",
+  "agent_version": "4d3a4523acbc-dirty",
+  "started_at": "2026-11-08T12:10:47Z",
+  "completed_at": "2026-11-08T12:12:17Z",
+  "input_count": 1000,
+  "emitted_envelopes": 1000,
+  "validation": {
+    "passed": true,
+    "checks": {
+      "one_envelope_per_input": true,
+      "unique_organisation_numbers": true,
+      "all_family_states_valid": true,
+      "every_claim_has_evidence": true,
+      "no_null_values_published": true,
+      "all_families_present": true
+    },
+    "invalid_states": []
+  },
+  "mode": "baseline",
+  "changes_detected": 0,
+  "family_states": {
+    "identity": {
+      "available": 992,
+      "not_available": 8
+    },
+    "status": {
+      "available": 992,
+      "not_available": 8
+    },
+    "industry": {
+      "available": 991,
+      "not_available": 8,
+      "failed": 1
+    },
+    "financials": {
+      "available": 988,
+      "not_available": 8,
+      "failed": 4
+    },
+    "leadership": {
+      "available": 175,
+      "failed": 817,
+      "not_available": 8
+    },
+    "locations": {
+      "available": 142,
+      "not_available": 30,
+      "failed": 828
+    },
+    "group": {
+      "not_applicable": 925,
+      "failed": 47,
+      "available": 20,
+      "not_available": 8
+    },
+    "website": {
+      "available": 26,
+      "failed": 915,
+      "ambiguous": 38,
+      "blocked": 9,
+      "not_available": 12
+    },
+    "social_profiles": {
+      "not_available": 29,
+      "failed": 915,
+      "ambiguous": 38,
+      "blocked": 9,
+      "available": 9
+    },
+    "contact": {
+      "not_available": 20,
+      "failed": 798,
+      "available": 166,
+      "ambiguous": 14,
+      "blocked": 2
+    },
+    "description": {
+      "available": 19,
+      "failed": 915,
+      "ambiguous": 38,
+      "not_available": 19,
+      "blocked": 9
+    },
+    "jobs": {
+      "not_available": 997,
+      "available": 2,
+      "ambiguous": 1
+    },
+    "activity": {
+      "available": 991,
+      "not_available": 9
+    }
+  },
+  "family_coverage": {
+    "identity": 0.992,
+    "status": 0.992,
+    "industry": 0.991,
+    "financials": 0.988,
+    "leadership": 0.175,
+    "locations": 0.142,
+    "group": 0.02,
+    "website": 0.026,
+    "social_profiles": 0.009,
+    "contact": 0.166,
+    "description": 0.019,
+    "jobs": 0.002,
+    "activity": 0.991
+  },
+  "claims_total": 71756,
+  "identity_gate": {
+    "accepted": 26,
+    "rejected": 23,
+    "ambiguous": 34,
+    "blocked": 19,
+    "unreachable": 7
+  },
+  "identity_gate_by_source": {
+    "name_slug_guess": {
+      "blocked": 2,
+      "ambiguous": 1
+    },
+    "registry_declared": {
+      "accepted": 26,
+      "rejected": 13,
+      "ambiguous": 21,
+      "blocked": 12,
+      "unreachable": 5
+    },
+    "registry_email_domain": {
+      "rejected": 10,
+      "ambiguous": 11,
+      "blocked": 5,
+      "unreachable": 2
+    },
+    "wikidata_p856": {
+      "ambiguous": 1
+    }
+  },
+  "jobs_feed": {
+    "pages": 15,
+    "ads_indexed": 6393,
+    "window_days": 7,
+    "error": null
+  },
+  "operations": {
+    "requests": 1920,
+    "max_requests": 2000,
+    "elapsed_seconds": 91.5,
+    "max_seconds": 720.0,
+    "third_party_cost_usd": 0.0,
+    "max_cost_usd": 10.0,
+    "requests_by_host": {
+      "data.brreg.no": 1385,
+      "pam-stilling-feed.nav.no": 19,
+      "vestbo.no": 18,
+      "www.rainbowstudios.no": 15,
+      "www.rorostweed.com": 14,
+      "styrerommet.no": 13,
+      "www.obos.no": 12,
+      "www.sparebank1.no": 12,
+      "www.eldirekte.no": 11,
+      "www.nordiskvannteknikk.no": 11,
+      "www.vbbl.no": 11,
+      "www.bori.no": 11,
+      "query.wikidata.org": 10,
+      "www.debet.no": 10,
+      "www.panor.no": 10,
+      "norrein.no": 10,
+      "www.sjakk.no": 10,
+      "www.tottem.no": 9,
+      "enqvist.no": 9,
+      "funbit.no": 8,
+      "www.ferstmedia.com": 8,
+      "www.cacas.no": 8,
+      "www.di.no": 8,
+      "www.regnskapnorge.no": 8,
+      "www.blixhotell.no": 7,
+      "www.solibo.no": 7,
+      "www.erlaeiendom.no": 7,
+      "www.rorostweed.no": 7,
+      "www.luxorstone.no": 7,
+      "www.solheimsv.no": 7,
+      "www.hypergene.com": 7,
+      "www.gp.no": 6,
+      "imitromso.no": 6,
+      "www.skagerraksparebank.no": 6,
+      "www.nortronic.no": 6,
+      "hansogolaf.no": 6,
+      "unifor.no": 6,
+      "www.aktiv-fysio.no": 6,
+      "braatheneiendom.no": 6,
+      "palleservice.no": 5,
+      "www.zoaring.com": 5,
+      "www.dyktige.no": 5,
+      "eidos.no": 5,
+      "harvest.no": 5,
+      "www.ramloglass.no": 5,
+      "www.sagbukta.no": 5,
+      "www.germitech.no": 5,
+      "slaagstemmenbarnehage.no": 5,
+      "vibbo.no": 4,
+      "www.dnb.no": 4,
+      "www.samfunnetiaas.no": 4,
+      "www.aktive-fredsreiser.no": 4,
+      "www.akgskole.no": 4,
+      "www.phronteseas.com": 3,
+      "www.vestbo.no": 3,
+      "www.prauma.no": 3,
+      "bori.no": 3,
+      "www.polarfakta.no": 3,
+      "www.ixmal.no": 2,
+      "www.vibbo.no": 2,
+      "www.gpmarked.no": 2,
+      "www.funbit.no": 2,
+      "www.imitromso.no": 2,
+      "www.elektroproffen.no": 2,
+      "www.norrein.no": 2,
+      "www.ixmal.com": 2,
+      "obos.no": 2,
+      "www.vansjobbl.no": 2,
+      "panor.no": 2,
+      "tottem.no": 2,
+      "vbbl.no": 2,
+      "corrosafe.no": 2,
+      "debet.no": 2,
+      "rorostweed.no": 2,
+      "solheimsv.no": 2,
+      "www.arctictak.no": 2,
+      "maudegruppen.no": 2,
+      "www.enqvist.no": 2,
+      "www.webhuset.no": 2,
+      "www.rainbowstudio.no": 2,
+      "www.s1g.no": 2,
+      "sjakk.no": 2,
+      "www.torggatabad.com": 2,
+      "www.unifor.no": 2,
+      "rainbowstudio.no": 2,
+      "www.smallfilm.no": 2,
+      "www.antek.no": 2,
+      "www.arkivet.no": 2,
+      "antek.no": 2,
+      "s1g.no": 2,
+      "www.braatheneiendom.no": 2,
+      "arkivet.no": 2,
+      "di.no": 2,
+      "slaagstemmen.no": 2,
+      "www.nbbo.no": 2,
+      "regnskapnorge.no": 2,
+      "www.obf.no": 2,
+      "www.bilskadesenteret.com": 1,
+      "www.telemarkhus.no": 1,
+      "oplandskebokforlag.no": 1,
+      "telemarkhus.no": 1,
+      "jobbidrett.no": 1,
+      "lhmrbil.no": 1,
+      "www.oef.no": 1,
+      "oplandskebokforlag.wpcomstaging.com": 1,
+      "www.extra-service.no": 1,
+      "opgardmotor.no": 1,
+      "fjordbyeninnkvartering.no": 1,
+      "www.harvest.no": 1,
+      "www.fresh.no": 1,
+      "www.kokkensmat.no": 1,
+      "fresh.no": 1,
+      "klovertunetbolig.no": 1,
+      "estransport.no": 1,
+      "kokkensmat.no": 1,
+      "www.enoksenregnskap.no": 1,
+      "www.eurojurisnord.no": 1,
+      "www.stoamaskin.no": 1,
+      "bomidt.no": 1,
+      "www.krscinematek.no": 1,
+      "eurojurisnord.no": 1,
+      "www.gitmark.no": 1
+    },
+    "requests_by_phase": {
+      "registry": 20,
+      "jobs": 16,
+      "activity": 20,
+      "accounts": 996,
+      "roles": 175,
+      "locations": 164,
+      "web": 459,
+      "web_news": 47,
+      "group": 20,
+      "jobs_verify": 3
+    },
+    "phase_caps": {
+      "registry": 32,
+      "activity": 42,
+      "jobs": 23,
+      "accounts": 1135,
+      "roles": 246,
+      "locations": 236,
+      "group": 155,
+      "jobs_verify": 11,
+      "history": 0,
+      "web": 598,
+      "web_news": 81
+    },
+    "refused_by_budget": {
+      "web": 19,
+      "locations": 903,
+      "roles": 892,
+      "group": 52
+    },
+    "p50_company_ms": 203,
+    "p95_company_ms": 5577
+  },
+  "phase_seconds": {
+    "bulk_snapshot": 0.0,
+    "registry": 6.0,
+    "activity": 7.4,
+    "companies": 43.2,
+    "jobs": 14.5,
+    "tail": 4.4,
+    "finalise": 1.0
+  },
+  "budget_plan": {
+    "registry": 32,
+    "activity": 42,
+    "jobs": 23,
+    "accounts": 1052,
+    "roles": 107,
+    "locations": 97,
+    "group": 16,
+    "jobs_verify": 11,
+    "history": 0,
+    "web": 540,
+    "web_news": 0
+  },
+  "bulk_snapshot": {
+    "note": "no bulk snapshot supplied; live registry API only"
+  },
+  "notes": [
+    "large batch (1000); per-company official sources scaled to fit 1920 requests",
+    "tail pass: 139 requests left unused by the per-phase caps were spent on families that had failed only for budget; filled: {'leadership': 68, 'locations': 67, 'group': 4}"
+  ],
+  "third_party_cost_usd": 0.0,
+  "models": []
+}

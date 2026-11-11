@@ -1,7 +1,7 @@
 # Email draft — submission to Builderr
 
 **To:** submit@builderr.ai
-**Subject:** Signalpost entry — Signalpost Agent — <short sha>
+**Subject:** Signalpost revision — Signalpost Agent — <short sha>
 **Attachment:** `signalpost-code.zip` (the code at the submitted commit: `git archive --format=zip -o signalpost-code.zip HEAD`)
 
 Before sending, replace `<40-char sha>` / `<short sha>` with the output of `git rev-parse HEAD` (after
@@ -11,7 +11,7 @@ Before sending, replace `<40-char sha>` / `<short sha>` with the output of `git 
 
 Hello Builderr team,
 
-Please find my entry for the Signalpost challenge ("Build an agent that finds company information").
+Please find my revised entry for the Signalpost challenge. This revision checks website ownership, social handle identity, article publication dates, and the employer of each individual vacancy before publishing those facts.
 
 **Agent:** Signalpost Agent
 **Builder and contact:** <your name>, harshvdn.2@gmail.com
@@ -21,33 +21,24 @@ Please find my entry for the Signalpost challenge ("Build an agent that finds co
 
 **One command to run it**
 ```
-uv sync --frozen
-uv run signalpost run --organisations <batch.jsonl> --out out/
+uv run --frozen signalpost run --organisations official-batch.jsonl --registry-snapshot official-registry.jsonl --registry-snapshot-at 2026-11-09T00:00:00Z --evidence-cutoff 2026-11-10T00:00:00Z --bulk-files --workers 8 --job-days 7 --max-requests 2000 --max-minutes 45 --max-cost 10 --out out-official
 ```
-Output: one terminal envelope per input in `out/envelopes.jsonl`, the run report in `out/run-report.json`, a static
-showcase in `out/site/index.html`. Running the same command again into the same `out/` is a refresh: it archives the
-previous run and reports typed changes.
+Replace the example paths, timestamps and limits with the supplied evaluation values. The run writes one terminal
+envelope per input to `out-official/envelopes.jsonl`, a run report and a static showcase. Reusing the output directory
+archives the previous run and reports changes.
 
-**At least 1,000 company profiles:** `reports/run-1000-envelopes.jsonl.gz` in the repository (1,000/1,000 valid
-envelopes, run under the official limits), with its run report `reports/run-1000-run-report.json`. The same 1,000
-profiles can be browsed (search, compare, verify every fact) at https://harshgitty58.github.io/SignalPost/
+The 100-company smoke report is `reports/rankup-smoke100-run-report.json`. The same-batch comparison and verification results for 1,100 companies are in `reports/rankup-implementation.md`. GitHub Pages builds the committed 1,000-profile sample. [Showcase](https://harshgitty58.github.io/SignalPost/) · [Sample profile](https://harshgitty58.github.io/SignalPost/#/c/999072712)
 
 **Model / API details**
 - No LLM is used.
 - Brønnøysundregistrene open APIs: Enhetsregisteret, Regnskapsregisteret, roles, sub-units, group structure, change log (NLOD 2.0).
-- NAV pam-stilling-feed (free public API; NAV's published public token).
+- NAV pam-stilling-feed requires an approved `NAV_FEED_TOKEN`. Without it, NAV is blocked and company-owned careers discovery continues.
 - Wikidata SPARQL (CC0), used only to find website candidates; every site must pass an exact-entity identity gate.
 - Company-owned websites, robots.txt honoured, published only after the identity gate.
-- No paid API and no API keys.
+- No paid APIs.
 
 **Expected run cost:** $0.00 in third-party / external API costs per run (limits enforced by default: 45 minutes,
 2,000 outbound requests, $10).
-
-**Measured results** (from the committed `reports/`):
-<!-- metrics:start -->
-- **100 random companies (smoke test)** (dev-rev18f @ `318dd62b4ff9`): 100/100 valid envelopes (validation passed), 899 requests, 4.1 min, $0.00. Coverage: identity 100%, status 100%, industry 100%, financials 100%, leadership 100%, locations 78%, group 5%, website 17%, social_profiles 8%, contact 31%, description 9%, jobs 0%, activity 100%.
-- **1,000 random companies (official limits)** (run-1000-rev18b @ `318dd62b4ff9`): 1000/1000 valid envelopes (validation passed), 1920 requests, 2.9 min, $0.00. Coverage: identity 100%, status 100%, industry 100%, financials 100%, leadership 37%, locations 28%, group 5%, website 0%, social_profiles 0%, contact 17%, description 0%, jobs 0%, activity 100%.
-<!-- metrics:end -->
 
 Every published fact carries its source URL, retrieval time, reporting period (where relevant), content SHA-256,
 claim span and extraction method. Anything that cannot be tied to the exact legal entity is returned as `ambiguous`

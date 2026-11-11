@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import ipaddress
 import json
+import re
 import socket
 import threading
 import time
@@ -46,6 +47,7 @@ class Snapshot:
     error: str | None = None
     redirects: list[str] = field(default_factory=list)
     headers: dict[str, str] = field(default_factory=dict)
+    provenance: dict[str, Any] = field(default_factory=dict)
 
     @property
     def ok(self) -> bool:
@@ -55,13 +57,16 @@ class Snapshot:
         return json.loads(self.body.decode("utf-8"))
 
     def text(self) -> str:
-        charset = "utf-8"
-        if "charset=" in self.content_type:
-            charset = self.content_type.split("charset=")[-1].split(";")[0].strip() or "utf-8"
+        match = re.search(r"charset\s*=\s*['\"]?([\w.-]+)", self.content_type, re.I)
+        if not match:
+            match = re.search(r"charset\s*=\s*['\"]?([\w.-]+)", self.body[:4096].decode("ascii", errors="ignore"), re.I)
+        charset = match.group(1) if match else "utf-8-sig"
         try:
-            return self.body.decode(charset, errors="replace")
+            return self.body.decode(charset)
         except LookupError:
             return self.body.decode("utf-8", errors="replace")
+        except UnicodeDecodeError:
+            return self.body.decode("windows-1252", errors="replace")
 
 
 class UrlPolicyError(Exception):
@@ -87,7 +92,11 @@ def host_is_public(host: str) -> bool:
 
 
 def check_url(url: str) -> urllib.parse.SplitResult:
-    parts = urllib.parse.urlsplit(url)
+    try:
+        parts = urllib.parse.urlsplit(url)
+        port = parts.port
+    except ValueError as exc:
+        raise UrlPolicyError("malformed URL") from exc
     if parts.scheme not in {"http", "https"}:
         raise UrlPolicyError(f"scheme not allowed: {parts.scheme}")
     if parts.username or parts.password:
@@ -100,7 +109,7 @@ def check_url(url: str) -> urllib.parse.SplitResult:
         raise UrlPolicyError("raw IP hosts not allowed")
     except ValueError:
         pass
-    if parts.port not in (None, 80, 443):
+    if port not in (None, 80, 443):
         raise UrlPolicyError("non-standard port not allowed")
     if not host_is_public(host):
         raise UrlPolicyError("host does not resolve to a public address")
@@ -108,8 +117,9 @@ def check_url(url: str) -> urllib.parse.SplitResult:
 
 
 class Fetcher:
-    def __init__(self, budget: Budget, *, api_concurrency: int = 6, web_concurrency: int = 2):
+    def __init__(self, budget: Budget, *, api_concurrency: int = 6, web_concurrency: int = 2, store=None):
         self.budget = budget
+        self.store = store
         self.client = httpx.Client(
             headers={"User-Agent": USER_AGENT, "Accept-Language": "nb-NO,nb;q=0.9,no;q=0.8,en;q=0.6"},
             follow_redirects=False,
@@ -169,8 +179,11 @@ class Fetcher:
                     parser.disallow_all = True  # type: ignore[union-attr]
                 elif snap.ok:
                     parser.parse(snap.text().splitlines())  # type: ignore[union-attr]
+                elif snap.status in (404, 410):
+                    parser = None
                 else:
-                    parser = None  # missing robots.txt => allowed
+                    # An unreachable policy is not permission to crawl.
+                    parser.disallow_all = True
                 self._robots[origin] = parser
             parser = self._robots[origin]
         if parser is None:
@@ -189,28 +202,38 @@ class Fetcher:
                 return Snapshot(url, url, 0, utc_now(), error=f"url_policy: {exc}")
             if not self.allowed_by_robots(url, phase):
                 return Snapshot(url, url, 0, utc_now(), error="blocked_robots")
-        return self._get(url, phase=phase, api=api, headers=headers, max_bytes=max_bytes, timeout=timeout)
+        snap = self._get(url, phase=phase, api=api, headers=headers, max_bytes=max_bytes, timeout=timeout,
+                         respect_robots=respect_robots)
+        if self.store:
+            self.store.capture(snap)
+        return snap
 
     def _get(self, url: str, *, phase: str, api: bool, headers: dict[str, str] | None = None,
-             max_bytes: int = MAX_BODY_BYTES, timeout: float = 20.0) -> Snapshot:
+             max_bytes: int = MAX_BODY_BYTES, timeout: float = 20.0, respect_robots: bool = False) -> Snapshot:
         current = url
         redirects: list[str] = []
         started = time.monotonic()
+        request_headers = dict(headers or {})
         for _hop in range(MAX_REDIRECTS + 1):
             try:
-                parts = check_url(current) if not api else urllib.parse.urlsplit(current)
+                parts = check_url(current)
             except UrlPolicyError as exc:
                 return Snapshot(url, current, 0, utc_now(), error=f"url_policy: {exc}", redirects=redirects)
             host = (parts.hostname or "").lower()
-            self.budget.acquire(host, phase)  # may raise BudgetExhausted
-            self.local.count = getattr(self.local, "count", 0) + 1
+            if _hop and respect_robots and not self.allowed_by_robots(current, phase):
+                return Snapshot(url, current, 0, utc_now(), error="blocked_robots", redirects=redirects)
             sem = self._sem(host, api)
             with sem:
                 self._pace(host)
+                self.budget.acquire(host, phase)  # charge immediately before the request, after waiting
+                self.local.count = getattr(self.local, "count", 0) + 1
                 try:
-                    with self.client.stream("GET", current, headers=headers or {}, timeout=timeout) as response:
+                    with self.client.stream("GET", current, headers=request_headers,
+                                            timeout=max(0.1, min(timeout, self.budget.time_left()))) as response:
                         if response.is_redirect and "location" in response.headers:
                             nxt = urllib.parse.urljoin(current, response.headers["location"])
+                            if urllib.parse.urlsplit(nxt).netloc != parts.netloc or urllib.parse.urlsplit(nxt).scheme != parts.scheme:
+                                request_headers = {k: v for k, v in request_headers.items() if k.lower() not in {"authorization", "cookie", "proxy-authorization"}}
                             redirects.append(nxt)
                             current = nxt
                             continue
@@ -219,7 +242,9 @@ class Fetcher:
                         for chunk in response.iter_bytes():
                             size += len(chunk)
                             if size > max_bytes:
-                                break
+                                return Snapshot(url, current, response.status_code, utc_now(), error="body_too_large", redirects=redirects)
+                            if self.budget.time_left() <= 0:
+                                raise BudgetExhausted("time budget exhausted during response")
                             chunks.append(chunk)
                         body = b"".join(chunks)
                         return Snapshot(

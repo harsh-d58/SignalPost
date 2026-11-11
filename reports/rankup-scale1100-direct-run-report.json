@@ -1,0 +1,335 @@
+{
+  "run_id": "rankup-scale1100-direct",
+  "agent_version": "4d3a4523acbc-dirty",
+  "code_sha256": "35305f8e7dc6c541002317a01bbceae35a79c709de258bcaa16b140c4d2a17db",
+  "started_at": "2026-11-10T07:25:06Z",
+  "completed_at": "2026-11-10T07:27:01Z",
+  "input_count": 1100,
+  "emitted_envelopes": 1100,
+  "validation": {
+    "passed": true,
+    "checks": {
+      "one_envelope_per_input": true,
+      "unique_organisation_numbers": true,
+      "all_family_states_valid": true,
+      "every_claim_has_evidence": true,
+      "no_null_values_published": true,
+      "all_families_present": true,
+      "snapshot_references_resolve": true,
+      "within_execution_limits": true,
+      "no_failed_terminal_envelopes": true
+    },
+    "invalid_states": []
+  },
+  "mode": "baseline",
+  "changes_detected": 0,
+  "family_states": {
+    "identity": {
+      "available": 1098,
+      "not_available": 2
+    },
+    "status": {
+      "available": 1098,
+      "not_available": 2
+    },
+    "industry": {
+      "available": 1098,
+      "not_available": 2
+    },
+    "financials": {
+      "available": 1091,
+      "failed": 7,
+      "not_available": 2
+    },
+    "leadership": {
+      "available": 133,
+      "failed": 965,
+      "not_available": 2
+    },
+    "locations": {
+      "available": 105,
+      "not_available": 24,
+      "failed": 971
+    },
+    "group": {
+      "not_applicable": 1020,
+      "available": 15,
+      "failed": 63,
+      "not_available": 2
+    },
+    "website": {
+      "failed": 1040,
+      "ambiguous": 30,
+      "available": 18,
+      "blocked": 5,
+      "not_available": 7
+    },
+    "social_profiles": {
+      "failed": 1040,
+      "ambiguous": 30,
+      "available": 7,
+      "not_available": 18,
+      "blocked": 5
+    },
+    "contact": {
+      "failed": 842,
+      "available": 234,
+      "ambiguous": 13,
+      "not_available": 10,
+      "blocked": 1
+    },
+    "description": {
+      "failed": 1040,
+      "ambiguous": 30,
+      "available": 10,
+      "not_available": 15,
+      "blocked": 5
+    },
+    "jobs": {
+      "blocked": 1098,
+      "not_available": 2
+    },
+    "activity": {
+      "available": 1097,
+      "not_available": 3
+    }
+  },
+  "family_coverage": {
+    "identity": 0.998,
+    "status": 0.998,
+    "industry": 0.998,
+    "financials": 0.992,
+    "leadership": 0.121,
+    "locations": 0.095,
+    "group": 0.014,
+    "website": 0.016,
+    "social_profiles": 0.006,
+    "contact": 0.213,
+    "description": 0.009,
+    "jobs": 0.0,
+    "activity": 0.997
+  },
+  "claims_total": 79618,
+  "identity_gate": {
+    "rejected": 23,
+    "accepted": 18,
+    "ambiguous": 27,
+    "blocked": 12,
+    "unreachable": 7,
+    "related_site": 4
+  },
+  "identity_gate_by_source": {
+    "name_slug_guess": {
+      "ambiguous": 1,
+      "blocked": 1
+    },
+    "registry_declared": {
+      "rejected": 12,
+      "accepted": 17,
+      "ambiguous": 15,
+      "blocked": 7,
+      "unreachable": 5,
+      "related_site": 2
+    },
+    "registry_email_domain": {
+      "rejected": 11,
+      "ambiguous": 10,
+      "blocked": 4,
+      "related_site": 2,
+      "accepted": 1,
+      "unreachable": 2
+    },
+    "subunit_email_domain": {
+      "ambiguous": 1
+    }
+  },
+  "jobs_feed": {
+    "pages": 0,
+    "ads_indexed": 0,
+    "window_days": 7,
+    "error": "blocked: NAV_FEED_TOKEN required; public token is experimental only"
+  },
+  "operations": {
+    "requests": 1920,
+    "max_requests": 2000,
+    "elapsed_seconds": 120.2,
+    "max_seconds": 900.0,
+    "third_party_cost_usd": 0.0,
+    "max_cost_usd": 10.0,
+    "requests_by_host": {
+      "data.brreg.no": 1413,
+      "vestbo.no": 29,
+      "vaagsgatalegesenter.no": 17,
+      "www.fondsfinans.no": 12,
+      "www.hafslund.no": 12,
+      "viden.no": 12,
+      "www.nordseter.no": 12,
+      "query.wikidata.org": 11,
+      "kirurgivest.no": 11,
+      "www.smartsignmanager.com": 11,
+      "www.egecarpets.com": 11,
+      "novaspektrum.no": 11,
+      "www.logistea.se": 11,
+      "www.uks.no": 11,
+      "www.sularorbuer.no": 10,
+      "godetall.no": 10,
+      "hande.no": 9,
+      "www.crispideas.com": 9,
+      "www.diakonhjemmetomsorg.no": 9,
+      "northstore.no": 9,
+      "thermotank.no": 9,
+      "www.abbl.no": 8,
+      "www.planday.com": 8,
+      "osu.no": 8,
+      "buskerudmuseene.no": 8,
+      "www.oslo-takst.no": 8,
+      "norron.com": 8,
+      "a2g.no": 8,
+      "bildata.no": 8,
+      "www.advokater.co": 7,
+      "www.norice.no": 6,
+      "codex.no": 6,
+      "unifor.no": 6,
+      "this.no": 5,
+      "www.vestbo.no": 5,
+      "www.bonord.no": 5,
+      "globalen.no": 5,
+      "www.truebeauty.no": 5,
+      "storefjell.no": 5,
+      "www.holmenveien20.no": 5,
+      "www.van-bergen.no": 5,
+      "kjoretoydata.no": 5,
+      "www.jbf.no": 5,
+      "www.fabi.no": 5,
+      "econor.no": 4,
+      "www.a2g.no": 4,
+      "espira.no": 4,
+      "messe.no": 4,
+      "logistea.se": 4,
+      "fabkirk.no": 4,
+      "id.planday.com": 3,
+      "buskerudmuseet.no": 3,
+      "hamar-montering.no": 3,
+      "www.logistea.no": 3,
+      "jtob.no": 3,
+      "ctgruppen.no": 3,
+      "www.codex.no": 2,
+      "www.econoras.no": 2,
+      "www.this.no": 2,
+      "abbl.no": 2,
+      "bonord.no": 2,
+      "www.vaagsgatalegesenter.no": 2,
+      "planday.com": 2,
+      "www.buskerudmuseene.no": 2,
+      "www.osu.no": 2,
+      "hafslund.no": 2,
+      "www.hande.no": 2,
+      "fondsfinans.no": 2,
+      "www.kirurgivest.no": 2,
+      "www.storefjell.no": 2,
+      "crispideas.com": 2,
+      "www.viden.no": 2,
+      "www.smartsign.se": 2,
+      "www.norron.com": 2,
+      "www.egecarpets.dk": 2,
+      "www.diakonhjemmet.no": 2,
+      "advokater.co": 2,
+      "egecarpets.com": 2,
+      "smartsign.se": 2,
+      "www.messe.no": 2,
+      "www.northstore.no": 2,
+      "www.bildata.no": 2,
+      "www.jtob.no": 2,
+      "www.ctgruppen.no": 2,
+      "holmenveien20.no": 2,
+      "www.fabkirk.no": 2,
+      "www.godetall.no": 2,
+      "www.unifor.no": 2,
+      "nordseter.no": 2,
+      "sularorbuer.no": 2,
+      "uks.no": 2,
+      "www.leikny.no": 1,
+      "www.nrg.no": 1,
+      "nrg.no": 1,
+      "www.kartro.com": 1,
+      "itw.no": 1,
+      "www.fintechneo.com": 1,
+      "fintechneo.no": 1,
+      "www.buskerudmedia.no": 1,
+      "buskerudmedia.no": 1,
+      "intergolf.no": 1,
+      "www.thermotank.no": 1,
+      "jfg.no": 1,
+      "www.mallofnorway.com": 1,
+      "mallofnorway.com": 1,
+      "apexgolf.no": 1
+    },
+    "requests_by_phase": {
+      "registry": 22,
+      "activity": 22,
+      "accounts": 1105,
+      "roles": 133,
+      "locations": 127,
+      "group": 15,
+      "web": 459,
+      "web_news": 37
+    },
+    "phase_caps": {
+      "registry": 35,
+      "activity": 46,
+      "jobs": 23,
+      "accounts": 1267,
+      "roles": 217,
+      "locations": 212,
+      "group": 170,
+      "jobs_verify": 6,
+      "history": 0,
+      "web": 621,
+      "web_news": 81
+    },
+    "refused_by_budget": {
+      "locations": 1048,
+      "roles": 1043,
+      "web": 5,
+      "group": 70
+    },
+    "p50_company_ms": 266,
+    "p95_company_ms": 1563
+  },
+  "phase_seconds": {
+    "bulk_snapshot": 0.0,
+    "registry": 10.1,
+    "activity": 10.7,
+    "companies": 83.0,
+    "jobs": 0.0,
+    "tail": 6.2,
+    "finalise": 4.2
+  },
+  "budget_plan": {
+    "registry": 35,
+    "activity": 46,
+    "jobs": 23,
+    "accounts": 1157,
+    "roles": 55,
+    "locations": 50,
+    "group": 8,
+    "jobs_verify": 6,
+    "history": 0,
+    "web": 540,
+    "web_news": 0
+  },
+  "bulk_snapshot": {
+    "note": "no bulk snapshot supplied; live registry API only"
+  },
+  "registry_snapshot": {},
+  "evidence_cutoff": null,
+  "source_policy_version": "signalpost-sources/2",
+  "nav_access": "credential_required",
+  "input_sha256": "a3aa26751e682ba853f0b165e4a169dcf9a084af300534237d43d4910615e9fe",
+  "notes": [
+    "large batch (1100); per-company official sources scaled to fit 1920 requests",
+    "tail pass: 162 requests left unused by the per-phase caps were spent on families that had failed only for budget; filled: {'locations': 77, 'leadership': 78, 'group': 7}"
+  ],
+  "third_party_cost_usd": 0.0,
+  "models": []
+}

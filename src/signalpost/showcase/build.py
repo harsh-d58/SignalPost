@@ -123,7 +123,13 @@ def build_site(envelopes_path: Path, report_path: Path | None, output: Path) -> 
             env = json.loads(line)
             envs.append(env)
             rows.append(_index_row(env))
-            payload = json.dumps(env, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+            public = dict(env)
+            if "source_snapshots" in env:
+                public["source_snapshots"] = [
+                    {key: record[key] for key in ("id", "retention") if key in record}
+                    for record in env["source_snapshots"]
+                ]
+            payload = json.dumps(public, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
             (output / "data" / f"{env['organisation_number']}.js").write_text(
                 f"window.SP_LOAD({json.dumps(env['organisation_number'])},{payload});\n", encoding="utf-8")
     report = json.loads(Path(report_path).read_text(encoding="utf-8")) if report_path and Path(report_path).exists() else {}

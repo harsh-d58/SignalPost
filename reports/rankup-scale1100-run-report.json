@@ -1,0 +1,1072 @@
+{
+  "run_id": "rankup-scale1100-final",
+  "agent_version": "4d3a4523acbc-dirty",
+  "code_sha256": "8d31a22bc644bcf5afac168bb35da40b267dfffe34a2baaa2e04640a2c5dc49d",
+  "started_at": "2026-11-10T07:10:02Z",
+  "completed_at": "2026-11-10T07:16:41Z",
+  "input_count": 1100,
+  "emitted_envelopes": 1100,
+  "validation": {
+    "passed": true,
+    "checks": {
+      "one_envelope_per_input": true,
+      "unique_organisation_numbers": true,
+      "all_family_states_valid": true,
+      "every_claim_has_evidence": true,
+      "no_null_values_published": true,
+      "all_families_present": true,
+      "snapshot_references_resolve": true
+    },
+    "invalid_states": []
+  },
+  "mode": "retained_source_replay",
+  "changes_detected": 0,
+  "family_states": {
+    "identity": {
+      "available": 1098,
+      "not_available": 2
+    },
+    "status": {
+      "available": 1098,
+      "not_available": 2
+    },
+    "industry": {
+      "available": 1098,
+      "not_available": 2
+    },
+    "financials": {
+      "available": 1091,
+      "failed": 7,
+      "not_available": 2
+    },
+    "leadership": {
+      "available": 1098,
+      "not_available": 2
+    },
+    "locations": {
+      "available": 839,
+      "not_available": 261
+    },
+    "group": {
+      "not_applicable": 1020,
+      "available": 78,
+      "not_available": 2
+    },
+    "website": {
+      "not_available": 43,
+      "available": 28,
+      "ambiguous": 47,
+      "blocked": 11,
+      "failed": 971
+    },
+    "social_profiles": {
+      "not_available": 61,
+      "ambiguous": 47,
+      "blocked": 11,
+      "failed": 971,
+      "available": 10
+    },
+    "contact": {
+      "not_available": 48,
+      "ambiguous": 20,
+      "available": 234,
+      "blocked": 5,
+      "failed": 793
+    },
+    "description": {
+      "not_available": 53,
+      "available": 18,
+      "ambiguous": 47,
+      "blocked": 11,
+      "failed": 971
+    },
+    "jobs": {
+      "blocked": 1098,
+      "not_available": 2
+    },
+    "activity": {
+      "available": 1097,
+      "not_available": 3
+    }
+  },
+  "family_coverage": {
+    "identity": 0.998,
+    "status": 0.998,
+    "industry": 0.998,
+    "financials": 0.992,
+    "leadership": 0.998,
+    "locations": 0.763,
+    "group": 0.071,
+    "website": 0.025,
+    "social_profiles": 0.009,
+    "contact": 0.213,
+    "description": 0.016,
+    "jobs": 0.0,
+    "activity": 0.997
+  },
+  "claims_total": 82738,
+  "identity_gate": {
+    "accepted": 28,
+    "ambiguous": 43,
+    "unreachable": 8,
+    "blocked": 22,
+    "rejected": 28,
+    "related_site": 4
+  },
+  "identity_gate_by_source": {
+    "name_slug_guess": {
+      "accepted": 4,
+      "unreachable": 1,
+      "ambiguous": 7,
+      "blocked": 6,
+      "rejected": 3
+    },
+    "registry_declared": {
+      "rejected": 12,
+      "ambiguous": 21,
+      "accepted": 22,
+      "blocked": 9,
+      "unreachable": 4,
+      "related_site": 2
+    },
+    "registry_email_domain": {
+      "ambiguous": 14,
+      "blocked": 6,
+      "rejected": 13,
+      "unreachable": 3,
+      "accepted": 2,
+      "related_site": 2
+    },
+    "subunit_email_domain": {
+      "ambiguous": 1
+    },
+    "wikidata_p856": {
+      "blocked": 1
+    }
+  },
+  "jobs_feed": {
+    "pages": 0,
+    "ads_indexed": 0,
+    "window_days": 7,
+    "error": "blocked: NAV_FEED_TOKEN required; public token is experimental only"
+  },
+  "operations": {
+    "requests": 1920,
+    "max_requests": 2000,
+    "elapsed_seconds": 407.4,
+    "max_seconds": 900.0,
+    "third_party_cost_usd": 0.0,
+    "max_cost_usd": 10.0,
+    "requests_by_host": {
+      "data.brreg.no": 1218,
+      "vestbo.no": 34,
+      "vaagsgatalegesenter.no": 17,
+      "mallofnorway.com": 15,
+      "www.fondsfinans.no": 12,
+      "www.hafslund.no": 12,
+      "viden.no": 12,
+      "www.nordseter.no": 12,
+      "www.uks.no": 12,
+      "query.wikidata.org": 11,
+      "kirurgivest.no": 11,
+      "www.smartsignmanager.com": 11,
+      "www.egecarpets.com": 11,
+      "novaspektrum.no": 11,
+      "www.logistea.se": 11,
+      "www.sularorbuer.no": 10,
+      "godetall.no": 10,
+      "hande.no": 9,
+      "www.crispideas.com": 9,
+      "a2g.no": 9,
+      "www.diakonhjemmetomsorg.no": 9,
+      "northstore.no": 9,
+      "thermotank.no": 9,
+      "www.loenfjord.no": 9,
+      "www.abbl.no": 8,
+      "www.planday.com": 8,
+      "buskerudmuseene.no": 8,
+      "osu.no": 8,
+      "www.oslo-takst.no": 8,
+      "norron.com": 8,
+      "bildata.no": 8,
+      "www.prefab.heidelbergmaterials.no": 8,
+      "www.advokater.co": 7,
+      "unifor.no": 7,
+      "nkl.no": 7,
+      "norgesgruppen.no": 7,
+      "www.norice.no": 6,
+      "codex.no": 6,
+      "uks.no": 6,
+      "www.gamlastovo.no": 6,
+      "formue.no": 6,
+      "megamonn.no": 6,
+      "www.e-nor.no": 6,
+      "www.lyngenvedsentral.no": 6,
+      "mobile.no": 6,
+      "www.kalddrikk.no": 6,
+      "www.vestbo.no": 5,
+      "this.no": 5,
+      "globalen.no": 5,
+      "www.bonord.no": 5,
+      "www.truebeauty.no": 5,
+      "storefjell.no": 5,
+      "www.holmenveien20.no": 5,
+      "www.van-bergen.no": 5,
+      "kjoretoydata.no": 5,
+      "www.jbf.no": 5,
+      "www.fabi.no": 5,
+      "flyttevask-grunerlokka.no": 5,
+      "www.fram.no": 5,
+      "hestekrefter.no": 5,
+      "haugronning.no": 5,
+      "econor.no": 4,
+      "espira.no": 4,
+      "messe.no": 4,
+      "logistea.se": 4,
+      "fabkirk.no": 4,
+      "intergolf.no": 4,
+      "karmatattoo.no": 4,
+      "www.unimar.no": 4,
+      "id.planday.com": 3,
+      "buskerudmuseet.no": 3,
+      "hamar-montering.no": 3,
+      "www.logistea.no": 3,
+      "jtob.no": 3,
+      "ctgruppen.no": 3,
+      "aprilarkitekter.no": 3,
+      "malvikbyggservice.no": 3,
+      "realkapital.no": 3,
+      "www.codex.no": 2,
+      "www.econoras.no": 2,
+      "www.this.no": 2,
+      "abbl.no": 2,
+      "bonord.no": 2,
+      "www.vaagsgatalegesenter.no": 2,
+      "planday.com": 2,
+      "www.buskerudmuseene.no": 2,
+      "fondsfinans.no": 2,
+      "hafslund.no": 2,
+      "www.osu.no": 2,
+      "www.hande.no": 2,
+      "www.kirurgivest.no": 2,
+      "www.storefjell.no": 2,
+      "www.viden.no": 2,
+      "crispideas.com": 2,
+      "www.smartsign.se": 2,
+      "www.norron.com": 2,
+      "www.a2g.no": 2,
+      "www.egecarpets.dk": 2,
+      "www.diakonhjemmet.no": 2,
+      "advokater.co": 2,
+      "smartsign.se": 2,
+      "www.messe.no": 2,
+      "egecarpets.com": 2,
+      "www.northstore.no": 2,
+      "www.bildata.no": 2,
+      "www.jtob.no": 2,
+      "www.ctgruppen.no": 2,
+      "holmenveien20.no": 2,
+      "www.fabkirk.no": 2,
+      "www.godetall.no": 2,
+      "www.unifor.no": 2,
+      "nordseter.no": 2,
+      "sularorbuer.no": 2,
+      "www.mallofnorway.com": 2,
+      "prefab.heidelbergmaterials.no": 2,
+      "sagasouvenir.no": 2,
+      "www.nkl.no": 2,
+      "www.lettenfoundation.com": 2,
+      "www.utleiefolketshus.no": 2,
+      "www.formue.no": 2,
+      "mastermal.no": 2,
+      "fykse706.no": 2,
+      "www.mastermal.no": 2,
+      "e-nor.no": 2,
+      "fram.no": 2,
+      "listerror.no": 2,
+      "www.listerror.no": 2,
+      "lyngenvedsentral.no": 2,
+      "oustad.no": 2,
+      "rewild.no": 2,
+      "holstadservice.no": 2,
+      "sjolystparken.no": 2,
+      "kalddrikk.no": 2,
+      "gjonnes.no": 2,
+      "www.norcap.no": 2,
+      "www.leikny.no": 1,
+      "www.nrg.no": 1,
+      "nrg.no": 1,
+      "www.kartro.com": 1,
+      "itw.no": 1,
+      "www.fintechneo.com": 1,
+      "fintechneo.no": 1,
+      "www.buskerudmedia.no": 1,
+      "buskerudmedia.no": 1,
+      "www.thermotank.no": 1,
+      "jfg.no": 1,
+      "www.hjerneslag.no": 1,
+      "www.maskegruppen.no": 1,
+      "www.telemarkbil.no": 1,
+      "telemarkbilruter.no": 1,
+      "www.armec.no": 1,
+      "www.telemarkbilruter.no": 1,
+      "au2.no": 1,
+      "multityder.no": 1,
+      "rewildnorge.no": 1,
+      "otterbech.no": 1,
+      "nybraten.no": 1,
+      "realkapitalutvikling.no": 1,
+      "holstad.no": 1,
+      "sjolystmotesenter.no": 1,
+      "northgrc.no": 1,
+      "unimar.no": 1
+    },
+    "requests_by_phase": {
+      "registry": 22,
+      "activity": 22,
+      "locations": 1,
+      "roles": 1,
+      "accounts": 1105,
+      "group": 78,
+      "web": 648,
+      "web_news": 43
+    },
+    "phase_caps": {
+      "registry": 35,
+      "activity": 46,
+      "jobs": 23,
+      "accounts": 1283,
+      "roles": 179,
+      "locations": 179,
+      "group": 186,
+      "jobs_verify": 6,
+      "history": 0,
+      "web": 719,
+      "web_news": 95
+    },
+    "refused_by_budget": {
+      "group": 70,
+      "web": 13
+    },
+    "p50_company_ms": 312,
+    "p95_company_ms": 3609
+  },
+  "phase_seconds": {
+    "bulk_snapshot": 0.0,
+    "registry": 10.4,
+    "activity": 10.3,
+    "companies": 98.2,
+    "jobs": 0.0,
+    "tail": 13.5,
+    "finalise": 6.8
+  },
+  "budget_plan": {
+    "registry": 35,
+    "activity": 46,
+    "jobs": 23,
+    "accounts": 1157,
+    "roles": 4,
+    "locations": 4,
+    "group": 8,
+    "jobs_verify": 6,
+    "history": 0,
+    "web": 637,
+    "web_news": 0
+  },
+  "bulk_snapshot": {
+    "note": "no bulk snapshot supplied; live registry API only"
+  },
+  "registry_snapshot": {},
+  "evidence_cutoff": null,
+  "source_policy_version": "signalpost-sources/2",
+  "nav_access": "credential_required",
+  "input_sha256": "a3aa26751e682ba853f0b165e4a169dcf9a084af300534237d43d4910615e9fe",
+  "notes": [
+    "large batch (1100): roles and workplaces from Brreg bulk files",
+    "large batch (1100); per-company official sources scaled to fit 1920 requests",
+    "tail pass: 178 requests left unused by the per-phase caps were spent on families that had failed only for budget; filled: {'group': 70, 'website': 58}"
+  ],
+  "third_party_cost_usd": 0.0,
+  "models": [],
+  "replay": {
+    "source_run_id": "rankup-scale1100-final",
+    "input_envelopes_sha256": "5e5e5fba4191a15b5ad7db52d3be9afb7d5687a68875d7bb089a20e6934c6b0c",
+    "code_sha256": "35305f8e7dc6c541002317a01bbceae35a79c709de258bcaa16b140c4d2a17db",
+    "completed_at": "2026-11-10T07:25:08Z",
+    "requests": 0,
+    "seconds": 25.08,
+    "normalizations": [
+      {
+        "organisation_number": "968408119",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "931773739",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "985618690",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "913020804",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "884778212",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "996852911",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "986427279",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "891419872",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "933539628",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "992558555",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "926446363",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "911865777",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "935197686",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "977129303",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "985215715",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "988224545",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "925237159",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "991021612",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "914780985",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "935907934",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "813492512",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "985934045",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "921631197",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "925231665",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "950055286",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "918064346",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "997328264",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "990964491",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "928794377",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "913512863",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "928745074",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "987523484",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "921857829",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "919767286",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "913939123",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "915273955",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "835409082",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "976523644",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "928913074",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "915565158",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "926578669",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "990600732",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "920510035",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "925018597",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "931065963",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "833393642",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "911941899",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "988103004",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "997103696",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "933101037",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "927218232",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "990841292",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "971584912",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "977131391",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "995205890",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "992299819",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "999081010",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "976088719",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "952037072",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "922054371",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "913151488",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "926147935",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "929584163",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "951395048",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "963820291",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "927514915",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "936369510",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "995133458",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "929089235",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "993450650",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "927770997",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "928653005",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "931446827",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "928770524",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "934069099",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "986503935",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "921673981",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "925896993",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "917104328",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "981255178",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "952932594",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "963150393",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "928737284",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "911723611",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "930615331",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "971283815",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "923420797",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "996514676",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "932848856",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "917101485",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "992114991",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "930477818",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "924480912",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "992843101",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "926070517",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "983170102",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "980024504",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "924530596",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "943475849",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "930331988",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "915430279",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "918565744",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "991551522",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "953358263",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "925751715",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "912179559",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "994662570",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "936065503",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "991822585",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "993226289",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "989120433",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "992249897",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "934939549",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "926706497",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "968067303",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "930122564",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "920317758",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "923553754",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "966754621",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "977074185",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "984993064",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "986287205",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "915651232",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "958450761",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "991938591",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "927296306",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "925110779",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "990712468",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "917627401",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "995557010",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "988174157",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "920027431",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "976324536",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      },
+      {
+        "organisation_number": "925178446",
+        "field": "workplace",
+        "kind": "address_line_separator"
+      }
+    ],
+    "note": "Operations and coverage above belong to the original live collection. This replay repairs extraction locators and normalizes address line separators using retained sources. Observation timestamps are unchanged."
+  }
+}

@@ -6,12 +6,19 @@ const fs = require("fs"), path = require("path");
 const site = process.argv[2];
 const html = fs.readFileSync(path.join(site, "index.html"), "utf8");
 const errs = [], problems = [];
+let clipboard;
 const vc = new VirtualConsole();
 vc.on("jsdomError", e => errs.push(String(e.message || e)));
 vc.on("error", e => errs.push("console.error: " + String(e && e.message || e)));
 const dom = new JSDOM(html, {
   runScripts: "dangerously", resources: "usable", url: "file:///" + site.replace(/\\/g, "/") + "/index.html", virtualConsole: vc, pretendToBeVisual: true,
-  beforeParse(w) { w.matchMedia = () => ({ matches: false, addEventListener() {} }); w.scrollTo = () => {}; w.Element.prototype.scrollIntoView = function () {}; w.print = () => {}; }
+  beforeParse(w) {
+    w.matchMedia = () => ({ matches: false, addEventListener() {} });
+    w.scrollTo = () => {};
+    w.Element.prototype.scrollIntoView = function () {};
+    w.print = () => {};
+    Object.defineProperty(w.navigator, "clipboard", { value: { writeText: async value => { clipboard = value; } } });
+  }
 });
 const w = dom.window, doc = w.document;
 const envs = fs.readFileSync(path.join(site, "..", "envelopes.jsonl"), "utf8").split("\n").filter(Boolean).map(JSON.parse);
@@ -36,6 +43,31 @@ async function go(hash, label) {
 (async () => {
   await wait(300);
   await go("#/", "overview");
+  const sampleEvidence = doc.querySelector(".specimen .btn.primary");
+  if (!sampleEvidence) problems.push("sample evidence action missing from overview");
+  else {
+    sampleEvidence.click();
+    const source = doc.querySelector("#dbody .evidence-actions a");
+    if (!source || !/^https?:\/\//.test(source.href)) problems.push("sample evidence has no original source link");
+    doc.querySelector("#dbody .evclaim button.btn")?.click();
+    const claimHash = clipboard?.split("#")[1];
+    const [, org, claimId] = /^\/c\/(\d{9})\?claim=(.+)$/.exec(claimHash || "") || [];
+    const claim = envs.find(e => e.organisation_number === org)?.claims.find(c => c.id === claimId);
+    if (!claim) problems.push("copy claim link did not identify a published claim");
+    else {
+      await go("#" + claimHash, "shared claim");
+      if (!drawerOpen() || !doc.getElementById("dbody").textContent.includes(claim.label || claim.field)) problems.push("shared claim link did not reopen its evidence");
+    }
+    key("Escape");
+    await go("#/", "overview after claim link");
+  }
+  const samplePair = doc.querySelector(".review-actions a[href^='#/compare/']");
+  if (!samplePair) problems.push("sample comparison link missing from overview");
+  else {
+    await go(samplePair.getAttribute("href"), "sample comparison");
+    if (doc.querySelectorAll(".cmp thead th").length !== 3) problems.push("sample comparison did not open two companies");
+    if (!doc.querySelector(".cmp tbody th[scope=row]")) problems.push("comparison lacks row headers");
+  }
   await go("#/companies", "explorer");
   const sortBtn = doc.querySelector("th .sortbtn");
   if (sortBtn) { doc.querySelectorAll("th .sortbtn")[3].click(); await wait(100); console.log("explorer sort -> hash:", w.location.hash); }
