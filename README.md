@@ -12,6 +12,10 @@ The [revision audit](reports/revision-audit.md) records the publication fixes, f
 
 The [rank-up implementation report](reports/rankup-implementation.md) tracks the current revision. Current scoring is **50 recall, 30 evidence, 12 synthesis, 8 UX**. Local coverage is not the evaluator's pooled recall, and the score scenarios are not measured scores.
 
+The [model improvement programme](docs/dev/metrics-improvement-plan.md) tracks current fixes and remaining validation. The latest changes cover exact-company article gates, job closure/expiry, financial and filing-history evidence, concurrent request reuse, and verification before optional enrichment. Independent precision and recall remain unmeasured.
+
+The [12 November release report](reports/release-readiness-20261112.md) records the clean Python 3.12 test run, live 1,100/100-company checks, source audits and remaining limitations.
+
 ### Evaluator command
 
 ```bash
@@ -24,6 +28,17 @@ Replace the filenames, observation time, cutoff and limits with Builderr's suppl
 uv run --frozen python eval/snapshot_audit.py out-official --output reports/snapshot-audit.json
 uv run --frozen python eval/metrics.py out-official --output reports/metrics.json
 ```
+
+Regression and diagnostic tests (both are required in CI):
+
+```bash
+uv run --frozen --group dev pytest tests eval/diagnostics -q
+uv run --frozen python eval/prepare_review.py out-official --out out-review
+# A reviewer fills judgments.jsonl with supported / wrong_entity / wrong_value / unsupported / unresolved.
+uv run --frozen python eval/adjudication.py out-official out-review/judgments.jsonl --output reports/adjudication.json
+```
+
+The review export contains no generated labels, refuses to overwrite reviewer answers, and is a development review queue. It is not a blinded recall reference set. Filing-history checks verify the exact official source endpoint, listed year, copy URL and reporting period separately from account-record checks.
 
 Snapshot files remain private under the output directory. `--previous` preserves their references on refresh. Full source JSON checks and excerpt-only artifact checks are reported separately. See [source access and retention](SOURCES.md).
 

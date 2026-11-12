@@ -204,7 +204,7 @@ def test_news_listing_requires_reachable_dated_detail():
 def test_job_listing_payload_is_discovery_only():
     pb = ProfileBuilder(ORG)
     pb.extra["legal_name"] = NAME
-    node = {"@type": "JobPosting", "title": "Marine engineer", "datePosted": TODAY,
+    node = {"@type": "JobPosting", "title": "Marine engineer", "datePosted": TODAY, "directApply": True,
             "hiringOrganization": {"name": NAME, "identifier": ORG}, "url": "/jobs/engineer"}
     _site_jobs(pb, visit(page(nodes=[node], url="https://fjord.no/careers")))
     assert not pb.family_claims("jobs")

@@ -7,9 +7,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --frozen
-      - run: uv run --group dev pytest -q
+      - run: uv run --group dev pytest tests eval/diagnostics -q
       - name: live smoke (5 companies)
         run: |
           printf '{"organisation_number":"923609016"}\n{"organisation_number":"947942638"}\n{"organisation_number":"996756246"}\n{"organisation_number":"914778271"}\n{"organisation_number":"000000000"}\n' > ci-batch.jsonl
           uv run signalpost run --organisations ci-batch.jsonl --out out-ci --job-days 2
           test "$(wc -l < out-ci/envelopes.jsonl)" -eq 5
+          uv run python eval/snapshot_audit.py out-ci

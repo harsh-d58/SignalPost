@@ -218,3 +218,18 @@ def test_watchdog_never_exits_successfully_on_write_failure(tmp_path, monkeypatc
         assert exc.value.code == 1
     finally:
         r.fetcher.close()
+
+@pytest.mark.parametrize("published, accepted", [("2026-11-09T01:00:00Z", False), ("2026-11-09T01:00:00+02:00", True)])
+def test_cutoff_compares_full_claim_timestamp(tmp_path, published, accepted):
+    from signalpost.model import Claim
+    r = runner(tmp_path, evidence_cutoff=AT)
+    snap = source({"title": "Fixture article"})
+    try:
+        r.store.capture(snap)
+        pb = r.builders[ORG]
+        ev = pb.add_evidence(Evidence(snap.url, "official_registry", AT, snap.sha256, '"title": "Fixture article"', "fixture"))
+        pb.add(Claim("activity", "company_news", {"title": "Fixture article"}, [ev], effective_date=published))
+        env = r.envelope(ORG, AT, None)
+        assert any(c.get("field") == "company_news" for c in env["claims"]) is accepted
+    finally:
+        r.fetcher.close()

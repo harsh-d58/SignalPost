@@ -1,0 +1,102 @@
+{
+  "evidence": 75421,
+  "source_locators_verified": 75100,
+  "excerpt_artifacts_verified": 321,
+  "missing_references": 0,
+  "invalid_objects": 0,
+  "invalid_locators": 0,
+  "account_claims_verified": 48756,
+  "account_claims_unverified": 0,
+  "invalid_account_claims": 0,
+  "financial_fields": {
+    "accounting_rules": {
+      "verified": 3070,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "audit_status": {
+      "verified": 3070,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "cash": {
+      "verified": 2956,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "current_assets": {
+      "verified": 3058,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "equity": {
+      "verified": 3067,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "fixed_assets": {
+      "verified": 2935,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "long_term_debt": {
+      "verified": 2460,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "net_financial_items": {
+      "verified": 2821,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "net_result": {
+      "verified": 3070,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "operating_expenses": {
+      "verified": 3022,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "operating_result": {
+      "verified": 3027,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "profit_before_tax": {
+      "verified": 3025,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "revenue": {
+      "verified": 2405,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "sales_revenue": {
+      "verified": 1763,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "short_term_debt": {
+      "verified": 2895,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "total_assets": {
+      "verified": 3070,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "total_debt": {
+      "verified": 3042,
+      "unverified": 0,
+      "invalid": 0
+    }
+  },
+  "unique_objects": 3388,
+  "passed": true,
+  "errors": [],
+  "limitation": "Excerpt integrity does not independently establish full-page support or exact-company precision."
+}

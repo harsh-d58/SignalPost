@@ -1,4 +1,4 @@
-"""Reparse identity/workplace artifacts without another crawl, preserving live provenance.
+"""Reparse identity, workplace and accounts artifacts, preserving live provenance.
 
 uv run python eval/replay_registry.py out-live out-replay
 This is explicitly an offline parser replay, not a new live benchmark. It refuses
@@ -7,6 +7,7 @@ unexpected claim changes and keeps the original live report and source timestamp
 from __future__ import annotations
 
 import copy
+import argparse
 import hashlib
 import json
 import shutil
@@ -18,11 +19,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from signalpost.http import Snapshot, utc_now
 from signalpost.model import ProfileBuilder
 from signalpost.pipeline import code_digest, git_version, validate
-from signalpost.registry import entity_claims, subunit_claims
+from signalpost.registry import accounts_claims, entity_claims, subunit_claims
 from signalpost.synthesis import build_brief
 
 
-def replay(source: Path, target: Path):
+def replay(source: Path, target: Path, *, accounts_only: bool = False):
     started = time.monotonic()
     if source.resolve() == target.resolve():
         raise ValueError("replay output must differ from original live artifacts")
@@ -43,7 +44,10 @@ def replay(source: Path, target: Path):
             methods = {e["extraction_method"] for e in related}
             is_entity = any(m.startswith(("brreg_enheter_api:", "frozen_registry_row:")) for m in methods)
             is_location = "brreg_underenheter_api:overordnetEnhet" in methods
-            if not (is_entity or is_location) or record.get("retention") != "privacy_minimized_json":
+            is_accounts = any(m.startswith("regnskapsregisteret_api:") for m in methods)
+            if accounts_only and not is_accounts:
+                continue
+            if not (is_entity or is_location or is_accounts) or record.get("retention") != "privacy_minimized_json":
                 continue
             obj = record["object"]
             path = (source / obj["path"]).resolve()
@@ -63,17 +67,22 @@ def replay(source: Path, target: Path):
                 row = next(r for r in rows if str(r.get("organisasjonsnummer")) == org)
                 method = next(m.split(":")[0] for m in methods if m.startswith(("brreg_enheter_api:", "frozen_registry_row:")))
                 entity_claims(pb, row, retrieved_at=snap.retrieved_at, source_class=related[0]["source_class"], method=method, snapshot=snap)
-            else:
+            elif is_location:
                 subunit_claims(pb, snap)
+            else:
+                accounts_claims(pb, snap)
             for ev in pb.evidence.values():
                 if ev.content_sha256 == snap.sha256 and ev.source_url == url:
                     bindings[ev.id] = record["id"]
         replacements = {(c.family, c.key): c.to_dict() for c in pb.claims.values()}
         evidence = {e["id"]: e for e in env["evidence"]}
+        replaced_evidence = set()
         for index, old in enumerate(env["claims"]):
             replacement = replacements.get((old["family"], old.get("key")))
             if not replacement:
                 continue
+            if old["family"] == "financials" and any(old.get(k) != replacement.get(k) for k in ("period", "unit", "note")):
+                raise ValueError(f"unexpected financial scope, currency or period change: {org} {old['field']}")
             if old["value"] != replacement["value"]:
                 before = old["value"]
                 expected = dict(before) if isinstance(before, dict) else before
@@ -86,11 +95,16 @@ def replay(source: Path, target: Path):
                 if name in old:
                     replacement[name] = old[name]
             env["claims"][index] = replacement
+            replaced_evidence.update(old["evidence_ids"])
             for eid in replacement["evidence_ids"]:
                 ev = pb.evidence[eid].to_dict()
                 ev.update(snapshot_id=bindings[eid], parser_version="signalpost-evidence/2")
                 evidence[eid] = ev
-        env["evidence"] = list(evidence.values())
+        referenced = {eid for claim in env["claims"] for eid in claim["evidence_ids"]}
+        for change in env.get("changes", []):
+            referenced.update(change.get("evidence_ids", []))
+            referenced.update(change.get("previous_evidence_ids", []))
+        env["evidence"] = [ev for eid, ev in evidence.items() if eid in referenced or eid not in replaced_evidence]
         env["brief"] = build_brief(env)
         env["run"].update(replay_code_sha256=revision, replay_agent_version=version)
         envelopes.append(env)
@@ -103,11 +117,19 @@ def replay(source: Path, target: Path):
     report["replay"] = {"source_run_id": live["run_id"], "input_envelopes_sha256": hashlib.sha256((source / "envelopes.jsonl").read_bytes()).hexdigest(),
                         "code_sha256": revision, "completed_at": utc_now(), "requests": 0,
                         "seconds": round(time.monotonic() - started, 2), "normalizations": normalizations,
-                        "note": "Operations and coverage above belong to the original live collection. This replay repairs extraction locators and normalizes address line separators using retained sources. Observation timestamps are unchanged."}
+                        "note": ("Operations and coverage above belong to the original live collection. "
+                                 + ("This replay updates account evidence only. " if accounts_only else
+                                    "This replay updates extraction locators and normalizes address line separators. ")
+                                 + "Observation timestamps are unchanged.")}
     (target / "run-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     shutil.copyfile(source / "run-report.json", target / "original-live-run-report.json")
     print(json.dumps({"envelopes": len(envelopes), "normalizations": len(normalizations), "passed": report["validation"]["passed"], "replay_seconds": report["replay"]["seconds"]}))
 
 
 if __name__ == "__main__":
-    replay(Path(sys.argv[1]), Path(sys.argv[2]))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("source", type=Path)
+    parser.add_argument("target", type=Path)
+    parser.add_argument("--accounts-only", action="store_true")
+    args = parser.parse_args()
+    replay(args.source, args.target, accounts_only=args.accounts_only)

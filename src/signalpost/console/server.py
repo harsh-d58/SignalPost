@@ -111,6 +111,12 @@ def build_cmd(body: dict) -> tuple[list[str], str | None]:
     if out and not (SAFE_NAME.match(out) and out.startswith("out-")):
         raise ValueError("output folder must look like out-<name>")
     if action == "run":
+        workers = body.get("workers")
+        if workers not in (None, "") and (not re.fullmatch(r"[1-9]\d*", str(workers)) or int(workers) > 64):
+            raise ValueError("workers must be an integer from 1 to 64")
+        bulk_files = body.get("bulk_files", False)
+        if not isinstance(bulk_files, bool):
+            raise ValueError("bulk_files must be a boolean")
         batch = body.get("batch") or ""
         orgs = [o for o in re.split(r"[\s,;]+", body.get("orgs") or "") if o]
         if orgs:
@@ -124,6 +130,10 @@ def build_cmd(body: dict) -> tuple[list[str], str | None]:
             raise ValueError("choose a batch or paste organisation numbers")
         cmd = [py, "-m", "signalpost.cli", "run", "--organisations", batch, "--out", out, "--events",
                "--job-days", str(max(1, min(60, int(body.get("job_days") or 60))))]
+        if bulk_files:
+            cmd.append("--bulk-files")
+        if workers not in (None, ""):
+            cmd += ["--workers", str(workers)]
         prev = body.get("previous") or ""
         if prev:
             if not (SAFE_NAME.match(prev) and (ROOT / prev / "envelopes.jsonl").exists()):

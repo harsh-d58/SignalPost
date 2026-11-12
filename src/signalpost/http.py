@@ -17,8 +17,10 @@ import threading
 import time
 import urllib.parse
 import urllib.robotparser
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 import httpx
@@ -73,21 +75,24 @@ class UrlPolicyError(Exception):
     pass
 
 
-_dns_cache: dict[str, bool] = {}
+_dns_cache: dict[str, tuple[float, bool]] = {}
 _dns_lock = threading.Lock()
 
 
 def host_is_public(host: str) -> bool:
     with _dns_lock:
-        if host in _dns_cache:
-            return _dns_cache[host]
+        cached = _dns_cache.get(host)
+        if cached and time.monotonic() < cached[0]:
+            return cached[1]
     try:
         infos = socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
         ok = bool(infos) and all(ipaddress.ip_address(info[4][0].split("%")[0]).is_global for info in infos)
     except (socket.gaierror, UnicodeError, ValueError, OSError):
         ok = False
     with _dns_lock:
-        _dns_cache[host] = ok
+        if len(_dns_cache) >= 1024:
+            _dns_cache.clear()
+        _dns_cache[host] = (time.monotonic() + (60 if ok else 5), ok)
     return ok
 
 
@@ -133,6 +138,8 @@ class Fetcher:
         self._robots: dict[str, urllib.robotparser.RobotFileParser | None] = {}
         self._robots_locks: dict[str, threading.Lock] = {}
         self._lock = threading.Lock()
+        self._response_cache = OrderedDict()
+        self._inflight = {}
         self._min_interval: dict[str, float] = {}
         self._last_start: dict[str, float] = {}
         self.local = threading.local()  # per-thread request counter (per-company operations)
@@ -190,8 +197,37 @@ class Fetcher:
             return True
         return parser.can_fetch(USER_AGENT, url) and parser.can_fetch("*", url)
 
+    def sitemap_urls(self, url: str) -> list[str]:
+        parts = urllib.parse.urlsplit(url)
+        with self._lock:
+            parser = self._robots.get(f"{parts.scheme}://{parts.netloc}")
+        return (parser.site_maps() or []) if parser is not None else []
+
     # ------------------------------------------------------------------ fetch
     def get(self, url: str, *, phase: str, api: bool = False, headers: dict[str, str] | None = None,
+            max_bytes: int = MAX_BODY_BYTES, timeout: float = 20.0, respect_robots: bool | None = None) -> Snapshot:
+        # Serialize equivalent work; only the ordinary freshness gate may reuse its result.
+        key = (url, api, max_bytes, respect_robots, tuple(sorted(httpx.Headers(headers or {}).multi_items())))
+        event = None
+        while True:
+            with self._lock:
+                waiting = self._inflight.get(key)
+                if waiting is None:
+                    if len(self._inflight) < 64:
+                        event = self._inflight[key] = threading.Event()
+                    break
+            if not waiting.wait(max(0, min(timeout, self.budget.time_left()))):
+                raise BudgetExhausted("deadline while waiting for equivalent request")
+        try:
+            return self._cached_get(url, phase=phase, api=api, headers=headers, max_bytes=max_bytes,
+                                    timeout=timeout, respect_robots=respect_robots)
+        finally:
+            if event is not None:
+                with self._lock:
+                    self._inflight.pop(key, None)
+                    event.set()
+
+    def _cached_get(self, url: str, *, phase: str, api: bool = False, headers: dict[str, str] | None = None,
             max_bytes: int = MAX_BODY_BYTES, timeout: float = 20.0, respect_robots: bool | None = None) -> Snapshot:
         if respect_robots is None:
             respect_robots = not api
@@ -202,10 +238,42 @@ class Fetcher:
                 return Snapshot(url, url, 0, utc_now(), error=f"url_policy: {exc}")
             if not self.allowed_by_robots(url, phase):
                 return Snapshot(url, url, 0, utc_now(), error="blocked_robots")
+        request_headers = httpx.Headers(self.client.headers)
+        request_headers.update(headers or {})
+        cache_key = None
+        if self.client.auth is None and not self.client.cookies and not any(key in request_headers for key in (
+                "authorization", "proxy-authorization", "cookie", "cache-control", "pragma", "range"
+        )) and not any(key.startswith("if-") for key in request_headers):
+            cache_key = (url, api, respect_robots, max_bytes, tuple(sorted(request_headers.multi_items())))
+            with self._lock:
+                cached = self._response_cache.get(cache_key)
+                if cached and time.monotonic() < cached[0]:
+                    self._response_cache.move_to_end(cache_key)
+                    return cached[1]
+                self._response_cache.pop(cache_key, None)
         snap = self._get(url, phase=phase, api=api, headers=headers, max_bytes=max_bytes, timeout=timeout,
                          respect_robots=respect_robots)
         if self.store:
             self.store.capture(snap)
+        if cache_key is not None and snap.status == 200 and snap.ok and not snap.redirects and len(snap.body) <= 256_000:
+            directives = {part.strip().lower() for part in snap.headers.get("cache-control", "").split(",")}
+            max_age = [d.partition("=")[2].strip('"') for d in directives if d.startswith("max-age=")]
+            if ("public" in directives and not any(d.partition("=")[0] in {"no-store", "no-cache", "private"} for d in directives)
+                    and "*" not in snap.headers.get("vary", "") and "set-cookie" not in snap.headers
+                    and len(max_age) == 1 and max_age[0].isdigit()):
+                try:
+                    age = max(0, int(snap.headers.get("age", "0")))
+                    if snap.headers.get("date"):
+                        age = max(age, (datetime.now(timezone.utc) - parsedate_to_datetime(snap.headers["date"])).total_seconds())
+                    ttl = min(300, int(max_age[0]) - age)
+                except (ValueError, TypeError, OverflowError):
+                    ttl = 0
+                if ttl > 0:
+                    with self._lock:
+                        self._response_cache[cache_key] = (time.monotonic() + ttl, snap)
+                        self._response_cache.move_to_end(cache_key)
+                        if len(self._response_cache) > 64:
+                            self._response_cache.popitem(last=False)
         return snap
 
     def _get(self, url: str, *, phase: str, api: bool, headers: dict[str, str] | None = None,
@@ -257,7 +325,8 @@ class Fetcher:
                             sha256=hashlib.sha256(body).hexdigest(),
                             elapsed_ms=int((time.monotonic() - started) * 1000),
                             redirects=redirects,
-                            headers={k.lower(): v for k, v in response.headers.items() if k.lower() in {"etag", "last-modified", "date"}},
+                            headers={k.lower(): "" if k.lower() == "set-cookie" else v for k, v in response.headers.items()
+                                     if k.lower() in {"etag", "last-modified", "date", "cache-control", "age", "vary", "set-cookie"}},
                         )
                 except BudgetExhausted:
                     raise

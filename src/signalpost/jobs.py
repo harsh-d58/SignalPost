@@ -7,6 +7,7 @@ Only ACTIVE ads are published (NAV terms: inactive ads must not be shown); conta
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 import threading
@@ -18,6 +19,7 @@ from urllib.parse import urljoin, urlsplit
 
 from .budget import BudgetExhausted
 from .http import Fetcher, Snapshot
+from .job_dates import job_expired, job_not_yet_published, parse_job_date
 from .model import Claim, Evidence, ProfileBuilder
 
 BASE = "https://pam-stilling-feed.nav.no"
@@ -142,7 +144,6 @@ class JobFeed:
 
 
 def job_claims(pb: ProfileBuilder, feed: JobFeed, names: list[str], valid_orgs: set[str], *, max_verify: int = 6) -> None:
-    from .web import _parse_date
     # A rolling feed is not a full inventory, even if all pages in its window were read.
     pb.extra.setdefault("incomplete_families", {})["jobs"] = "rolling NAV window; absent ads have not been checked for closure"
     if not feed.done.is_set():
@@ -187,18 +188,26 @@ def job_claims(pb: ProfileBuilder, feed: JobFeed, names: list[str], valid_orgs: 
             continue
         locs = content.get("workLocations") or []
         place = ", ".join(sorted({(l.get("city") or l.get("municipal") or "").title() for l in locs if (l.get("city") or l.get("municipal"))}))
-        published = _parse_date(content.get("published"))
-        expires = _parse_date(content.get("expires"))
-        today = datetime.now(timezone.utc).date().isoformat()
-        if not (content.get("title") or ad.get("title")) or not published or published > today or (content.get("expires") and not expires) or (expires and expires < today):
+        posted = parse_job_date(content.get("published"))
+        deadline = parse_job_date(content.get("expires"))
+        now = datetime.now(timezone.utc)
+        title = content.get("title")
+        if (not isinstance(title, str) or not title.strip() or not posted or job_not_yet_published(posted, now)
+                or (content.get("expires") not in (None, "") and not deadline) or (deadline and job_expired(deadline, now))):
+            rejected += 1
+            continue
+        proof = {key: content[key] for key in ("title", "published", "expires") if key in content}
+        proof["employer"] = {key: employer[key] for key in ("orgnr", "name") if key in employer}
+        excerpt = json.dumps({"status": body["status"], "ad_content": proof}, ensure_ascii=False)
+        if len(excerpt) > 600:
             rejected += 1
             continue
         value = {
-            "title": content.get("title") or ad.get("title"),
+            "title": title,
             "employer": employer.get("name"),
             "location": place or None,
-            "published": published,
-            "expires": expires,
+            "published": posted.isoformat(),
+            "expires": deadline.isoformat() if deadline else None,
             "url": f"https://arbeidsplassen.nav.no/stillinger/stilling/{ad['uuid']}",
             "positions": content.get("positioncount"),
             "extent": content.get("extent"),
@@ -206,7 +215,7 @@ def job_claims(pb: ProfileBuilder, feed: JobFeed, names: list[str], valid_orgs: 
         value = {k: v for k, v in value.items() if v not in (None, "")}
         reason = "employer.orgnr equals company organisation number" if orgnr == pb.org else f"employer.orgnr {orgnr} is a registered sub-unit of this company"
         ev = pb.add_evidence(Evidence(snap.url, "public_api", snap.retrieved_at, snap.sha256,
-                                      str(value["title"]),
+                                      excerpt,
                                       "nav_pam_stilling_feed:ad_content.employer.orgnr", "NAV arbeidsplassen API terms", identity_reason=reason,
                                       reporting_period={"from": value.get("published", ""), "to": value.get("expires", "")}))
         pb.add(Claim("jobs", "job_posting", value, [ev], label="Active job posting", key=f"job:{ad['uuid']}", effective_date=value.get("published")))

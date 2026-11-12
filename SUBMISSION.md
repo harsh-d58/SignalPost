@@ -4,28 +4,28 @@ Repository: https://github.com/harshgitty58/SignalPost (branch `main`) · The em
 
 ## Current scoring and revision
 
-The current working-tree revision is documented in [rank-up implementation and measured metrics](reports/rankup-implementation.md). Use the evaluator command in [README](README.md), including `--bulk-files` for large batches. NAV requires a permitted credential and is blocked by default without one. Optional environment setup is documented in [.env.example](.env.example). Freeze an exact new commit before sending a revision.
+The current working-tree revision is documented in [release verification and measured metrics](reports/release-readiness-20261112.md). Use the evaluator command in [README](README.md), including `--bulk-files` for large batches. NAV requires a permitted credential and is blocked by default without one. Optional environment setup is documented in [.env.example](.env.example). Freeze an exact new commit before sending a revision.
 
 Builderr's published scoring weights are 50 for recall and coverage, 30 for precision and evidence, 12 for synthesis, and 8 for UX. Qualification requires 65/100 overall and passing the integrity and execution checks. Builderr supplies the official batches. Submit a public 100-company smoke result or report, the exact revision commit, a reproducible command, and source and cost details. The organizer lists November 16, 2026 as the revision deadline. [Scoring](https://builderr.ai/challenges/signalpost#scoring) · [Evaluation contract](https://builderr.ai/docs/signalpost-evaluation-harness.md)
 
-See [the implementation report](reports/rankup-implementation.md) for current checks and results. The generated metrics in section 3 are explicitly historical.
+See [the release report](reports/release-readiness-20261112.md) for current checks and results. The generated metrics in section 3 are explicitly historical.
 
 ## 1. Requirements checklist
 
-Local checks as of 11 November 2026. Official recall, precision, qualification and rank remain unmeasured.
+Local checks as of 12 November 2026. Official recall, precision, qualification and rank remain unmeasured.
 
 ### What to build
 | Requirement | Status | Where it is shown |
 |---|---|---|
 | Take a Norwegian organisation number, search permitted public sources | ✅ | `uv run signalpost run --organisations <batch> --out out/`; sources and licences in [SOURCES.md](SOURCES.md) |
 | Return company facts, source links and dates | ✅ | every claim has source URL, retrieval time, reporting period (where relevant), content SHA-256, claim span, extraction method; `reports/*-envelopes.jsonl.gz` |
-| Each fact belongs to the right company | Audit required | exact org.nr keys and website identity gates are implemented; deterministic revalidation passed for 28 scale websites, but independent population precision is unmeasured |
+| Each fact belongs to the right company | Audit required | exact org.nr keys and website identity gates are implemented; exact-company fixtures and source audits pass, but independent population precision is unmeasured |
 | Keep profiles current | ✅ | re-running into the same output folder is a refresh: typed, material/minor changes, `first_seen` / `last_seen` / `times_seen`, unreadable sources carried forward; [reports/refresh-replay.json](reports/refresh-replay.json) = PASS |
 
 ### What to submit
 | Requirement | Status | Where it is shown |
 |---|---|---|
-| Public 100-company smoke result or report | ✅ locally | `reports/rankup-smoke100-run-report.json`; the existing 1,000-profile Pages sample is historical demonstration data, not the official scoring input |
+| Public 100-company smoke result or report | ✅ locally | `reports/release-validation100-metrics.json`; the existing 1,000-profile Pages sample is historical demonstration data, not the official scoring input |
 | Repository link | ✅ | https://github.com/harshgitty58/SignalPost |
 | Exact commit hash | ✅ at send time | `git rev-parse HEAD` after `git push origin main` (§2) |
 | One command to run it | ✅ | `uv sync --frozen` then `uv run signalpost run --organisations <batch.jsonl> --out out/` |
@@ -35,11 +35,11 @@ Local checks as of 11 November 2026. Official recall, precision, qualification a
 ### How it is tested and scored
 | Item | Status | Evidence |
 |---|---|---|
-| Execution limits | Passed locally | use evaluator-supplied limits; recorded bulk run returned 1,100 results in 407.4 seconds using 1,920 requests and $0 external API cost |
+| Execution limits | Passed locally | use evaluator-supplied limits; recorded bulk run returned 1,100 results in 429.3 seconds using 1,920 requests and $0 external API cost |
 | Exactly one terminal envelope per input | Passed locally | tested up to 1,100 inputs including source failures; exhausted runs exit unsuccessfully even when envelopes are emitted |
 | Clean-machine install | ✅ | `uv sync --frozen` from a fresh clone; GitHub Actions `clean-machine` workflow runs tests + a live smoke on every push |
-| Recall and coverage (50) | Unmeasured officially | local 1,100-company website coverage 2.55%, social 0.91%, company news 0.45%, jobs 0%; pooled reference labels are unavailable |
-| Precision, exact identity and evidence (30) | Unmeasured officially | 75,475 retained-evidence checks passed; this is artifact integrity, not independent factual precision |
+| Recall and coverage (50) | Unmeasured officially | latest scale run: 29 websites, social profiles for 11 companies, news for 2 companies and no jobs; the final publisher-reference correction has separate focused validation |
+| Precision, exact identity and evidence (30) | Unmeasured officially | latest scale audit verified 48,707 account claims; direct smoke verified 4,522 account and 928 history claims; independent factual precision remains unknown |
 | Refresh requirements | Passed local replay | unchanged-source replay produced zero false changes; controlled changes, stale carry-forward and prior evidence tested |
 | Useful explanations (12) | Implemented, unscored | cited deterministic English/Norwegian summaries, signals, changes and unknowns |
 | UX (8) | Implemented, unscored | find, compare and verify flows; 14 frontend failure-path tests and interaction checks on current and legacy datasets |
@@ -70,7 +70,7 @@ Security / URL policy: [SECURITY.md](SECURITY.md)
 
 ## 4. Before every revision
 ```bash
-uv run --frozen --group dev pytest -q -p no:cacheprovider
+uv run --frozen --group dev pytest tests eval/diagnostics -q -p no:cacheprovider
 node --test eval/ui_resilience_check.cjs
 uv run --frozen signalpost run --organisations eval/rankup/smoke-100.jsonl --out out-check --job-days 7
 uv run --frozen python eval/refresh_replay.py out-check/envelopes.jsonl out-check/refresh-replay.json

@@ -1,0 +1,110 @@
+{
+  "evidence": 166,
+  "source_locators_verified": 148,
+  "excerpt_artifacts_verified": 18,
+  "missing_references": 0,
+  "invalid_objects": 0,
+  "invalid_locators": 0,
+  "history_claims_verified": 16,
+  "history_claims_unverified": 0,
+  "invalid_history_claims": 0,
+  "account_claims_verified": 63,
+  "account_claims_unverified": 0,
+  "invalid_account_claims": 0,
+  "financial_fields": {
+    "accounting_rules": {
+      "verified": 4,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "audit_status": {
+      "verified": 4,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "cash": {
+      "verified": 4,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "current_assets": {
+      "verified": 4,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "equity": {
+      "verified": 4,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "filed_annual_accounts": {
+      "verified": 16,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "fixed_assets": {
+      "verified": 3,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "long_term_debt": {
+      "verified": 2,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "net_financial_items": {
+      "verified": 4,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "net_result": {
+      "verified": 4,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "operating_expenses": {
+      "verified": 4,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "operating_result": {
+      "verified": 4,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "profit_before_tax": {
+      "verified": 4,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "revenue": {
+      "verified": 3,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "sales_revenue": {
+      "verified": 3,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "short_term_debt": {
+      "verified": 4,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "total_assets": {
+      "verified": 4,
+      "unverified": 0,
+      "invalid": 0
+    },
+    "total_debt": {
+      "verified": 4,
+      "unverified": 0,
+      "invalid": 0
+    }
+  },
+  "unique_objects": 30,
+  "passed": true,
+  "errors": [],
+  "limitation": "Excerpt integrity does not independently establish full-page support or exact-company precision."
+}

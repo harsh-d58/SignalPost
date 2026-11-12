@@ -123,7 +123,7 @@ def test_small_batch_budgets_group_for_every_company(tmp_path):
     assert r.plan["group"] >= len(orgs)
 
 
-def test_tail_pass_retries_only_budget_failures(tmp_path):
+def test_tail_pass_retries_only_budget_failures(tmp_path, monkeypatch):
     from signalpost.pipeline import Runner
     r = Runner(["923609016", "984661185"], out_dir=tmp_path, run_id="t", bulk=None, previous=None, max_requests=2000,
                max_minutes=45.0, max_cost=10.0, workers=2, job_days=7, web=False, log=lambda *_: None)
@@ -137,6 +137,8 @@ def test_tail_pass_retries_only_budget_failures(tmp_path):
         return Snapshot(url, url, 404, "2026-10-17T00:00:00Z")
 
     r.fetcher.get_json = fake_get_json
+    # The delayed scale run had about 137 seconds left after its first pass.
+    monkeypatch.setattr(r.budget, "elapsed", lambda: r.budget.deadline_seconds - 137)
     r.tail_pass(r.orgs)
     assert calls == [(calls[0][0], "roles")] and "923609016" in calls[0][0]
     assert a.families["leadership"].state == "not_available"
@@ -184,3 +186,26 @@ def test_brief_survives_job_ads_without_title():
     text = " ".join(s["text"] for s in build_brief(env)["sentences"])
     assert "2 active job postings" in text and "e.g. Elektriker" in text
 
+
+
+def test_account_prefetch_consumed_without_second_request(tmp_path, monkeypatch):
+    from concurrent.futures import Future
+    from signalpost.pipeline import Runner
+    from signalpost.registry import ACCOUNTS_URL
+
+    # A prefetched snapshot is consumed through the ordinary validation path.
+    runner = Runner(["923609016"], out_dir=tmp_path, run_id="prefetch-test", bulk=None, previous=None,
+                    max_requests=2000, max_minutes=45, max_cost=10, workers=2, job_days=7, log=lambda _: None)
+    future = Future()
+    future.set_result((Snapshot(ACCOUNTS_URL.format(org="923609016"), ACCOUNTS_URL.format(org="923609016"),
+                                200, "2026-11-11T00:00:00Z", body=b"[]"), 1))
+    runner.account_futures["923609016"] = future
+    monkeypatch.setattr(runner.fetcher, "get_json", lambda *a, **k: (_ for _ in ()).throw(AssertionError("duplicate fetch")))
+    pb = runner.builders["923609016"]
+    try:
+        runner._official_step(pb, pb.org, "financials", "accounts", ACCOUNTS_URL, lambda *a: None)
+        assert pb.requests == 1
+        assert pb.families["financials"].state == "not_available"
+        assert not runner.account_futures
+    finally:
+        runner.fetcher.close()

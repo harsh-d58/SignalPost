@@ -299,6 +299,8 @@ function renderForm(){
       field("…or organisation numbers",el("textarea",{class:"input",id:"orgs",placeholder:"923609016 947942638"}),"Space, comma or newline separated; 9 digits each."),
       el("div",{class:"row"},field("Output folder",el("input",{class:"input",id:"out",value:"out-console"}),"must start with out-"),field("NAV job window (days)",el("input",{class:"input",id:"days",type:"number",min:1,max:60,value:7}))),
       field("Refresh against previous run",el("select",{class:"input",id:"prev"},...runOptions("— baseline run —"))),
+      field("Workers",el("input",{class:"input",id:"workers",type:"number",min:1,max:64,value:24})),
+      el("label",{class:"check"},el("input",{type:"checkbox",id:"bulkfiles"}),"Use bulk registry files"),
       el("label",{class:"check"},el("input",{type:"checkbox",id:"noweb"}),"Registry only (skip websites)"));
     const v=()=>{const bad=$("orgs").value.split(/[\s,;]+/).filter(Boolean).filter(o=>!/^\d{9}$/.test(o));$("orgs").setAttribute("aria-invalid",String(!!bad.length));$("err").textContent=bad.length?"Not 9 digits: "+bad.slice(0,4).join(", "):"";};
     $("orgs").addEventListener("input",v);
@@ -316,7 +318,7 @@ function renderForm(){
 $("start").onclick=async()=>{
   $("err").textContent="";
   const a=S.action,body={action:a};
-  if(a==="run")Object.assign(body,{batch:$("batch").value,orgs:$("orgs").value,out:$("out").value.trim(),job_days:$("days").value,previous:$("prev").value,no_web:$("noweb").checked});
+  if(a==="run")Object.assign(body,{batch:$("batch").value,orgs:$("orgs").value,out:$("out").value.trim(),job_days:$("days").value,previous:$("prev").value,no_web:$("noweb").checked,workers:$("workers").value,bulk_files:$("bulkfiles").checked});
   else if(a==="rerun")Object.assign(body,{target:$("target").value,org:$("org").value.trim(),job_days:$("days").value});
   else if(a!=="tests")body.target=$("target").value;
   if(a==="rerun"&&!/^\d{9}$/.test(body.org||"")){$("err").textContent="Organisation number must be 9 digits.";$("org").focus();return;}

@@ -27,7 +27,7 @@ Replace the example paths, timestamps and limits with the supplied evaluation va
 envelope per input to `out-official/envelopes.jsonl`, a run report and a static showcase. Reusing the output directory
 archives the previous run and reports changes.
 
-The 100-company smoke report is `reports/rankup-smoke100-run-report.json`. The same-batch comparison and verification results for 1,100 companies are in `reports/rankup-implementation.md`. GitHub Pages builds the committed 1,000-profile sample. [Showcase](https://harshgitty58.github.io/SignalPost/) · [Sample profile](https://harshgitty58.github.io/SignalPost/#/c/999072712)
+The 100-company smoke report is `reports/release-validation100-metrics.json`. The same-batch comparison and verification results for 1,100 companies are in `reports/release-readiness-20261112.md`. GitHub Pages builds the committed 1,000-profile sample. [Showcase](https://harshgitty58.github.io/SignalPost/) · [Sample profile](https://harshgitty58.github.io/SignalPost/#/c/999072712)
 
 **Model / API details**
 - No LLM is used.

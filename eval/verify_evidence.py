@@ -23,6 +23,21 @@ def compact(text: str) -> str:
     return re.sub(r"\s+", "", html.unescape(text))
 
 
+def json_fragment_present(actual, fragment) -> bool:
+    def contains(value, expected):
+        if isinstance(expected, dict):
+            return isinstance(value, dict) and all(k in value and contains(value[k], v) for k, v in expected.items())
+        if isinstance(expected, list):
+            return isinstance(value, list) and len(value) == len(expected) and all(
+                contains(a, b) for a, b in zip(value, expected))
+        return value == expected and type(value) is type(expected)
+
+    if contains(actual, fragment):
+        return True
+    children = actual.values() if isinstance(actual, dict) else actual if isinstance(actual, list) else []
+    return any(json_fragment_present(child, fragment) for child in children)
+
+
 def span_present(body: str, span: str) -> bool:
     """Require the claimed excerpt, not unrelated occurrences of value words."""
     if not isinstance(span, str) or not span.strip():
@@ -30,32 +45,37 @@ def span_present(body: str, span: str) -> bool:
     probe = compact(span)
     if probe in compact(body):
         return True
-    try:
-        # JSON object formatting and escaping may differ, but field/value structure must agree.
-        parsed = json.loads(body)
-        normalized = json.dumps(parsed, ensure_ascii=False, sort_keys=True)
-        if probe in compact(normalized):
-            return True
+    fragment = None
+    for candidate in (span, "{" + span + "}"):
         try:
-            fragment = json.loads(span)
+            parsed = json.loads(candidate)
         except ValueError:
-            fragment = json.loads("{" + span + "}")
-        def contains(actual, expected):
-            if isinstance(expected, dict):
-                return isinstance(actual, dict) and all(k in actual and contains(actual[k], v) for k, v in expected.items())
-            return actual == expected and type(actual) is type(expected)
-        def walk(value):
-            if contains(value, fragment):
-                return True
-            children = value.values() if isinstance(value, dict) else value if isinstance(value, list) else []
-            return any(walk(child) for child in children)
-        if isinstance(fragment, dict) and fragment and walk(parsed):
+            continue
+        if isinstance(parsed, dict) and parsed:
+            fragment = parsed
+        break
+    try:
+        parsed = json.loads(body)
+        if probe in compact(json.dumps(parsed, ensure_ascii=False, sort_keys=True)):
+            return True
+        if fragment is not None and json_fragment_present(parsed, fragment):
             return True
     except (ValueError, TypeError):
         pass
     try:
         from lxml import html as lhtml
         doc = lhtml.fromstring(body)
+        if fragment is not None:
+            for script in doc.xpath("//script[@type='application/ld+json']"):
+                try:
+                    data = json.loads(script.text_content())
+                except ValueError:
+                    continue
+                if json_fragment_present(data, fragment):
+                    return True
+            return False
+        if span.startswith("<"):
+            return probe in compact(lhtml.tostring(doc, encoding="unicode"))
         return probe in compact(doc.text_content())
     except (ValueError, TypeError):
         return False

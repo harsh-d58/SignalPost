@@ -1,0 +1,27 @@
+{
+  "review_date": "2026-11-11",
+  "mode": "offline_acceptance_review",
+  "cases": 222,
+  "passed": 218,
+  "failed": [
+    {
+      "class": "eval.diagnostics.test_remaining_risks",
+      "case": "test_remaining_news_publication_boundaries[foreign-publisher-html]"
+    },
+    {
+      "class": "eval.diagnostics.test_remaining_risks",
+      "case": "test_remaining_news_publication_boundaries[sibling-host]"
+    },
+    {
+      "class": "eval.diagnostics.test_remaining_risks",
+      "case": "test_remaining_news_publication_boundaries[future-time]"
+    },
+    {
+      "class": "eval.diagnostics.test_remaining_risks",
+      "case": "test_remaining_refresh_distinguishes_closed_from_unobserved[explicitly-closed-ad]"
+    }
+  ],
+  "errors": 0,
+  "live_accuracy": "unmeasured",
+  "production_changes": false
+}

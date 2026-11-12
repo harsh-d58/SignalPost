@@ -57,7 +57,10 @@ class Evidence:
 
     def __post_init__(self) -> None:
         if not self.id:
-            self.id = stable_id("ev", self.source_url, self.content_sha256, self.claim_span, self.extraction_method, self.reporting_period)
+            parts = (self.source_url, self.content_sha256, self.claim_span, self.extraction_method, self.reporting_period)
+            if self.locator and self.locator.get("record_pointer"):
+                parts += (self.locator,)
+            self.id = stable_id("ev", *parts)
 
     def to_dict(self) -> dict[str, Any]:
         out = {

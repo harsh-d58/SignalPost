@@ -379,7 +379,8 @@ def accounts_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
             continue
         period = rec.get("regnskapsperiode") or {}
         p = {"from": period.get("fraDato"), "to": period.get("tilDato")}
-        account_type = (rec.get("regnskapstype") or "SELSKAP").upper()
+        source_scope = rec.get("regnskapstype")
+        account_type = (source_scope or "SELSKAP").upper()
         currency = rec.get("valuta") or None
         scope = "company" if account_type == "SELSKAP" else "group (consolidated)"
         for field, label, path in FIN_FIELDS:
@@ -391,26 +392,40 @@ def accounts_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
                                           f"regnskapsregisteret_api:{'.'.join(path)}", NLOD, identity_reason="exact organisation-number key",
                                           reporting_period=p, locator={"type": "json_pointer", "pointer": f"/{record_index}/" + "/".join(path),
                                                                        "value": value, "record_pointer": f"/{record_index}", "organisation_number": pb.org,
-                                                                       "currency": currency, "period": p}))
+                                                                       "currency": currency, "period": p,
+                                                                       **({"account_type": account_type} if source_scope else {})}))
             pb.add(Claim("financials", field, value, [ev], label=f"{label} ({scope})", period=p, unit=currency,
                          key=f"{field}:{account_type}:{p['to']}", note=f"account_type={account_type}"))
+        def record_locator(path, value):
+            return {"type": "json_pointer", "pointer": f"/{record_index}/{path}", "value": value,
+                    "record_pointer": f"/{record_index}", "organisation_number": pb.org,
+                    "currency": currency, "period": p, **({"account_type": account_type} if source_scope else {})}
+
         audit = rec.get("revisjon") or {}
         if audit:
             audited = "not audited" if audit.get("ikkeRevidertAarsregnskap") or audit.get("fravalgRevisjon") else "audited"
             ev = pb.add_evidence(Evidence(url, "official_registry", snap.retrieved_at, snap.sha256, span("revisjon", audit),
-                                          "regnskapsregisteret_api:revisjon", NLOD, reporting_period=p))
+                                          "regnskapsregisteret_api:revisjon", NLOD, reporting_period=p, locator=record_locator("revisjon", audit)))
             pb.add(Claim("financials", "audit_status", audited, [ev], label=f"Audit status ({scope})", period=p, key=f"audit:{account_type}:{p['to']}"))
         rules = _get(rec, "regnkapsprinsipper", "regnskapsregler")
         if rules:
             ev = pb.add_evidence(Evidence(url, "official_registry", snap.retrieved_at, snap.sha256, span("regnskapsregler", rules),
-                                          "regnskapsregisteret_api:regnkapsprinsipper", NLOD, reporting_period=p))
+                                          "regnskapsregisteret_api:regnkapsprinsipper", NLOD, reporting_period=p,
+                                          locator=record_locator("regnkapsprinsipper/regnskapsregler", rules)))
             pb.add(Claim("financials", "accounting_rules", rules, [ev], label=f"Accounting rules ({scope})", period=p, key=f"rules:{account_type}:{p['to']}"))
     pb.set_state("financials", "available", "official annual accounts", url)
 
 
 def history_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
     """Official filing history: every year with a filed annual-account copy, linked to the official copy (PDF)."""
-    years = sorted({str(y) for y in (snap.json() if snap.ok else []) if str(y).isdigit()}, reverse=True)
+    if snap.url != HISTORY_URL.format(org=pb.org) or snap.final_url != snap.url:
+        pb.set_state("financials", "ambiguous", "filing history source does not resolve to the exact organisation")
+        return
+    data = snap.json() if snap.ok else []
+    if not isinstance(data, list):
+        raise ValueError("filing history must be a list of years")
+    years = sorted({str(y) for y in data if type(y) in (str, int) and len(str(y)) == 4
+                    and str(y).isascii() and str(y).isdigit()}, reverse=True)
     for year in years[:20]:
         ev = pb.add_evidence(Evidence(snap.url, "official_registry", snap.retrieved_at, snap.sha256, snap.text()[:600],
                                       "regnskapsregisteret_kopi_api:aar", NLOD, identity_reason="exact organisation-number key",

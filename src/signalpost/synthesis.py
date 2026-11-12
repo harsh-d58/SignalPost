@@ -225,6 +225,9 @@ def build_brief(envelope: dict[str, Any]) -> dict[str, Any]:
         st = (envelope.get("availability") or {}).get(fam) or {}
         if st.get("state") and st["state"] != "available":
             unknowns.append({"family": fam, "label": meta["label"], "state": st["state"], "reason": st.get("reason")})
+    if not any(c["field"] == "company_news" for c in claims):
+        unknowns.append({"family": "activity", "field": "company_news", "label": "Company news",
+                         "state": "unknown", "reason": "No dated company article was verified."})
     return {"sentences": sentences, "signals": signals, "checks": checks, "unknowns": unknowns,
             "method": "deterministic_template_v2 (English `text` + Norwegian `text_no` from the same claims; every sentence and signal cites claim IDs; derived values are labelled)"}
 

@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-12",
+  "tests": {
+    "total": 255,
+    "failed": 0,
+    "errors": 0
+  },
+  "live_run": {
+    "run_id": "run-20261111T100540Z",
+    "code_sha256": "3a0107948cdbec6e4f4f99c9eba8ce7737ba7dd99842eabc79c83847e80da3b9",
+    "companies": 100,
+    "terminal_completion": 1.0,
+    "requests": 601,
+    "elapsed_seconds": 216.3,
+    "external_cost_usd": 0.0,
+    "specific_fields": {
+      "company_news": {
+        "companies": 1,
+        "claims": 1
+      },
+      "registry_event": {
+        "companies": 99,
+        "claims": 347
+      },
+      "job_posting": {
+        "companies": 0,
+        "claims": 0
+      },
+      "filed_annual_accounts": {
+        "companies": 99,
+        "claims": 928
+      }
+    }
+  },
+  "precision": null,
+  "recall": null,
+  "remaining_work_document": "docs/dev/metrics-improvement-plan.md"
+}

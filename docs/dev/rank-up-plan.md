@@ -1,5 +1,7 @@
 # SignalPost technical plan for the November revision
 
+**Superseded for remaining work on 11 November:** use the [inspected metrics improvement plan](metrics-improvement-plan.md), which separates completed protections from the remaining request-allocation, discovery and independent-evaluation work. The plan below records the earlier implementation sequence.
+
 **Implementation update, 10 November:** see [measured results and remaining work](../../reports/rankup-implementation.md). The source-contract changes, retained-evidence audits, bulk/direct comparison, refresh checks and smoke/scale runs are implemented. On the same 1,100-company cohort, bulk improved leadership by 87.73 percentage points and workplaces by 66.73 points at 1,920 requests, with 60/60 direct-source parity checks after address normalization. Use the documented bulk flag for large batches. The 77-point score remains a target; external discovery coverage and independent recall labeling remain open work.
 
 **Prove the evidence and refresh contract, then run bulk registry as the first challenger.** The revised default run used 1,920 requests on 1,000 companies, including 996 annual-account requests and 339 individual role and workplace requests. It returned 1,000 valid envelopes in 91.5 seconds at $0, but covered roles for only 175 companies and workplaces for 142. Consolidating those lookups could recover both families and free requests for verified websites, news, and vacancies. [Local run report](../../reports/revision-scale-1000-run-report.json)

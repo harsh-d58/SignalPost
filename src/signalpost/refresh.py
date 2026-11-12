@@ -12,6 +12,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from .job_dates import job_expired, parse_job_date
+
 CHANGE_TYPES = {
     ("leadership", "added"): "new_role", ("leadership", "removed"): "ended_role", ("leadership", "changed"): "changed_role",
     ("locations", "added"): "new_location", ("locations", "removed"): "closed_location", ("locations", "changed"): "changed_location",
@@ -65,6 +67,7 @@ def diff(previous: dict[str, Any] | None, current: dict[str, Any], *, detected_a
     prev_evidence = {e["id"]: e for e in previous.get("evidence", [])}
     states = current.get("availability", {})
     incomplete = current.get("incomplete_families", {})
+    closed = current.get("closed_jobs", {})
     prev_started = previous.get("run", {}).get("started_at") or previous.get("run", {}).get("completed_at")
     for key, claim in cur_claims.items():
         old = prev_claims.get(key)
@@ -82,8 +85,15 @@ def diff(previous: dict[str, Any] | None, current: dict[str, Any], *, detected_a
     families = sorted({f for f, _ in prev_claims} | {f for f, _ in cur_claims})
     for family in families:
         state = (states.get(family) or {}).get("state")
-        expired = {key for (fam, key), c in prev_claims.items() if fam == "jobs" and isinstance(c.get("value"), dict)
-                   and c["value"].get("expires") and c["value"]["expires"] < detected_at[:10]}
+        expired = set(closed) if family == "jobs" else set()
+        if family == "jobs":
+            observed = parse_job_date(detected_at)
+            for (fam, key), claim in prev_claims.items():
+                if fam != "jobs" or not isinstance(claim.get("value"), dict):
+                    continue
+                deadline = parse_job_date(claim["value"].get("expires"))
+                if deadline is not None and observed is not None and job_expired(deadline, observed):
+                    expired.add(key)
         if state in UNREADABLE or family in incomplete or ((states.get(family) or {}).get("reason", "").startswith("request budget")):
             not_compared.append(family)
             # carry forward last supported values with their original evidence
@@ -137,7 +147,7 @@ def diff(previous: dict[str, Any] | None, current: dict[str, Any], *, detected_a
                 "current_unit": new.get("unit") if new else None,
                 "previous_period": old.get("period") if old else None,
                 "current_period": new.get("period") if new else None,
-                "evidence_ids": (new or {}).get("evidence_ids") or [],
+                "evidence_ids": (new or {}).get("evidence_ids") or (closed.get(key, {}).get("evidence_ids", []) if family == "jobs" else []),
                 "previous_evidence_ids": (old or {}).get("evidence_ids") or [],
                 "detected_at": detected_at,
             })

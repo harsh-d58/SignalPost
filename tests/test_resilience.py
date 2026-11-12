@@ -112,7 +112,7 @@ def test_real_news_and_distinct_same_title_jobs():
     pb = ProfileBuilder(ORG)
     pb.extra["legal_name"] = NAME
     nodes = [{"@type": "NewsArticle", "headline": "Our new factory opens", "datePublished": TODAY, "url": "/news/factory"}]
-    nodes += [{"@type": "JobPosting", "title": "Marine engineer", "datePosted": TODAY,
+    nodes += [{"@type": "JobPosting", "title": "Marine engineer", "datePosted": TODAY, "directApply": True,
                "hiringOrganization": {"name": NAME, "identifier": ORG}, "url": "/jobs/" + location} for location in ("oslo", "bergen")]
     v = visit(page(nodes=[nodes[0]], url="https://fjord.no/news/factory"))
     v.pages.extend(page(nodes=[node], url="https://fjord.no" + node["url"]) for node in nodes[1:])
@@ -209,13 +209,19 @@ def test_nav_latest_inactive_entry_wins(monkeypatch):
     assert feed.complete and feed.done.is_set()
 
 
-def test_expired_job_is_closed_even_with_partial_feed():
-    old = {"id": "old", "family": "jobs", "field": "job_posting", "key": "old", "value": {"title": "Old", "expires": "2020-01-01"}, "evidence_ids": ["e"]}
+@pytest.mark.parametrize("deadline, observed, closed", [
+    ("2020-01-01", TODAY, True),
+    ("2026-11-11T02:00:00+02:00", "2026-11-10T23:59:59Z", False),
+    ("2026-11-11T02:00:00+02:00", "2026-11-11T00:00:00Z", True),
+    ("2026-11-11T02:00:00+02:00", "2026-11-11T00:00:01Z", True),
+])
+def test_expired_job_is_closed_even_with_partial_feed(deadline, observed, closed):
+    old = {"id": "old", "family": "jobs", "field": "job_posting", "key": "old", "value": {"title": "Old", "expires": deadline}, "evidence_ids": ["e"]}
     prev = {"claims": [old], "evidence": [{"id": "e"}]}
     cur = {"claims": [], "evidence": [], "availability": {"jobs": {"state": "failed"}}, "incomplete_families": {"jobs": "partial"}}
-    changes, _ = diff(prev, cur, detected_at=TODAY)
-    assert [c["type"] for c in changes] == ["closed_job"]
-    assert not cur["claims"]
+    changes, _ = diff(prev, cur, detected_at=observed)
+    assert [c["type"] for c in changes] == (["closed_job"] if closed else [])
+    assert bool(cur["claims"]) is not closed
 
 
 def test_evidence_words_alone_do_not_validate_an_excerpt():
@@ -228,6 +234,41 @@ def test_evidence_words_alone_do_not_validate_an_excerpt():
     assert module.span_present('{"revenue":100}', '"revenue": 100')
     assert module.span_present('{"organisasjonsform":{"kode":"AS","_links":{},"beskrivelse":"Aksjeselskap"}}',
                                '"organisasjonsform": {"beskrivelse": "Aksjeselskap", "kode": "AS"}')
+    article = """<script type="application/ld+json">
+        {"headline":"Office opens","datePublished":"2026-11-11","publisher":{"name":"Fjord","contactPoint":"omitted"}}
+        </script>"""
+    proof = '{"headline":"Office opens","datePublished":"2026-11-11","publisher":{"name":"Fjord"}}'
+    assert module.span_present(article, proof)
+    assert not module.span_present(article, proof.replace("2026-11-11", "2026-11-12"))
+    assert module.span_present(
+        "<html><head><meta property='article:published_time' content='2026-11-11'/></head></html>",
+        '<meta property="article:published_time" content="2026-11-11">',
+    )
+
+
+@pytest.mark.parametrize("response_headers, second_headers, requests", [
+    ({"Cache-Control": "public, max-age=300"}, {}, 1),
+    ({"Cache-Control": "public, max-age=300, no-store"}, {}, 2),
+    ({"Cache-Control": "public, max-age=300", "Age": "300"}, {}, 2),
+    ({"Cache-Control": "public, max-age=300", "Vary": "*"}, {}, 2),
+    ({"Cache-Control": "public, max-age=300"}, {"Accept-Language": "en"}, 2),
+    ({"Cache-Control": "public, max-age=300"}, {"Authorization": "Bearer fixture"}, 2),
+])
+def test_response_reuse_obeys_freshness_and_request_context(monkeypatch, response_headers, second_headers, requests):
+    from signalpost import http
+
+    monkeypatch.setattr(http, "check_url", lambda url: http.urllib.parse.urlsplit(url))
+    fetcher = http.Fetcher(Budget())
+    fetcher.client.close()
+    fetcher.client = httpx.Client(transport=httpx.MockTransport(
+        lambda request: httpx.Response(200, text="public source", headers=response_headers)))
+    try:
+        first = fetcher.get("https://fixture.no/source", phase="web", api=True)
+        second = fetcher.get("https://fixture.no/source", phase="web", api=True, headers=second_headers)
+        assert first.ok and second.ok
+        assert fetcher.budget.requests == requests
+    finally:
+        fetcher.close()
 
 
 @pytest.mark.parametrize("content_type,body", [
@@ -258,3 +299,91 @@ def test_bulk_malformed_json_fails_instead_of_claiming_absence(body):
     from signalpost.bulk import _json_array
     with pytest.raises(ValueError):
         list(_json_array(io.StringIO(body)))
+
+@pytest.mark.parametrize("cacheable", [True, False])
+def test_concurrent_requests_share_only_cacheable_responses(monkeypatch, cacheable):
+    from concurrent.futures import ThreadPoolExecutor
+    import threading
+    from signalpost import http
+
+    monkeypatch.setattr(http, "check_url", lambda url: http.urllib.parse.urlsplit(url))
+    started, release = threading.Event(), threading.Event()
+    calls = []
+    def respond(request):
+        calls.append(request)
+        started.set()
+        assert release.wait(3)
+        return httpx.Response(200, text="public", headers={"Cache-Control": "public, max-age=300" if cacheable else "no-store"})
+    fetcher = http.Fetcher(Budget())
+    fetcher.client.close()
+    fetcher.client = httpx.Client(transport=httpx.MockTransport(respond))
+    try:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            first = pool.submit(fetcher.get, "https://fixture.no/source", phase="web", api=True)
+            assert started.wait(3)
+            second = pool.submit(fetcher.get, "https://fixture.no/source", phase="web", api=True)
+            release.set()
+            assert first.result().ok and second.result().ok
+        assert len(calls) == (1 if cacheable else 2)
+        assert not fetcher._inflight
+    finally:
+        release.set()
+        fetcher.close()
+
+
+def test_dns_failures_expire_instead_of_poisoning_process(monkeypatch):
+    from signalpost import http
+    clock = [100.0]
+    answers = [False, True]
+    monkeypatch.setattr(http.time, "monotonic", lambda: clock[0])
+    http._dns_cache.clear()
+    def resolve(*args, **kwargs):
+        if not answers.pop(0):
+            raise OSError("temporary DNS failure")
+        return [(None, None, None, None, ("8.8.8.8", 0))]
+    monkeypatch.setattr(http.socket, "getaddrinfo", resolve)
+    try:
+        assert not http.host_is_public("fixture.no")
+        assert not http.host_is_public("fixture.no")
+        clock[0] += 6
+        assert http.host_is_public("fixture.no")
+    finally:
+        http._dns_cache.clear()
+
+
+def test_inflight_failure_releases_waiters(monkeypatch):
+    from signalpost import http
+    fetcher = http.Fetcher(Budget())
+    calls = []
+    def fail_once(*args, **kwargs):
+        calls.append(1)
+        if len(calls) == 1:
+            raise RuntimeError("fixture failure")
+        return Snapshot("https://fixture.no", "https://fixture.no", 200, TODAY, body=b"ok")
+    monkeypatch.setattr(fetcher, "_cached_get", fail_once)
+    try:
+        with pytest.raises(RuntimeError):
+            fetcher.get("https://fixture.no", phase="web")
+        assert not fetcher._inflight
+        assert fetcher.get("https://fixture.no", phase="web").ok
+        assert not fetcher._inflight
+    finally:
+        fetcher.close()
+
+
+def test_inflight_wait_obeys_deadline_without_removing_owner(monkeypatch):
+    import threading
+    from signalpost import http
+    fetcher = http.Fetcher(Budget())
+    url = "https://fixture.no"
+    key = (url, False, http.MAX_BODY_BYTES, None, ())
+    owner = threading.Event()
+    fetcher._inflight[key] = owner
+    monkeypatch.setattr(fetcher.budget, "time_left", lambda: 0)
+    try:
+        with pytest.raises(BudgetExhausted, match="waiting"):
+            fetcher.get(url, phase="web")
+        assert fetcher._inflight[key] is owner
+        assert not owner.is_set()
+    finally:
+        fetcher.close()

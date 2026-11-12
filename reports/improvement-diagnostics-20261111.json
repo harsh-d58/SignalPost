@@ -1,0 +1,169 @@
+{
+  "inspection_date": "2026-11-11",
+  "agent_commit": "de11bc45be987beaa744f8ab80c110445ffe887d",
+  "agent_code_sha256": "efcb10fd95260dcf3c0a08bed5fd050027f79f086c3ce11b102fd73b8516be62",
+  "fixture_clock": "2026-11-11T00:00:00Z",
+  "network": "prohibited; mocked responses only",
+  "diagnostic_fixture_sha256": "055635a04e8f83f717fcdb5b256115dab018cbd8fe20096369b372c37f587964",
+  "regression_suite": {
+    "tests": 164,
+    "passed": 164,
+    "failed": 0,
+    "errors": 0
+  },
+  "diagnostic_suite": {
+    "tests": 14,
+    "passed": 5,
+    "failed": 9,
+    "errors": 0,
+    "cases": [
+      {
+        "test": "test_D01_contact_page_name_and_registry_phone_prove_entity",
+        "status": "failed",
+        "seconds": 0.003,
+        "message": "AssertionError: contact-page proof ignored: ambiguous; no organisation number and insufficient name/contact evidence\nassert 'ambiguous' == 'accepted'\n  \n  - accepted\n  + ambiguous",
+        "case_id": "D01",
+        "classification": "identity_false_negative",
+        "code_location": "web.py::visit_site",
+        "proposed_remedy": "Validate exact entity evidence on the contact page with corroboration and scoped ownership.",
+        "programme_status": "reproduced_remedy_researched"
+      },
+      {
+        "test": "test_D02_news_retained_source_proves_publication_date",
+        "status": "failed",
+        "seconds": 0.021,
+        "message": "AssertionError: retained source contains title but no publication-date fragment\nassert False\n +  where False = any(<generator object test_D02_news_retained_source_proves_publication_date.<locals>.<genexpr> at 0x00000243454AF850>)",
+        "case_id": "D02",
+        "classification": "retained_evidence_gap",
+        "code_location": "web.py::_news; evidence.py::SnapshotStore.bind",
+        "proposed_remedy": "Retain publication-date and publisher source fragments alongside the article title.",
+        "programme_status": "reproduced_remedy_researched"
+      },
+      {
+        "test": "test_D03_job_retained_source_proves_employer_and_dates",
+        "status": "failed",
+        "seconds": 0.022,
+        "message": "AssertionError: retained job title does not prove employer or dates\nassert False\n +  where False = all(<generator object test_D03_job_retained_source_proves_employer_and_dates.<locals>.<genexpr> at 0x0000024345524450>)",
+        "case_id": "D03",
+        "classification": "retained_evidence_gap",
+        "code_location": "web.py::_site_jobs; evidence.py::SnapshotStore.bind",
+        "proposed_remedy": "Retain hiring organization, identifier, publication, expiry and status source fragments.",
+        "programme_status": "reproduced_remedy_researched"
+      },
+      {
+        "test": "test_D04_equivalent_reference_fact_matches_different_internal_key",
+        "status": "failed",
+        "seconds": 0.017,
+        "message": "AssertionError: identical company, field and URL missed because reviewer key differs\nassert 0 == 1",
+        "case_id": "D04",
+        "classification": "evaluation_matching_gap",
+        "code_location": "eval/metrics.py::signature",
+        "proposed_remedy": "Match semantic facts independently of crawler/reviewer internal keys.",
+        "programme_status": "reproduced_remedy_researched"
+      },
+      {
+        "test": "test_D05_registry_event_does_not_hide_unknown_company_news",
+        "status": "failed",
+        "seconds": 0.002,
+        "message": "AssertionError: available registry activity hides missing company news\nassert False\n +  where False = any(<generator object test_D05_registry_event_does_not_hide_unknown_company_news.<locals>.<genexpr> at 0x00000243455257D0>)",
+        "case_id": "D05",
+        "classification": "synthesis_capability_gap",
+        "code_location": "synthesis.py::build_brief",
+        "proposed_remedy": "Expose company-news unknowns separately from registry-event availability.",
+        "programme_status": "reproduced_remedy_researched"
+      },
+      {
+        "test": "test_D06_reusable_response_avoids_duplicate_outbound_requests",
+        "status": "failed",
+        "seconds": 0.068,
+        "message": "AssertionError: two identical cacheable requests caused 2 outbound requests\nassert 2 == 1\n +  where 2 = len(['https://fjord.example.no/shared', 'https://fjord.example.no/shared'])",
+        "case_id": "D06",
+        "classification": "request_efficiency_gap",
+        "code_location": "http.py::Fetcher.get",
+        "proposed_remedy": "Add context-safe cacheable response reuse with header/freshness and authorization controls.",
+        "programme_status": "reproduced_remedy_researched"
+      },
+      {
+        "test": "test_D07_console_honors_requested_bulk_configuration",
+        "status": "failed",
+        "seconds": 0.002,
+        "message": "AssertionError: console silently omits requested bulk mode\nassert '--bulk-files' in ['E:\\\\Harsh\\\\Self coding\\\\Hackathons\\\\SignalPost\\\\.test-tmp\\\\rankup-clean\\\\Scripts\\\\python.exe', '-m', 'signalpost.cli', 'run', '--organisations', 'eval/known-15.jsonl', ...]",
+        "case_id": "D07",
+        "classification": "console_configuration_gap",
+        "code_location": "console/server.py::build_cmd",
+        "proposed_remedy": "Validate and pass explicit bulk mode and worker settings and expose effective configuration.",
+        "programme_status": "reproduced_remedy_researched"
+      },
+      {
+        "test": "test_D08_sitemap_discovers_article_but_detail_supplies_date",
+        "status": "failed",
+        "seconds": 0.002,
+        "message": "AssertionError: dated article reachable only from sitemap missed; requested=[]\nassert 0 == 1\n +  where 0 = len([])",
+        "case_id": "D08",
+        "classification": "discovery_capability_gap",
+        "code_location": "web.py::_news",
+        "proposed_remedy": "Discover bounded sitemap candidates and verify dates on individual article pages.",
+        "programme_status": "reproduced_remedy_researched"
+      },
+      {
+        "test": "test_D09_expired_job_timestamp_is_not_active_until_end_of_day",
+        "status": "failed",
+        "seconds": 0.002,
+        "message": "AssertionError: expired DateTime was truncated to a date and still published as active\nassert not [Claim(family='jobs', field='job_posting', value={'title': 'Engineer', 'published': '2026-11-10', 'expires': '2026-11-...', unit=None, derived=False, note=None, key='sitejob:https://fjord.example.no/jobs/engineer', id='c-ee62503b2e91fc22')]\n +  where [Claim(family='jobs', field='job_posting', value={'title': 'Engineer', 'published': '2026-11-10', 'expires': '2026-11-...', unit=None, derived=False, note=None, key='sitejob:https://fjord.example.no/jobs/engineer', id='c-ee62503b2e91fc22')] = family_claims('jobs')\n +    where family_claims = <signalpost.model.ProfileBuilder object at 0x00000243423F9C40>.family_claims",
+        "case_id": "D09",
+        "classification": "job_validity_bug",
+        "code_location": "web.py::_parse_date; web.py::_site_jobs",
+        "proposed_remedy": "Preserve DateTime precision and compare timezone-aware expiry instants.",
+        "programme_status": "reproduced_remedy_researched"
+      },
+      {
+        "test": "test_control_exact_owner_gate[owner]",
+        "status": "passed",
+        "seconds": 0.002,
+        "classification": "control"
+      },
+      {
+        "test": "test_control_exact_owner_gate[parent]",
+        "status": "passed",
+        "seconds": 0.004,
+        "classification": "control"
+      },
+      {
+        "test": "test_control_modified_date_is_not_publication_date",
+        "status": "passed",
+        "seconds": 0.004,
+        "classification": "control"
+      },
+      {
+        "test": "test_control_wrong_job_employer_is_rejected",
+        "status": "passed",
+        "seconds": 0.002,
+        "classification": "control"
+      },
+      {
+        "test": "test_control_nav_without_credential_is_blocked_without_requests",
+        "status": "passed",
+        "seconds": 0.001,
+        "classification": "control"
+      }
+    ]
+  },
+  "official_recall": null,
+  "independent_precision": null,
+  "limitations": [
+    "New acceptance probes expose uncovered correctness requirements and proposed capabilities; these are not nine regressions in the existing suite.",
+    "Synthetic failures do not establish their prevalence in real companies. Live scale batch had zero published jobs.",
+    "No production extraction fixes or new live crawl were performed for this diagnostic report."
+  ],
+  "research_sources": [
+    "https://builderr.ai/docs/signalpost-evaluation-harness.md",
+    "https://schema.org/datePublished",
+    "https://schema.org/JobPosting",
+    "https://schema.org/validThrough",
+    "https://docs.python.org/3.12/library/datetime.html",
+    "https://www.rfc-editor.org/rfc/rfc9111.html",
+    "https://www.sitemaps.org/protocol.html",
+    "https://navikt.github.io/pam-stilling-feed/",
+    "https://www.python-httpx.org/advanced/transports/"
+  ]
+}

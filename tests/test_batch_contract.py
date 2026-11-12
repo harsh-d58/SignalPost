@@ -19,16 +19,25 @@ def numbers(count):
     return result
 
 
+@pytest.mark.parametrize("bulk", [False, True])
 @pytest.mark.parametrize("size", [0, 1, 100, 1000, 1100])
-def test_complete_batch_under_budget_with_random_source_failures(tmp_path, monkeypatch, size):
+def test_complete_batch_under_budget_with_random_source_failures(tmp_path, monkeypatch, size, bulk):
     orgs = numbers(size)
     runner = Runner(orgs, out_dir=tmp_path, run_id="fixture", bulk=None, previous=None,
-                    max_requests=2000, max_minutes=45, max_cost=10, workers=8, job_days=7, web=False, log=lambda *_: None)
+                    max_requests=2000, max_minutes=45, max_cost=10, workers=8, job_days=7, web=False, bulk_files=bulk, log=lambda *_: None)
     monkeypatch.setattr("signalpost.pipeline.pace_history", lambda: None)
     def feed():
         runner.job_feed.complete = True
         runner.job_feed.done.set()
     monkeypatch.setattr(runner.job_feed, "start", feed)
+    import threading
+    account_started = threading.Event()
+    overlap = []
+    def bulk_source(*args):
+        overlap.append(account_started.wait(3) if size else True)
+        return {}
+    monkeypatch.setattr("signalpost.pipeline.bulk_roles", bulk_source)
+    monkeypatch.setattr("signalpost.pipeline.bulk_subunits", bulk_source)
     def get_json(url, phase, **kw):
         runner.budget.acquire("data.brreg.no", phase)
         if phase == "registry":
@@ -37,6 +46,7 @@ def test_complete_batch_under_budget_with_random_source_failures(tmp_path, monke
         elif phase == "activity":
             value = [] if "/roller?" in url else {"_embedded": {"oppdaterteEnheter": []}, "page": {"totalPages": 1}}
         elif phase == "accounts":
+            account_started.set()
             o = url.rsplit("/", 1)[-1]
             if int(o) % 7 == 0:
                 return Snapshot(url, url, 500, "2026-11-08T00:00:00Z")
@@ -55,6 +65,8 @@ def test_complete_batch_under_budget_with_random_source_failures(tmp_path, monke
         runner.fetcher.close()
     rows = [json.loads(line) for line in (tmp_path / "envelopes.jsonl").read_text().splitlines()]
     assert [row["organisation_number"] for row in rows] == orgs
+    if bulk:
+        assert overlap == [True, True], "accounts must start before bulk completion"
     assert report["validation"]["passed"]
     assert report["operations"]["requests"] <= 2000
     assert all(row["run"]["terminal_status"] == "completed" for row in rows)

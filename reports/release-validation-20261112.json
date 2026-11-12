@@ -1,0 +1,54 @@
+{
+  "date": "2026-11-12",
+  "base_commit": "de11bc45be987beaa744f8ab80c110445ffe887d",
+  "working_tree_uncommitted": true,
+  "final_code_sha256": "6b71faa6dde5e8da89b2b43ecc6b5851db5a0a84a9efc143b3298752816345cb",
+  "python_test_version": "3.12.13",
+  "tests": {
+    "count": 267,
+    "failed": 0,
+    "errors": 0
+  },
+  "console_smoke": "passed",
+  "refresh_replay": "passed",
+  "runs": [
+    {
+      "directory": "out-release-scale1100",
+      "run_id": "run-20261112T063050Z",
+      "code_sha256": "218ccd5631e80623e658ee835001a90b29c59e44891d8542d0fbcfe7c810c34f",
+      "inputs": 1100,
+      "validation_passed": true,
+      "requests": 1920,
+      "elapsed_seconds": 429.3,
+      "cost_usd": 0.0
+    },
+    {
+      "directory": "out-release-validation100",
+      "run_id": "run-20261112T063822Z",
+      "code_sha256": "f0a642b58a2c0c84f61f88520e47f4e7b58e1c1f878df80b228a647b2dfbf99c",
+      "inputs": 100,
+      "validation_passed": true,
+      "requests": 607,
+      "elapsed_seconds": 220.1,
+      "cost_usd": 0.0
+    },
+    {
+      "directory": "out-release-publisher-graph",
+      "run_id": "run-20261112T064120Z",
+      "code_sha256": "6b71faa6dde5e8da89b2b43ecc6b5851db5a0a84a9efc143b3298752816345cb",
+      "inputs": 2,
+      "validation_passed": true,
+      "requests": 31,
+      "elapsed_seconds": 11.5,
+      "cost_usd": 0.0
+    }
+  ],
+  "precision": null,
+  "recall": null,
+  "official_score": null,
+  "caveat": "Large/direct runs precede final publisher-reference correction. Final code has full suite and focused two-company live validation.",
+  "frontend_resilience": {
+    "passed": 14,
+    "failed": 0
+  }
+}

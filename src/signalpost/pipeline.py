@@ -35,7 +35,7 @@ from .refresh import diff, load_previous
 from .registry import (ACCOUNTS_URL, GROUP_URL, HISTORY_URL, ROLES_URL, SUBUNITS_URL, accounts_claims, history_claims, pace_history, activity_claims, entity_claims,
                        fetch_activity, fetch_entities, group_claims, load_bulk, roles_claims, subunit_claims)
 from .synthesis import build_brief
-from .web import research_website, valid_orgnr
+from .web import enrich_company_owned, research_website, valid_orgnr
 from .wikidata import websites as wikidata_websites
 
 
@@ -136,6 +136,7 @@ class Runner:
         self.fetcher.set_min_interval("pam-stilling-feed.nav.no", 0.05)
         self.started_at = utc_now()
         self.builders: dict[str, ProfileBuilder] = {o: ProfileBuilder(o) for o in orgs}
+        self.account_futures = {}
         self.entities: dict[str, dict] = {}
         self.bulk_rows: dict[str, dict] = {}
         self.timings: dict[str, float] = {}
@@ -244,7 +245,16 @@ class Runner:
         try:
             if phase == "history":
                 pace_history()
-            snap = self.fetcher.get_json(url.format(org=org), phase=phase, retries=1)
+            pending_account = self.account_futures.pop(org, None) if phase == "accounts" else None
+            if pending_account is not None:
+                try:
+                    snap, requests = pending_account.result(timeout=max(0.1, self.budget.time_left()))
+                    pb.requests += requests
+                except TimeoutError:
+                    pb.set_state(family, "failed", "request budget: account prefetch deadline")
+                    return
+            else:
+                snap = self.fetcher.get_json(url.format(org=org), phase=phase, retries=1)
         except BudgetExhausted as exc:
             pb.set_state(family, "failed", f"request budget: {exc}")
             return
@@ -269,7 +279,28 @@ class Runner:
             pb.set_state("website", "failed", "request budget: website phase exhausted")
         else:
             research_website(pb, self.fetcher, entity, self.bulk_rows.get(org), {r for r in related if r},
-                             max_candidates=2 if len(self.orgs) > 200 else 4)
+                             max_candidates=2 if len(self.orgs) > 200 else 4, defer_enrichment=True)
+
+    def enrich_sites(self, known: list[str]) -> None:
+        def enrich(org):
+            pb = self.builders[org]
+            visit = pb.extra.pop("deferred_site", None)
+            if visit is None:
+                return
+            if self.stop.is_set() or self.budget.time_left() < 60:
+                pb.extra.setdefault("incomplete_families", {}).update({"jobs": "enrichment deadline", "activity": "enrichment deadline"})
+                return
+            self.fetcher.take_count()
+            try:
+                enrich_company_owned(pb, self.fetcher, visit)
+            except BudgetExhausted:
+                pb.extra.setdefault("incomplete_families", {}).update({"jobs": "enrichment budget", "activity": "enrichment budget"})
+            except Exception as exc:
+                pb.error("website", f"enrichment failed: {type(exc).__name__}")
+            finally:
+                pb.requests += self.fetcher.take_count()
+        with ThreadPoolExecutor(max_workers=self.workers) as pool:
+            list(pool.map(enrich, known))
 
     def tail_pass(self, known: list[str]) -> None:
         """Spend requests the fixed per-phase caps left unused on families that failed *only* for budget.
@@ -279,7 +310,7 @@ class Runner:
         first to exact-key official lookups (1 request each), then to websites (same identity gate as always).
         """
         spare = self.budget.usable_requests - self.budget.requests
-        if spare < 20 or self.stop.is_set() or self.budget.time_left() < 180:
+        if spare < 20 or self.stop.is_set() or self.budget.time_left() < 90:
             return
         steps = {"financials": ("accounts", ACCOUNTS_URL, accounts_claims), "leadership": ("roles", ROLES_URL, roles_claims),
                  "locations": ("locations", SUBUNITS_URL, subunit_claims), "group": ("group", GROUP_URL, group_claims)}
@@ -470,6 +501,18 @@ class Runner:
 
         t = time.monotonic()
         known = [o for o in self.orgs if o in self.entities]
+        account_pool = None
+        if self.bulk_mode:
+            # Fetch immutable account snapshots while independent bulk files load.
+            # Only company workers mutate builders after consuming these futures.
+            account_pool = ThreadPoolExecutor(max_workers=min(self.workers, 8), thread_name_prefix="accounts")
+            def prefetch_account(org):
+                self.fetcher.take_count()
+                if self.stop.is_set():
+                    raise BudgetExhausted("run stopped before account prefetch")
+                snap = self.fetcher.get_json(ACCOUNTS_URL.format(org=org), phase="accounts", retries=1)
+                return snap, self.fetcher.take_count()
+            self.account_futures = {org: account_pool.submit(prefetch_account, org) for org in known}
         ent_events, role_events, act_errors = fetch_activity(self.fetcher, known)
         for org in known:
             try:
@@ -525,7 +568,13 @@ class Runner:
         if self.stop.is_set():
             wait(pending, timeout=25)  # in-flight requests are bounded by their timeouts; budget now refuses new ones
         pool.shutdown(wait=False, cancel_futures=True)
+        if account_pool is not None:
+            account_pool.shutdown(wait=False, cancel_futures=True)
         self.phase("companies", t)
+
+        t = time.monotonic()
+        self.enrich_sites(known)
+        self.phase("website_enrichment", t)
 
         t = time.monotonic()
         feed_wait = max(0.0, min(self.budget.time_left() - 60, 600))
@@ -540,6 +589,7 @@ class Runner:
         t = time.monotonic()
         if not self.stop.is_set():
             self.tail_pass(known)
+        self.enrich_sites(known)  # process any sites recovered by the final retry pass
         self.phase("tail", t)
 
         t = time.monotonic()
@@ -582,6 +632,7 @@ class Runner:
             "changes": [],
             "refresh": {},
             "incomplete_families": pb.extra.get("incomplete_families", {}),
+            "closed_jobs": pb.extra.get("closed_jobs", {}),
             "brief": {},
             "unpublished_candidates": pb.candidates[:20],
             "errors": pb.errors[:20],
@@ -621,11 +672,13 @@ class Runner:
                 retained.append(ev)
                 snapshots[record["id"]] = record
         ids = {e["id"] for e in retained}
+        env["closed_jobs"] = {key: obs for key, obs in env.get("closed_jobs", {}).items()
+                              if obs.get("evidence_ids") and all(e in ids for e in obs["evidence_ids"])}
         claims = []
         dropped = set()
         for claim in env["claims"]:
             dates = [claim.get("effective_date"), (claim.get("period") or {}).get("to")]
-            future = self.evidence_cutoff and any(str(d)[:10] > self.evidence_cutoff[:10] for d in dates if d)
+            future = self.evidence_cutoff and any(instant(str(d)) > instant(self.evidence_cutoff) for d in dates if d)
             if all(eid in ids for eid in claim["evidence_ids"]) and not future:
                 claims.append(claim)
             else:
@@ -748,6 +801,8 @@ class Runner:
                            "p95_company_ms": ms[min(len(ms) - 1, int(len(ms) * 0.95))] if ms else None},
             "phase_seconds": self.timings,
             "budget_plan": self.plan,
+            "configuration": {"bulk_files": self.bulk_files, "workers": self.workers,
+                              "job_days": self.job_feed.days, "web_enabled": self.web_enabled},
             "bulk_snapshot": self.bulk_meta,
             "registry_snapshot": self.snapshot_meta,
             "evidence_cutoff": self.evidence_cutoff,

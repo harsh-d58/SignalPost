@@ -1,0 +1,174 @@
+{
+  "organisation_number": "919787538",
+  "name": "SUSHI HOUSE PHAN AS",
+  "checks": {
+    "idempotent_rerun_zero_changes": {
+      "passed": true,
+      "changes": 0
+    },
+    "typed_changes_detected": {
+      "passed": true,
+      "expected": [
+        "address_change",
+        "closed_location",
+        "ended_role",
+        "new_filing",
+        "new_job",
+        "new_role"
+      ],
+      "got": [
+        "address_change",
+        "closed_location",
+        "ended_role",
+        "new_filing",
+        "new_job",
+        "new_role"
+      ],
+      "changes": [
+        {
+          "id": "chg-c-5ed99bef2a41cce6-added",
+          "type": "new_filing",
+          "material": true,
+          "family": "financials",
+          "field": "revenue",
+          "key": "revenue:SELSKAP:2026-12-31",
+          "label": "revenue",
+          "previous": null,
+          "current": 12345000,
+          "previous_unit": null,
+          "current_unit": "NOK",
+          "previous_period": null,
+          "current_period": {
+            "from": "2026-01-01",
+            "to": "2026-12-31"
+          },
+          "evidence_ids": [
+            "ev-40e25e760158859f"
+          ],
+          "previous_evidence_ids": [],
+          "detected_at": "t2"
+        },
+        {
+          "id": "chg-c-7afce5f16f66c5cd-changed",
+          "type": "address_change",
+          "material": true,
+          "family": "identity",
+          "field": "business_address",
+          "key": "business_address",
+          "label": "Business address",
+          "previous": "Maridalsveien 162D, 0461 OSLO",
+          "current": "Testveien 1, 0150 OSLO",
+          "previous_unit": null,
+          "current_unit": null,
+          "previous_period": null,
+          "current_period": null,
+          "evidence_ids": [
+            "ev-ad07af6d2159fab9"
+          ],
+          "previous_evidence_ids": [
+            "ev-ad07af6d2159fab9"
+          ],
+          "detected_at": "t2"
+        },
+        {
+          "id": "chg-c-29ca840e9ea07d9f-added",
+          "type": "new_job",
+          "material": true,
+          "family": "jobs",
+          "field": "job_posting",
+          "key": "job:replay-1",
+          "label": "job posting",
+          "previous": null,
+          "current": {
+            "title": "Prosjektleder",
+            "published": "2026-10-17"
+          },
+          "previous_unit": null,
+          "current_unit": null,
+          "previous_period": null,
+          "current_period": null,
+          "evidence_ids": [
+            "ev-141ab5741cd664f5"
+          ],
+          "previous_evidence_ids": [],
+          "detected_at": "t2"
+        },
+        {
+          "id": "chg-c-d91bbb7f5ce8597e-removed",
+          "type": "ended_role",
+          "material": true,
+          "family": "leadership",
+          "field": "ceo",
+          "key": "role:DAGL:Huong Tra Thi Phan",
+          "label": "Daglig leder",
+          "previous": "Huong Tra Thi Phan",
+          "current": null,
+          "previous_unit": null,
+          "current_unit": null,
+          "previous_period": null,
+          "current_period": null,
+          "evidence_ids": [],
+          "previous_evidence_ids": [
+            "ev-93d4adc26ed6bbc9"
+          ],
+          "detected_at": "t2"
+        },
+        {
+          "id": "chg-c-9a66d54d03c77ae5-added",
+          "type": "new_role",
+          "material": true,
+          "family": "leadership",
+          "field": "ceo",
+          "key": "role:DAGL:Kari Nordmann",
+          "label": "Daglig leder",
+          "previous": null,
+          "current": "Kari Nordmann",
+          "previous_unit": null,
+          "current_unit": null,
+          "previous_period": null,
+          "current_period": null,
+          "evidence_ids": [
+            "ev-ea0095082cb3d0f9"
+          ],
+          "previous_evidence_ids": [],
+          "detected_at": "t2"
+        },
+        {
+          "id": "chg-c-0e43080b8fd076eb-removed",
+          "type": "closed_location",
+          "material": true,
+          "family": "locations",
+          "field": "workplace",
+          "key": "workplace:919926643",
+          "label": "Registered workplace",
+          "previous": {
+            "name": "SUSHI HOUSE PHAN AS",
+            "organisation_number": "919926643",
+            "address": "Maridalsveien 162D, 0461 OSLO",
+            "municipality": "Oslo",
+            "industry": "56.210 Catering for arrangementer",
+            "opened": "2018-01-01"
+          },
+          "current": null,
+          "previous_unit": null,
+          "current_unit": null,
+          "previous_period": null,
+          "current_period": null,
+          "evidence_ids": [],
+          "previous_evidence_ids": [
+            "ev-0d00bcfa4fb0be1d"
+          ],
+          "detected_at": "t2"
+        }
+      ]
+    },
+    "unreadable_source_carried_forward": {
+      "passed": true,
+      "carried_claims": 3,
+      "not_compared": [
+        "leadership"
+      ]
+    }
+  },
+  "passed": true
+}

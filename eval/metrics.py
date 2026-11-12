@@ -2,7 +2,8 @@
 
 uv run python eval/metrics.py out-run --output reports/metrics.json
 Optional --pool independent.jsonl: independently verified claim objects with
-organisation_number, family, key, value, period and unit. No predictions are labels.
+organisation_number, family, field, value, and period/unit where applicable.
+For accounts, supply account_type (SELSKAP or KONSERN). No predictions are labels.
 Optional --baseline out-baseline compares the same organisation set only.
 """
 from __future__ import annotations
@@ -10,8 +11,11 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from collections import Counter
 from pathlib import Path
+
+from signalpost.web import item_url
 
 
 def claims(env):
@@ -21,6 +25,40 @@ def claims(env):
 def signature(org, claim):
     return json.dumps([org, claim["family"], claim.get("key") or claim["field"], claim["value"],
                        claim.get("unit"), claim.get("period")], sort_keys=True, ensure_ascii=False)
+
+
+def account_type(claim):
+    explicit = claim.get("account_type")
+    if explicit:
+        return explicit.strip().upper()
+    note = re.search(r"\baccount_type=(\w+)", claim.get("note") or "")
+    if note:
+        return note[1].upper()
+    # Older audit and accounting-rules claims carry their account type in the key.
+    legacy = re.fullmatch(r"(?:audit|rules):(SELSKAP|KONSERN):\d{4}-\d{2}-\d{2}", claim.get("key") or "")
+    return legacy[1] if legacy else None
+
+
+def reference_signature(org, claim):
+    """Match independently labeled facts by their meaning within an exact entity."""
+    family, field, value = claim["family"], claim["field"], claim["value"]
+    effective_date = claim.get("effective_date")
+    if field == "official_website":
+        value = item_url(value, "") or value
+    elif field in ("company_news", "job_posting") and isinstance(value, dict):
+        url = item_url(value.get("url"), "")
+        if field == "company_news":
+            published = value.get("date") or effective_date
+            if url and published:
+                value = {"url": url, "date": published}
+                effective_date = None
+        elif url and isinstance(value.get("employer"), str) and value["employer"].strip():
+            employer = " ".join(value["employer"].split()).casefold()
+            value = {"url": url, "employer": employer}
+            effective_date = None
+    scope = account_type(claim) if family == "financials" else None
+    return json.dumps([org, family, field, value, claim.get("unit"), claim.get("period"), effective_date, scope],
+                      sort_keys=True, ensure_ascii=False)
 
 
 def measure(run: Path, pool: Path | None = None) -> dict:
@@ -59,9 +97,9 @@ def measure(run: Path, pool: Path | None = None) -> dict:
         positive_families = {c["family"] for c in labels}
         sparse = len(opportunities) < 15 or len(positive_families) < 3
         recalled = {}
-        actual = {signature(e["organisation_number"], c) for e in envs for c in claims(e)}
+        actual = {reference_signature(e["organisation_number"], c) for e in envs for c in claims(e)}
         for fam in sorted(positive_families):
-            reference = {signature(c["organisation_number"], c) for c in labels if c["family"] == fam}
+            reference = {reference_signature(c["organisation_number"], c) for c in labels if c["family"] == fam}
             matched = reference & actual
             ref_orgs = {json.loads(s)[0] for s in reference}
             found_orgs = {json.loads(s)[0] for s in matched}
@@ -69,7 +107,7 @@ def measure(run: Path, pool: Path | None = None) -> dict:
             recalled[fam] = {"reference_companies": len(ref_orgs), "reference_claims": len(reference),
                              "matched_claims": len(matched), "company_recall": company_recall, "claim_recall": claim_recall,
                              "weighted_recall": None if sparse else .7 * company_recall + .3 * claim_recall}
-        result["local_pool"] = {"sha256": hashlib.sha256(pool.read_bytes()).hexdigest(), "sparse_not_measured": sparse,
+        result["local_pool"] = {"sha256": hashlib.sha256(pool.read_bytes()).hexdigest(), "matching": "semantic_v1", "sparse_not_measured": sparse,
                                 "company_field_opportunities": len(opportunities), "families": recalled,
                                 "scope": "Only this independently labeled local pool; no official score inferred."}
     result["score_scenarios_not_predictions"] = [
