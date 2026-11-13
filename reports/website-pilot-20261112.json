@@ -1,0 +1,552 @@
+{
+  "date": "2026-11-12",
+  "selection": {
+    "companies": 100,
+    "random": 20,
+    "positive_candidate_unverified": 40,
+    "challenge": 40,
+    "excluded_previously_tested_entities": 3722,
+    "universe_candidates": 82
+  },
+  "probe": {
+    "mode": "candidate_attribution_probe",
+    "companies": 100,
+    "input_sha256": "299574c9b522dfda37bd58646af332e18ce1868d5d9567fcf3e206eaf03b8601",
+    "requests": 346,
+    "elapsed_seconds": 95.1,
+    "external_cost_usd": 0,
+    "candidate_outcomes": {
+      "ambiguous": 28,
+      "unreachable": 11,
+      "accepted": 20,
+      "rejected": 17,
+      "blocked": 6,
+      "skipped_platform": 1
+    },
+    "companies_with_accepted_candidate": 20,
+    "companies_without_candidate": 17,
+    "registry_errors": [],
+    "independently_labeled": 0,
+    "precision": null,
+    "recall": null,
+    "limitation": "Production gate observations on an injected-candidate development cohort. Not discovery recall, verified labels or a blind evaluation."
+  },
+  "baseline_run": {
+    "run_id": "run-20261112T122402Z",
+    "agent_version": "617212227de8",
+    "code_sha256": "6b71faa6dde5e8da89b2b43ecc6b5851db5a0a84a9efc143b3298752816345cb",
+    "started_at": "2026-11-12T12:24:02Z",
+    "completed_at": "2026-11-12T12:28:00Z",
+    "input_count": 100,
+    "emitted_envelopes": 100,
+    "validation": {
+      "passed": true,
+      "checks": {
+        "one_envelope_per_input": true,
+        "unique_organisation_numbers": true,
+        "all_family_states_valid": true,
+        "every_claim_has_evidence": true,
+        "no_null_values_published": true,
+        "all_families_present": true,
+        "snapshot_references_resolve": true,
+        "within_execution_limits": true,
+        "no_failed_terminal_envelopes": true
+      },
+      "invalid_states": []
+    },
+    "mode": "baseline",
+    "changes_detected": 0,
+    "family_states": {
+      "identity": {
+        "available": 100
+      },
+      "status": {
+        "available": 100
+      },
+      "industry": {
+        "available": 100
+      },
+      "financials": {
+        "available": 100
+      },
+      "leadership": {
+        "available": 100
+      },
+      "locations": {
+        "available": 89,
+        "not_available": 11
+      },
+      "group": {
+        "not_applicable": 87,
+        "available": 13
+      },
+      "website": {
+        "not_available": 19,
+        "ambiguous": 48,
+        "blocked": 10,
+        "available": 23
+      },
+      "social_profiles": {
+        "not_available": 33,
+        "ambiguous": 48,
+        "blocked": 10,
+        "available": 9
+      },
+      "contact": {
+        "available": 55,
+        "ambiguous": 22,
+        "not_available": 18,
+        "blocked": 5
+      },
+      "description": {
+        "not_available": 29,
+        "ambiguous": 48,
+        "blocked": 10,
+        "available": 13
+      },
+      "jobs": {
+        "blocked": 100
+      },
+      "activity": {
+        "available": 100
+      }
+    },
+    "family_coverage": {
+      "identity": 1.0,
+      "status": 1.0,
+      "industry": 1.0,
+      "financials": 1.0,
+      "leadership": 1.0,
+      "locations": 0.89,
+      "group": 0.13,
+      "website": 0.23,
+      "social_profiles": 0.09,
+      "contact": 0.55,
+      "description": 0.13,
+      "jobs": 0.0,
+      "activity": 1.0
+    },
+    "claims_total": 9343,
+    "identity_gate": {
+      "ambiguous": 49,
+      "unreachable": 16,
+      "blocked": 23,
+      "accepted": 23,
+      "rejected": 31,
+      "related_site": 2
+    },
+    "identity_gate_by_source": {
+      "name_slug_guess": {
+        "ambiguous": 3,
+        "blocked": 11,
+        "accepted": 1,
+        "rejected": 2
+      },
+      "registry_declared": {
+        "ambiguous": 27,
+        "unreachable": 11,
+        "accepted": 20,
+        "rejected": 17,
+        "blocked": 6,
+        "related_site": 1
+      },
+      "registry_email_domain": {
+        "ambiguous": 19,
+        "unreachable": 5,
+        "rejected": 11,
+        "blocked": 6,
+        "related_site": 1,
+        "accepted": 1
+      },
+      "subunit_declared": {
+        "rejected": 1
+      },
+      "subunit_email_domain": {
+        "accepted": 1
+      }
+    },
+    "jobs_feed": {
+      "pages": 0,
+      "ads_indexed": 0,
+      "window_days": 7,
+      "error": "blocked: NAV_FEED_TOKEN required; public token is experimental only"
+    },
+    "operations": {
+      "requests": 1137,
+      "max_requests": 2000,
+      "elapsed_seconds": 239.6,
+      "max_seconds": 600.0,
+      "third_party_cost_usd": 0.0,
+      "max_cost_usd": 10.0,
+      "requests_by_host": {
+        "data.brreg.no": 416,
+        "www.petronavitas.no": 16,
+        "www.veranda.no": 16,
+        "autismeforeningen.no": 15,
+        "www.ncl.no": 14,
+        "smarthotel.no": 14,
+        "www.lerum.no": 13,
+        "www.byggassist.no": 12,
+        "agioforvaltning.no": 12,
+        "www.storebrand.no": 12,
+        "www.nordbohus.no": 12,
+        "dss.no": 11,
+        "www.total-utleieservice.no": 11,
+        "www.mde-group.com": 10,
+        "bate.no": 10,
+        "haugesjoen.no": 10,
+        "www.skaparglede.no": 10,
+        "www.bori.no": 10,
+        "www.citycon.com": 10,
+        "campbellco.no": 10,
+        "www.nhoelektro.no": 10,
+        "www.norgeshus.no": 10,
+        "jbelektro.no": 10,
+        "colorsfromtheworld.org": 9,
+        "vibbo.no": 9,
+        "styrerommet.no": 9,
+        "unifor.no": 9,
+        "www.asassert.no": 9,
+        "lunsjeri.no": 9,
+        "www.bolgeninvest.no": 9,
+        "brenselutsalget.no": 8,
+        "www.bos.no": 8,
+        "ragde.no": 8,
+        "magnesenmedia.no": 8,
+        "www.kragero.kommune.no": 8,
+        "mosetertoppen.no": 8,
+        "www.rasmussen-eiendom.no": 8,
+        "www.airflow.no": 8,
+        "www.nuko.no": 7,
+        "www.obf.no": 7,
+        "www.reintrivsel.no": 7,
+        "www.norwegianseals.no": 7,
+        "stem.no": 7,
+        "spenst.no": 7,
+        "spesialkompetanse.no": 6,
+        "fabritius.no": 6,
+        "petronavitas.no": 6,
+        "www.hoegh.com": 6,
+        "www.obos.no": 6,
+        "visitbo.no": 6,
+        "www.careium.com": 6,
+        "www.kjerringoybryggehotell.no": 6,
+        "www.eagle.no": 6,
+        "www.listerakupunktur.no": 5,
+        "bymoe.no": 5,
+        "www.hoeghautoliners.com": 5,
+        "senterscene.no": 5,
+        "www.duraline-europe.com": 5,
+        "assist.no": 5,
+        "www.haugesjoen.no": 5,
+        "www.dalhogd.no": 5,
+        "www.skadberg.no": 5,
+        "skadberg.no": 5,
+        "www.abpre.no": 5,
+        "www.krogsveen.no": 5,
+        "www.sorum.as": 5,
+        "www.iktforlaget.no": 5,
+        "www.sunnfjordelektro.no": 5,
+        "jacobsen.no": 5,
+        "www.solibo.no": 4,
+        "qaresources.no": 4,
+        "www.annerledes.no": 4,
+        "www.3t.no": 4,
+        "www.nelfo.no": 4,
+        "www.brolendelam.no": 4,
+        "dreie.no": 4,
+        "www.nextsignal.no": 3,
+        "www.riksfjordtaksering.no": 3,
+        "lett-transport.no": 3,
+        "jobb.norwegianseals.no": 3,
+        "www.brenselutsalget.no": 2,
+        "www.fabritius.no": 2,
+        "www.petronavitas.com": 2,
+        "bos.no": 2,
+        "www.ragde.no": 2,
+        "www.senterscene.no": 2,
+        "petronavitas.com": 2,
+        "byggassist.no": 2,
+        "hoegh.com": 2,
+        "www.agioforvaltning.no": 2,
+        "www.mde.no": 2,
+        "mde-group.com": 2,
+        "ncl.no": 2,
+        "www.bate.no": 2,
+        "www.dss.no": 2,
+        "skaparglede.no": 2,
+        "www.svill.no": 2,
+        "bori.no": 2,
+        "www.unifor.no": 2,
+        "citycon.com": 2,
+        "annerledes.no": 2,
+        "lifjellstua.no": 2,
+        "storebrand.no": 2,
+        "bolgeninvest.no": 2,
+        "kjerringoybryggehotell.no": 2,
+        "telle.no": 2,
+        "obf.no": 2,
+        "www.autismeforeningen.no": 2,
+        "idealhus.no": 2,
+        "www.campbellco.no": 2,
+        "veranda.no": 2,
+        "kragero.kommune.no": 2,
+        "www.mosetertoppen.no": 2,
+        "www.polarx.com": 2,
+        "nelfo.no": 2,
+        "lerum.no": 2,
+        "norgeshus.no": 2,
+        "rasmussen-eiendom.no": 2,
+        "www.stem.no": 2,
+        "sunnfjordelektro.no": 2,
+        "www.dreie.no": 2,
+        "www.spenst.no": 2,
+        "www.smarthotel.no": 2,
+        "fourphase.com": 2,
+        "www.jbelektro.no": 2,
+        "total-utleieservice.no": 2,
+        "airflow.no": 2,
+        "eagle.no": 2,
+        "palmtree.no": 2,
+        "query.wikidata.org": 1,
+        "www.acompany.no": 1,
+        "acompany.no": 1,
+        "www.hast.no": 1,
+        "hast.no": 1,
+        "www.lias.no": 1,
+        "lias.no": 1,
+        "bygg-assist.no": 1,
+        "hoeghautoliners.no": 1,
+        "sandvika-oyelegesenter.no": 1,
+        "www.mallingco.no": 1,
+        "mallingco.no": 1,
+        "careium.no": 1,
+        "polarx.com": 1,
+        "polarx.no": 1,
+        "www.fourphase.com": 1,
+        "fourphase.no": 1,
+        "entusia.no": 1,
+        "jaarkitekter.no": 1,
+        "ja-arkitekter.no": 1,
+        "www.mystore.no": 1,
+        "airflowboligventilasjon.no": 1
+      },
+      "requests_by_phase": {
+        "registry": 2,
+        "activity": 2,
+        "accounts": 100,
+        "history": 100,
+        "roles": 100,
+        "locations": 100,
+        "web": 665,
+        "group": 13,
+        "web_news": 55
+      },
+      "phase_caps": {
+        "registry": 5,
+        "activity": 6,
+        "jobs": 23,
+        "accounts": 107,
+        "roles": 107,
+        "locations": 107,
+        "group": 37,
+        "jobs_verify": 60,
+        "history": 102,
+        "web": 1161,
+        "web_news": 204
+      },
+      "refused_by_budget": {},
+      "p50_company_ms": 14483,
+      "p95_company_ms": 35204
+    },
+    "phase_seconds": {
+      "bulk_snapshot": 0.0,
+      "registry": 2.1,
+      "activity": 3.8,
+      "companies": 225.0,
+      "website_enrichment": 5.8,
+      "jobs": 0.0,
+      "tail": 0.0,
+      "finalise": 1.1
+    },
+    "budget_plan": {
+      "registry": 5,
+      "activity": 6,
+      "jobs": 23,
+      "accounts": 107,
+      "roles": 107,
+      "locations": 107,
+      "group": 37,
+      "jobs_verify": 60,
+      "history": 102,
+      "web": 1366,
+      "web_news": 0
+    },
+    "configuration": {
+      "bulk_files": false,
+      "workers": 8,
+      "job_days": 7,
+      "web_enabled": true
+    },
+    "bulk_snapshot": {
+      "note": "no bulk snapshot supplied; live registry API only"
+    },
+    "registry_snapshot": {},
+    "evidence_cutoff": null,
+    "source_policy_version": "signalpost-sources/2",
+    "nav_access": "credential_required",
+    "input_sha256": "a02ead4e12bedad91f5f37ed2ae478d1268c4838006f107aa4806c6809f857e1",
+    "notes": [],
+    "third_party_cost_usd": 0.0,
+    "models": []
+  },
+  "stage_diagnosis": {
+    "companies": 100,
+    "mode": "stage_diagnosis",
+    "stages": {
+      "no_candidate_or_anchor": 16,
+      "candidate_gate_unresolved_or_rejected": 61,
+      "baseline_published_website": 23
+    },
+    "cohorts": {
+      "challenge_holding_name": {
+        "candidate_gate_unresolved_or_rejected": 10
+      },
+      "challenge_scoped_path": {
+        "candidate_gate_unresolved_or_rejected": 10
+      },
+      "challenge_shared_host": {
+        "candidate_gate_unresolved_or_rejected": 20
+      },
+      "positive_candidate": {
+        "candidate_gate_unresolved_or_rejected": 19,
+        "baseline_published_website": 21
+      },
+      "random": {
+        "no_candidate_or_anchor": 16,
+        "candidate_gate_unresolved_or_rejected": 2,
+        "baseline_published_website": 2
+      }
+    },
+    "precision": null,
+    "recall": null,
+    "limitation": "Injected candidates and production gate outputs are not reference labels. Differences may also reflect observation time and source availability."
+  },
+  "snapshot_audit": {
+    "evidence": 8790,
+    "source_locators_verified": 8675,
+    "excerpt_artifacts_verified": 115,
+    "missing_references": 0,
+    "invalid_objects": 0,
+    "invalid_locators": 0,
+    "history_claims_verified": 1183,
+    "history_claims_unverified": 0,
+    "invalid_history_claims": 0,
+    "account_claims_verified": 4775,
+    "account_claims_unverified": 0,
+    "invalid_account_claims": 0,
+    "financial_fields": {
+      "accounting_rules": {
+        "verified": 296,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "audit_status": {
+        "verified": 296,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "cash": {
+        "verified": 279,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "current_assets": {
+        "verified": 296,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "equity": {
+        "verified": 296,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "filed_annual_accounts": {
+        "verified": 1183,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "fixed_assets": {
+        "verified": 275,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "long_term_debt": {
+        "verified": 240,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "net_financial_items": {
+        "verified": 280,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "net_result": {
+        "verified": 296,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "operating_expenses": {
+        "verified": 296,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "operating_result": {
+        "verified": 296,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "profit_before_tax": {
+        "verified": 293,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "revenue": {
+        "verified": 254,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "sales_revenue": {
+        "verified": 208,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "short_term_debt": {
+        "verified": 284,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "total_assets": {
+        "verified": 296,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "total_debt": {
+        "verified": 294,
+        "unverified": 0,
+        "invalid": 0
+      }
+    },
+    "unique_objects": 434,
+    "passed": true,
+    "errors": [],
+    "limitation": "Excerpt integrity does not independently establish full-page support or exact-company precision."
+  },
+  "validation": {
+    "unique_python_tests_passed": 275
+  },
+  "precision": null,
+  "recall": null,
+  "f1": null,
+  "organizer_score": null
+}

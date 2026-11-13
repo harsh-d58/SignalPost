@@ -89,6 +89,7 @@ def runs() -> list[dict]:
                     "valid": r.get("validation", {}).get("passed"), "requests": r.get("operations", {}).get("requests"),
                     "seconds": r.get("operations", {}).get("elapsed_seconds"), "coverage": r.get("family_coverage"),
                     "states": r.get("family_states"), "gate": r.get("identity_gate"), "mode": r.get("mode"),
+                    "website_diagnostics": r.get("website_diagnostics"),
                     "has_site": (d / "site" / "index.html").exists(), "has_audit": (d / "identity-audit.md").exists(),
                     "ops": r.get("operations", {}), "cost": r.get("third_party_cost_usd"), "changes": r.get("changes_detected"),
                     "history": sorted((h.name for h in (d / "history").glob("*.jsonl*") if HISTORY_NAME.match(h.name)), reverse=True)

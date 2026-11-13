@@ -58,7 +58,8 @@ def cmd_run(args: argparse.Namespace) -> int:
                     max_minutes=args.max_minutes, max_cost=args.max_cost, workers=args.workers, job_days=args.job_days,
                     web=not args.no_web, bulk_files=args.bulk_files, events=args.events, log=_log,
                     registry_snapshot=args.registry_snapshot, registry_snapshot_at=args.registry_snapshot_at,
-                    evidence_cutoff=args.evidence_cutoff, allow_public_nav_token=args.allow_public_nav_token)
+                    evidence_cutoff=args.evidence_cutoff, allow_public_nav_token=args.allow_public_nav_token,
+                    website_strategy=args.website_strategy)
     try:
         report = runner.run()
     finally:
@@ -140,6 +141,8 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--job-days", type=int, default=60, help="NAV feed look-back window in days")
     run.add_argument("--bulk-files", action="store_true", help="roles/workplaces from Brreg bulk files; recommended for large batches, with bounded direct fallback")
     run.add_argument("--events", action="store_true", help="emit @event JSON progress lines (used by the live console)")
+    run.add_argument("--website-strategy", choices=("auto", "legacy", "breadth"), default="auto",
+                     help="website scheduling: auto preserves legacy; breadth enables experimental candidate rounds")
     run.add_argument("--no-web", action="store_true", help="skip website discovery (registry-only run)")
     run.add_argument("--showcase", help="where to write the static showcase site (default: <out>/site)")
     run.add_argument("--no-showcase", action="store_true")

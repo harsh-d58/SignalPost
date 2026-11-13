@@ -10,11 +10,11 @@ const rows = Array.from({ length: 60 }, (_, i) => ({
   o: String(900000000 + i), n: `Company ${i}`, s: {}, k: 0, c: 0, j: 0, l: 0,
 }));
 
-function page(hash = '#/companies', saved) {
+function page(hash = '#/companies', saved, report = {}) {
   const errors = [];
   const vc = new VirtualConsole();
   vc.on('jsdomError', e => errors.push(e.message));
-  const html = template.replace('/*__BOOT__*/null', JSON.stringify({ index: rows }))
+  const html = template.replace('/*__BOOT__*/null', JSON.stringify({ index: rows, report }))
     .replace('// ================================================================ boot',
       'window.testAPI = { load };\n// ================================================================ boot');
   const dom = new JSDOM(html, {
@@ -87,5 +87,18 @@ for (const event of ['onerror', 'onload']) {
       w.SP_LOAD(org, { claims: [] });
       assert.equal((await retry).claims.length, 0);
     } finally { dom.window.close(); }
+  });
+}
+
+for (const report of [{}, {website_diagnostics: {companies_attempted: 50, companies_with_completed_check: 42, companies_budget_unattempted: 8}}]) {
+  test(`run diagnostics render with ${report.website_diagnostics ? 'new' : 'legacy'} report`, () => {
+    const {dom, w, errors} = page('#/', undefined, report);
+    try {
+      const text = w.document.querySelector('#app').textContent;
+      assert.deepEqual(errors, []);
+      assert.equal(text.includes('Companies with a website check attempted'), !!report.website_diagnostics);
+      if (report.website_diagnostics) assert.ok(text.includes('not precision or recall'));
+      assert.ok(!text.includes('NaN'));
+    } finally {dom.window.close();}
   });
 }

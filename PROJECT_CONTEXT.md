@@ -1,4 +1,6 @@
-# Signalpost — full project context
+# Signalpost — historical project context
+
+> Historical design/submission context: the scoring rules, submission requirements and metrics below describe an earlier version. For current setup and verified results use [README](README.md), [submission checklist](SUBMISSION.md), [latest implementation report](reports/scheduling-improvement-20261113.md) and [plan](plan.md). Do not use the old 35-point coverage rubric below for a new submission.
 
 One document that explains the problem, what we set out to achieve, the solution we chose, how it is built, and how
 it performs. All numbers come from the committed [`reports/`](reports) folder (generated from real runs). Nothing

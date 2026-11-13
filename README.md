@@ -8,13 +8,17 @@ every run produces a static **showcase site** where each fact is one tap from it
 **Precision first:** anything that cannot be tied to the exact legal entity is returned as `ambiguous` /
 `not_available`, never published. Missing values are never turned into zero.
 
-The [revision audit](reports/revision-audit.md) records the publication fixes, fresh-batch benchmarks, and remaining coverage gaps. The generated metrics later in this README describe the original submission.
+## Current status — 13 November 2026
 
-The [rank-up implementation report](reports/rankup-implementation.md) tracks the current revision. Current scoring is **50 recall, 30 evidence, 12 synthesis, 8 UX**. Local coverage is not the evaluator's pooled recall, and the score scenarios are not measured scores.
+The latest implementation and measurements are in the [scheduling report](reports/scheduling-improvement-20261113.md); the remaining programme is in [plan.md](plan.md).
 
-The [model improvement programme](docs/dev/metrics-improvement-plan.md) tracks current fixes and remaining validation. The latest changes cover exact-company article gates, job closure/expiry, financial and filing-history evidence, concurrent request reuse, and verification before optional enrichment. Independent precision and recall remain unmeasured.
+- **282 Python tests and 16 frontend resilience tests passed.** Console/showcase interaction checks, source audits and refresh replay also passed.
+- The existing scheduler remains the default. `--website-strategy breadth` is an experimental option, pending independent attribution review and matched validation.
+- The scale experiment returned **1,100/1,100 valid profiles**, **38 published websites**, **1,920 requests**, **567.9 seconds** and **$0 declared API cost**. These are experimental results, not default-mode performance or measured recall.
+- Final state-preservation, timing and default-selection fixes were regression-tested after those live runs; a final committed-code live run remains a submission gate.
+- Independent precision, recall, F1 and official rank remain **unmeasured**. The 82-point plan target is not a forecast.
 
-The [12 November release report](reports/release-readiness-20261112.md) records the clean Python 3.12 test run, live 1,100/100-company checks, source audits and remaining limitations.
+The scoring contract checked on 12 November uses **50 recall, 30 evidence, 12 synthesis and 8 UX**. Use the organizer's supplied inputs, timestamps and limits. Earlier measurements remain in the [12 November release report](reports/release-readiness-20261112.md) and historical report sections below.
 
 ### Evaluator command
 
@@ -43,6 +47,12 @@ The review export contains no generated labels, refuses to overwrite reviewer an
 Snapshot files remain private under the output directory. `--previous` preserves their references on refresh. Full source JSON checks and excerpt-only artifact checks are reported separately. See [source access and retention](SOURCES.md).
 
 ---
+
+## Website scheduling experiment (13 November 2026)
+
+The existing scheduler remains the default (`--website-strategy auto` resolves to `legacy`). Use `--website-strategy breadth` to test one complete candidate check per company before alternatives. This changes allocation, not ownership criteria. The 1,100-company experiment published 38 websites versus 29 in the historical baseline at the same 1,920-request ceiling; independent precision/recall are not established, and live-source timing differed. See [the measured comparison and limits](reports/scheduling-improvement-20261113.md).
+
+Runs now include `website-diagnostics.json` and aggregate attempt/completion/budget counts in `run-report.json`. The console and showcase display these as execution counts, not accuracy. Interrupted identity traversal cannot fall through to a weaker acceptance rule. Budget refusal on an alternative preserves an earlier completed ownership decision.
 
 ## 1. Quick start
 
@@ -155,7 +165,7 @@ the backend.
 From the repository root, run the backend and code-only frontend checks:
 
 ```powershell
-uv run --frozen --group dev pytest -q -p no:cacheprovider
+uv run --frozen --group dev pytest tests eval/diagnostics -q -p no:cacheprovider
 npm install --no-save --package-lock=false jsdom@24.1.3
 node --test eval/ui_resilience_check.cjs
 # After the quick-start batch has produced out-ui/envelopes.jsonl:
@@ -163,11 +173,11 @@ uv run --frozen signalpost showcase --envelopes out-ui/envelopes.jsonl --report 
 node eval/ui_check.cjs "$((Get-Location).Path)/out-ui/site"
 ```
 
-The Python suite currently has 164 tests; frontend failure-path checks have 14. These checks do not measure
+As of 13 November, the Python and diagnostic suites have 282 passing tests; frontend failure-path checks have 16. These checks do not measure
 official recall or precision. Run the snapshot audit and metrics commands above against each new batch.
 
 **Outputs** in `out-<name>/`: `envelopes.jsonl` (one per input, input order), `run-report.json` (validation,
-coverage, identity gate per source, requests by host and phase, p50/p95, cost), `identity-audit.md`, `site/`
+coverage, identity gate per source, requests by host and phase, p50/p95, cost), `identity-audit.md`, `website-diagnostics.json`, `site/`
 (showcase), `history/` (archived previous runs).
 
 ---
@@ -239,11 +249,14 @@ unused are spent in a final *tail pass* on families that failed only for budget 
 
 ## 7. Measured results
 
-The current revision's 1,100-company collection returned 1,100 envelopes using 1,920 requests in 407.4 seconds
-at $0 external API cost. Identity and leadership coverage were 99.82%, financials 99.18%, workplaces 76.27%,
-websites 2.55%, social profiles 0.91%, company news 0.45% and jobs 0%. These are company coverage rates.
-Official recall, precision, F1 and competition score remain unmeasured. The retained-source replay repairs
-locators without representing a new live run. See [the current report](reports/rankup-implementation.md).
+| Run | Valid profiles | Websites | Requests | Seconds | API cost |
+|---|---:|---:|---:|---:|---:|
+| Historical default scale | 1,100/1,100 | 29 | 1,920 | 429.3 | $0 |
+| Experimental breadth scale | 1,100/1,100 | 38 | 1,920 | 567.9 | $0 |
+| Historical default pilot | 100/100 | 23 | 1,137 | 239.6 | $0 |
+| Experimental breadth pilot | 100/100 | 23 | 1,099 | 332.8 | $0 |
+
+The scale experiment gained 12 websites and lost three. Live-source conditions and code revisions differed; this is not a controlled recall measurement. Jobs remained blocked without approved NAV access. Cost excludes compute, bandwidth and development tools. See [run hashes, audits and limitations](reports/scheduling-improvement-20261113.md) and its [JSON manifest](reports/scheduling-improvement-20261113.json).
 
 ### Historical submission results
 

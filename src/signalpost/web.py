@@ -333,6 +333,7 @@ class SiteVisit:
         self.proof_page: Page | None = None
         self.proof_span = ""
         self.foreign_orgs: set[str] = set()
+        self.budget_incomplete = False
 
     @property
     def origin(self) -> str:
@@ -452,6 +453,7 @@ def visit_site(fetcher: Fetcher, candidate: str, source: str, org: str, entity: 
             try:
                 sub = fetcher.get(url, phase="web")
             except BudgetExhausted:
+                visit.budget_incomplete = True
                 break
             if not sub.ok or urllib.parse.urlsplit(sub.final_url).hostname != urllib.parse.urlsplit(home.url).hostname:
                 continue
@@ -463,6 +465,9 @@ def visit_site(fetcher: Fetcher, candidate: str, source: str, org: str, entity: 
     if visit.proof_page is not None:
         visit.decision = "accepted"
         visit.reason += "exact organisation number printed on the site"
+        return visit
+    if visit.budget_incomplete:
+        visit.decision, visit.reason = "budget", "identity traversal interrupted by request/time budget"
         return visit
     # conflicting org number: this is somebody else's site (parent, brand, sister, accountant, web agency…)
     owner_conflict = visit.foreign_orgs - related_orgs
@@ -531,7 +536,8 @@ def visit_site(fetcher: Fetcher, candidate: str, source: str, org: str, entity: 
     return visit
 
 
-def domain_candidates(entity: dict, bulk_row: dict | None, extra: list[tuple[str, str]] | None = None) -> list[tuple[str, str]]:
+def domain_candidates(entity: dict, bulk_row: dict | None, extra: list[tuple[str, str]] | None = None, *,
+                      include_guesses: bool = True) -> list[tuple[str, str]]:
     out: list[tuple[str, str]] = []
     seen: set[str] = set()
 
@@ -560,6 +566,8 @@ def domain_candidates(entity: dict, bulk_row: dict | None, extra: list[tuple[str
             continue
         if source != "wikidata_p856":
             push(url, source)
+    if not include_guesses:
+        return out
     tokens = [t for t in name_tokens(entity.get("navn")) if t not in ("og", "and", "i", "pa")]
     distinct = distinctive_tokens(entity.get("navn"))
     if distinct and 1 <= len(tokens) <= 4 and not set(tokens) & HOLDING_WORDS:
@@ -1047,24 +1055,39 @@ def _news(pb: ProfileBuilder, fetcher: Fetcher, visit: SiteVisit, origin: str, m
 
 
 def research_website(pb: ProfileBuilder, fetcher: Fetcher, entity: dict, bulk_row: dict | None, related_orgs: set[str], *,
-                     max_candidates: int = 4, want_news: bool = True, defer_enrichment: bool = False) -> None:
+                     max_candidates: int = 4, want_news: bool = True, defer_enrichment: bool = False,
+                     candidates: list[tuple[str, str]] | None = None) -> None:
     legal_name = entity.get("navn") or (bulk_row or {}).get("navn") or ""
-    cands = domain_candidates(entity, bulk_row, pb.extra.get("site_candidates"))
+    cands = candidates if candidates is not None else domain_candidates(entity, bulk_row, pb.extra.get("site_candidates"))
+    diag = pb.extra.setdefault("website_diagnostics", {"attempts": [], "candidate_urls": [], "budget_interruptions": 0})
+    diag["candidate_urls"] = list(dict.fromkeys(diag["candidate_urls"] + [u for u, _ in cands]))
+    pb.extra["website_pending_candidates"] = list(cands)
     if not cands:
+        if diag["attempts"]:
+            return  # retain the result of a completed first-round check
         pb.set_state("website", "not_available", "registry lists no website or company e-mail domain, and no name-based domain resolves")
         for fam in ("social_profiles", "description", "contact"):
             pb.set_state(fam, "not_available", "no verified official website to read from")
         return
-    decisions = []
+    decisions = [a["decision"] for a in diag["attempts"] if a["completed"]]
     accepted: SiteVisit | None = None
     for candidate, source in cands[:max_candidates]:
+        attempt = {"candidate": candidate, "source": source, "decision": "budget", "completed": False}
+        diag["attempts"].append(attempt)
         try:
             people = {t for c in pb.family_claims("leadership") for t in name_tokens(str(c.value))}
             visit = visit_site(fetcher, candidate, source, pb.org, {**entity, "_unit_emails": pb.extra.get("emails", [])}, legal_name,
                                related_orgs, person_tokens=people)
         except BudgetExhausted:
+            diag["budget_interruptions"] += 1
             decisions.append("budget")
             break
+        attempt.update(decision=visit.decision, completed=visit.decision != "budget", reason=visit.reason)
+        if visit.decision == "budget":
+            diag["budget_interruptions"] += 1
+            decisions.append("budget")
+            break
+        pb.extra["website_pending_candidates"].remove((candidate, source))
         decisions.append(visit.decision)
         if visit.decision == "accepted":
             accepted = visit
@@ -1077,6 +1100,7 @@ def research_website(pb: ProfileBuilder, fetcher: Fetcher, entity: dict, bulk_ro
             pb.add(Claim("group", "related_website", visit.origin, [ev], label="Website of a related group entity (labelled, not the company's own)",
                          key=f"related_site:{registrable_domain(visit.origin)}", confidence=0.9))
     if accepted:
+        pb.extra["website_pending_candidates"] = []
         try:
             extract_company_owned(pb, fetcher, accepted, legal_name, want_news=want_news, defer_enrichment=defer_enrichment)
         except BudgetExhausted:

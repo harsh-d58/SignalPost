@@ -1,84 +1,91 @@
-# Submission pack — Builderr "Signalpost" challenge
+# Submission and push checklist — 13 November 2026
 
-Repository: https://github.com/harshgitty58/SignalPost (branch `main`) · The email to send: [SUBMISSION_EMAIL.md](SUBMISSION_EMAIL.md)
+Repository: https://github.com/harshgitty58/SignalPost. Current local branch: `main`.
 
-## Current scoring and revision
+This revision is ready for the user to review and push as an engineering update. It is **not a measured top-three entry or an independently qualified release**. Before emailing a competition revision, freeze the exact commit and complete the final committed-code run and ownership review below.
 
-The current working-tree revision is documented in [release verification and measured metrics](reports/release-readiness-20261112.md). Use the evaluator command in [README](README.md), including `--bulk-files` for large batches. NAV requires a permitted credential and is blocked by default without one. Optional environment setup is documented in [.env.example](.env.example). Freeze an exact new commit before sending a revision.
+## What this update contains
 
-Builderr's published scoring weights are 50 for recall and coverage, 30 for precision and evidence, 12 for synthesis, and 8 for UX. Qualification requires 65/100 overall and passing the integrity and execution checks. Builderr supplies the official batches. Submit a public 100-company smoke result or report, the exact revision commit, a reproducible command, and source and cost details. The organizer lists November 16, 2026 as the revision deadline. [Scoring](https://builderr.ai/challenges/signalpost#scoring) · [Evaluation contract](https://builderr.ai/docs/signalpost-evaluation-harness.md)
+- Interrupted website identity traversal now stays unpublished instead of falling through to weaker evidence.
+- Existing scheduling remains the default (`auto` resolves to `legacy`). Breadth-first candidate rounds are available explicitly with `--website-strategy breadth` for experiments.
+- Website attempt/completion/budget diagnostics are included in reports and displayed by both frontend surfaces. Older reports remain compatible.
+- A fresh 100-company research pilot, corpus/probe/comparison tools, regression tests and the detailed improvement plan are included. Private generated inputs, snapshots and review tasks remain local.
 
-See [the release report](reports/release-readiness-20261112.md) for current checks and results. The generated metrics in section 3 are explicitly historical.
+Verification: **282 Python tests and 16 frontend tests passed**; console/showcase interaction checks, source audits and refresh replay passed. See [implementation report](reports/scheduling-improvement-20261113.md) and [run manifest](reports/scheduling-improvement-20261113.json). The live experiments preceded the final state/timing/default corrections; those corrections have regression coverage, not a new final-code scale measurement.
 
-## 1. Requirements checklist
+## Reported performance and source declarations
 
-Local checks as of 12 November 2026. Official recall, precision, qualification and rank remain unmeasured.
+| Run | Profiles | Websites | Requests | Seconds | Declared API cost |
+|---|---:|---:|---:|---:|---:|
+| Historical default scale | 1,100/1,100 | 29 | 1,920 | 429.3 | $0 |
+| Experimental breadth scale | 1,100/1,100 | 38 | 1,920 | 567.9 | $0 |
+| Historical default pilot | 100/100 | 23 | 1,137 | 239.6 | $0 |
+| Experimental breadth pilot | 100/100 | 23 | 1,099 | 332.8 | $0 |
 
-### What to build
-| Requirement | Status | Where it is shown |
-|---|---|---|
-| Take a Norwegian organisation number, search permitted public sources | ✅ | `uv run signalpost run --organisations <batch> --out out/`; sources and licences in [SOURCES.md](SOURCES.md) |
-| Return company facts, source links and dates | ✅ | every claim has source URL, retrieval time, reporting period (where relevant), content SHA-256, claim span, extraction method; `reports/*-envelopes.jsonl.gz` |
-| Each fact belongs to the right company | Audit required | exact org.nr keys and website identity gates are implemented; exact-company fixtures and source audits pass, but independent population precision is unmeasured |
-| Keep profiles current | ✅ | re-running into the same output folder is a refresh: typed, material/minor changes, `first_seen` / `last_seen` / `times_seen`, unreadable sources carried forward; [reports/refresh-replay.json](reports/refresh-replay.json) = PASS |
+These live comparisons do not establish precision or recall. Exact attribution must be independently reviewed. Do not describe the 38-website result as the default scheduler's result. NAV was blocked without an approved token. No LLM or paid API is used; measured external API cost is $0, excluding compute, bandwidth and development tools.
 
-### What to submit
-| Requirement | Status | Where it is shown |
-|---|---|---|
-| Public 100-company smoke result or report | ✅ locally | `reports/release-validation100-metrics.json`; the existing 1,000-profile Pages sample is historical demonstration data, not the official scoring input |
-| Repository link | ✅ | https://github.com/harshgitty58/SignalPost |
-| Exact commit hash | ✅ at send time | `git rev-parse HEAD` after `git push origin main` (§2) |
-| One command to run it | ✅ | `uv sync --frozen` then `uv run signalpost run --organisations <batch.jsonl> --out out/` |
-| Model / API details | ✅ | no LLM; Brønnøysundregistrene open APIs (NLOD 2.0), NAV with approved `NAV_FEED_TOKEN` or blocked, Wikidata SPARQL (CC0, candidates only), permitted company-owned pages |
-| Expected run costs | Measured | **$0.00** external API cost for the recorded connector set; excludes compute, bandwidth and development tools |
+Sources: Brønnøysundregistrene APIs and declared bulk records, authorized NAV access when configured, Wikidata for discovery candidates only, and permitted company-owned pages with robots checks. See [SOURCES.md](SOURCES.md), [SECURITY.md](SECURITY.md) and [.env.example](.env.example). Connection-time DNS protection remains an open item in the improvement plan; do not claim all transport risks are closed.
 
-### How it is tested and scored
-| Item | Status | Evidence |
-|---|---|---|
-| Execution limits | Passed locally | use evaluator-supplied limits; recorded bulk run returned 1,100 results in 429.3 seconds using 1,920 requests and $0 external API cost |
-| Exactly one terminal envelope per input | Passed locally | tested up to 1,100 inputs including source failures; exhausted runs exit unsuccessfully even when envelopes are emitted |
-| Clean-machine install | ✅ | `uv sync --frozen` from a fresh clone; GitHub Actions `clean-machine` workflow runs tests + a live smoke on every push |
-| Recall and coverage (50) | Unmeasured officially | latest scale run: 29 websites, social profiles for 11 companies, news for 2 companies and no jobs; the final publisher-reference correction has separate focused validation |
-| Precision, exact identity and evidence (30) | Unmeasured officially | latest scale audit verified 48,707 account claims; direct smoke verified 4,522 account and 928 history claims; independent factual precision remains unknown |
-| Refresh requirements | Passed local replay | unchanged-source replay produced zero false changes; controlled changes, stale carry-forward and prior evidence tested |
-| Useful explanations (12) | Implemented, unscored | cited deterministic English/Norwegian summaries, signals, changes and unknowns |
-| UX (8) | Implemented, unscored | find, compare and verify flows; 14 frontend failure-path tests and interaction checks on current and legacy datasets |
-| Qualify: ≥65/100 and valid official run | Unknown until scored | no separate component threshold in the current published contract |
-| No material wrong-company publication or fabricated financial value | Release gate | strict identity and financial publication tests; no claim of independently measured population precision |
-| JBOX bonus | — | not claimed (the agent was not built with JBOX) |
+## Push this engineering update
 
-## 2. Send it
+Run from the repository root. Review the diff before staging. Do not switch branches or force-push. No push has been performed by the assistant.
+
 ```powershell
-git checkout main
+git status --short
+git diff --check
+git diff --stat
+
+git add README.md SUBMISSION.md SUBMISSION_EMAIL.md PROJECT_CONTEXT.md .env.example plan.md
+git add docs/dev/metrics-improvement-plan.md docs/dev/deep-website-search-plan.md
+git add src/signalpost/cli.py src/signalpost/pipeline.py src/signalpost/web.py
+git add src/signalpost/console/console.html src/signalpost/console/server.py src/signalpost/showcase/template.html
+git add eval/build_website_corpus.py eval/website_modes.py eval/website_metrics.py eval/ui_resilience_check.cjs
+git add tests/test_website_corpus.py tests/test_website_scheduling.py
+git add reports/website-pilot-20261112.md reports/website-pilot-20261112.json reports/scheduling-improvement-20261113.md reports/scheduling-improvement-20261113.json
+
+git diff --cached --stat
+git diff --cached --check
+git commit -m "Improve website verification diagnostics and add breadth scheduling experiment"
 git push origin main
-git rev-parse HEAD                                   # the exact commit hash
-git archive --format=zip -o signalpost-code.zip HEAD # the code at that commit (about 9 MB), to attach
+git rev-parse HEAD
 ```
-Check that `https://github.com/harshgitty58/SignalPost/commit/<sha>` opens and the `clean-machine` workflow is green,
-then send [SUBMISSION_EMAIL.md](SUBMISSION_EMAIL.md) to **submit@builderr.ai** with the hash filled in and the zip
-attached. Form field: `https://github.com/harshgitty58/SignalPost/commit/<40-char-sha>`.
 
-## 3. Historical submission metrics (generated by `eval/write_docs.py`)
-<!-- metrics:start -->
-- **100 random companies (smoke test)** (dev-rev18f @ `318dd62b4ff9`): 100/100 valid envelopes (validation passed), 899 requests, 4.1 min, $0.00. Coverage: identity 100%, status 100%, industry 100%, financials 100%, leadership 100%, locations 78%, group 5%, website 17%, social_profiles 8%, contact 31%, description 9%, jobs 0%, activity 100%.
-- **1,000 random companies (official limits)** (run-1000-rev18b @ `318dd62b4ff9`): 1000/1000 valid envelopes (validation passed), 1920 requests, 2.9 min, $0.00. Coverage: identity 100%, status 100%, industry 100%, financials 100%, leadership 37%, locations 28%, group 5%, website 0%, social_profiles 0%, contact 17%, description 0%, jobs 0%, activity 100%.
-<!-- metrics:end -->
-1,000 profiles: `reports/run-1000-envelopes.jsonl.gz` (+ run report) · Smoke test: `reports/smoke-100-run-report.json` +
-`reports/smoke-100-envelopes.jsonl.gz` · Benchmark with 95% intervals: `reports/benchmark.md` · Identity audit:
-`reports/identity-audit.md` · Refresh proof: `reports/refresh-replay.json` · Source rights: [SOURCES.md](SOURCES.md) ·
-Security / URL policy: [SECURITY.md](SECURITY.md)
+If normal whitespace checking flags existing Windows line endings, use `git -c core.whitespace=cr-at-eol diff --check` (and `--cached` after staging). Resolve actual whitespace errors rather than suppressing them.
 
-## 4. Before every revision
+`.gitignore` already excludes `.env`, local environments/caches, `out-*`, snapshots, downloaded data, logs, node_modules and the generated ZIP. `.env.example` contains no token. Explicit staging above avoids adding unrelated scratch files. Inspect staged content for secrets before committing.
+
+A push touching the showcase template can trigger the existing Pages workflow. It rebuilds the **historical committed 1,000-profile sample**, not the private latest pilot. Check Actions after pushing; do not assume a successful deployment or a green clean-machine job before it completes.
+
+## Before emailing a competition revision
+
+- Confirm the published deadline and remaining revision slots against the organizer's current instructions and submission acknowledgments. The contract checked on 12 November lists 16 November 2026 and four revisions after the initial submission.
+- Use a clean checkout of the pushed hash, pinned dependencies and the declared command.
+- Run the final committed code on the supplied or newly frozen inputs. Review ownership of published websites/social/news/jobs and audit source support.
+- Produce a public 100-company smoke report from that revision. Existing reports are supporting historical evidence, not a new exact-commit run.
+- Preserve exactly one terminal envelope per input, source dates, hashes, reporting periods, explicit missing/blocked states and refresh evidence.
+- Keep the submitted strategy explicit. Use `legacy` unless independent validation has justified promoting `breadth`.
+- Supply repository link, exact 40-character commit hash, command, model/API details and expected external API costs. Larger precomputed profile files are not the current official scoring input.
+- Update [the email draft](SUBMISSION_EMAIL.md) with the actual hash and final report. The user's supplied contact is Harsh Dhavane, harshdhavane06@gmail.com.
+
+## Evaluator command
+
+Install with `uv sync --frozen`, then use this single run command. Replace the example files, timestamps and resource limits with the organizer's supplied values:
+
 ```bash
-uv run --frozen --group dev pytest tests eval/diagnostics -q -p no:cacheprovider
-node --test eval/ui_resilience_check.cjs
-uv run --frozen signalpost run --organisations eval/rankup/smoke-100.jsonl --out out-check --job-days 7
-uv run --frozen python eval/refresh_replay.py out-check/envelopes.jsonl out-check/refresh-replay.json
-uv run --frozen python eval/snapshot_audit.py out-check --output out-check/snapshot-audit.json
-uv run --frozen python eval/metrics.py out-check --output out-check/metrics.json
-uv run --frozen python eval/verify_evidence.py out-check/envelopes.jsonl --sample 30
-# review out-check/identity-audit.md: every published website must be the exact company
+uv run --frozen signalpost run --organisations official-batch.jsonl --registry-snapshot official-registry.jsonl --registry-snapshot-at 2026-11-09T00:00:00Z --evidence-cutoff 2026-11-10T00:00:00Z --bulk-files --website-strategy legacy --workers 8 --job-days 7 --max-requests 2000 --max-minutes 45 --max-cost 10 --out out-official
 ```
-Install jsdom for the frontend check using the README instructions. Existing smoke/scale cohorts are now
-development data; freeze a new uninspected cohort before claiming a blind release check. The organizer accepts
-up to four revisions after the initial submission. Send the exact commit hash for each revision.
+
+For live local testing without a supplied identity snapshot, omit both registry snapshot arguments. Do not treat an old universe download as a current authoritative anchor. Optional NAV credentials must be supplied securely and reproducibly; the agent does not read `.env` automatically.
+
+## Local checks
+
+```powershell
+uv run --frozen --group dev pytest tests eval/diagnostics -q -p no:cacheprovider --basetemp=.test-tmp/prepush-next
+npm install --no-save --package-lock=false jsdom@24.1.3
+node --test eval/ui_resilience_check.cjs
+# After creating a fresh run:
+uv run --frozen python eval/snapshot_audit.py out-official --output out-official/source-audit.json
+uv run --frozen python eval/refresh_replay.py out-official/envelopes.jsonl out-official/refresh-replay.json
+```
+
+Generate an archive only after committing: `git archive --format=zip -o signalpost-code.zip HEAD`. The archive does not include uncommitted work. No email or submission is sent by these commands.

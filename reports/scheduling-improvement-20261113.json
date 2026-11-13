@@ -1,0 +1,99 @@
+{
+  "report_date": "2026-11-13",
+  "final_code_sha256": "537e1d16f3a4296887226e831413accf2802b64463120d08d99fbea522a3b9f1",
+  "runs": [
+    {
+      "directory": "out-release-scale1100",
+      "run_id": "run-20261112T063050Z",
+      "code_sha256": "218ccd5631e80623e658ee835001a90b29c59e44891d8542d0fbcfe7c810c34f",
+      "input_sha256": "a3aa26751e682ba853f0b165e4a169dcf9a084af300534237d43d4910615e9fe",
+      "companies": 1100,
+      "validation": true,
+      "requests": 1920,
+      "seconds": 429.3,
+      "cost_usd": 0.0,
+      "website_companies": 29,
+      "social_companies": 11,
+      "website_diagnostics": null
+    },
+    {
+      "directory": "out-breadth-scale1100",
+      "run_id": "run-20261112T153049Z",
+      "code_sha256": "c8de4df40a9b0d62713f58a24f8de95b99e802706330c53112ca8907235a64f8",
+      "input_sha256": "a3aa26751e682ba853f0b165e4a169dcf9a084af300534237d43d4910615e9fe",
+      "companies": 1100,
+      "validation": true,
+      "requests": 1920,
+      "seconds": 567.9,
+      "cost_usd": 0.0,
+      "website_companies": 38,
+      "social_companies": 11,
+      "website_diagnostics": {
+        "companies_with_candidates": 259,
+        "companies_attempted": 127,
+        "companies_with_completed_check": 116,
+        "companies_budget_unattempted": 970,
+        "budget_interruptions": 12,
+        "limitation": "Attempt and completion counts are operational diagnostics, not accuracy or recall."
+      }
+    },
+    {
+      "directory": "out-website-pilot-baseline",
+      "run_id": "run-20261112T122402Z",
+      "code_sha256": "6b71faa6dde5e8da89b2b43ecc6b5851db5a0a84a9efc143b3298752816345cb",
+      "input_sha256": "a02ead4e12bedad91f5f37ed2ae478d1268c4838006f107aa4806c6809f857e1",
+      "companies": 100,
+      "validation": true,
+      "requests": 1137,
+      "seconds": 239.6,
+      "cost_usd": 0.0,
+      "website_companies": 23,
+      "social_companies": 9,
+      "website_diagnostics": null
+    },
+    {
+      "directory": "out-breadth-pilot100",
+      "run_id": "run-20261112T152816Z",
+      "code_sha256": "e71dbe2ed640eeba083e8c91921d64d4f631e17ab52f635b55269be523b53537",
+      "input_sha256": "a02ead4e12bedad91f5f37ed2ae478d1268c4838006f107aa4806c6809f857e1",
+      "companies": 100,
+      "validation": true,
+      "requests": 1099,
+      "seconds": 332.8,
+      "cost_usd": 0.0,
+      "website_companies": 23,
+      "social_companies": 9,
+      "website_diagnostics": {
+        "companies_with_candidates": 87,
+        "companies_attempted": 87,
+        "companies_with_completed_check": 87,
+        "companies_budget_unattempted": 0,
+        "budget_interruptions": 0,
+        "limitation": "Attempt and completion counts are operational diagnostics, not accuracy or recall."
+      }
+    }
+  ],
+  "default_strategy": "legacy",
+  "breadth_strategy": "experimental_opt_in",
+  "precision": null,
+  "recall": null,
+  "official_score": null,
+  "limitations": [
+    "Historical live comparisons are not a matched snapshot experiment.",
+    "Pilot run preceded lazy speculative discovery and frontend changes.",
+    "Scale run preceded final state-preservation, timing and default-selection fixes; these final changes require regression verification.",
+    "Independent ownership review remains pending.",
+    "Final source digest includes line-ending preservation; semantic test results are unchanged."
+  ],
+  "verification": {
+    "python_tests_passed": 282,
+    "frontend_tests_passed": 16,
+    "console_headless": "passed",
+    "showcase_interactions": "passed",
+    "refresh_replay": "passed",
+    "source_audits": {
+      "out-breadth-scale1100": true,
+      "out-breadth-pilot100": true
+    }
+  }
+}

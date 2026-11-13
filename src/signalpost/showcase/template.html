@@ -602,6 +602,7 @@ const D = {
   changed_n:["{0} changes in {1} companies ({2} material)","{0} endringer i {1} selskaper ({2} vesentlige)"], all_changes:["All changes","Alle endringer"],
   run_title:["Run","Kjøring"], run_requests:["Outbound requests","Utgående forespørsler"], run_time:["Run time","Kjøretid"], run_cost:["Third-party cost","Tredjepartskostnad"], run_of:["of {0}","av {0}"],
   run_valid:["Contract checks","Kontraktsjekker"], run_phases:["Time by phase","Tid per fase"], run_p:["p50 / p95 per company","p50 / p95 per selskap"], run_mode:["Mode","Modus"], run_refresh:["Refresh (diffed against previous run)","Oppdatering (sammenlignet med forrige kjøring)"], run_baseline:["Baseline","Grunnlag"],
+  run_web_attempted:["Companies with a website check attempted","Selskaper med påbegynt nettsidekontroll"], run_web_completed:["Companies with a completed candidate check","Selskaper med fullført kandidatkontroll"], run_web_budget:["Companies not attempted because of budget","Selskaper ikke kontrollert på grunn av budsjett"], run_web_note:["Check counts describe execution, not precision or recall.","Kontrolltall beskriver gjennomføringen, ikke presisjon eller gjenfinning."],
   run_jobs:["NAV job feed","NAV-stillingsfeed"], run_jobs_v:["{0} ads indexed over {1} days","{0} annonser indeksert over {1} dager"], run_agent:["Agent version","Agentversjon"], run_env:["Envelopes","Konvolutter"],
   meter_warn:["warning","advarsel"], meter_bad:["near limit","nær grensen"],
   "chk.one_envelope_per_input":["One envelope per input","Én konvolutt per input"], "chk.unique_organisation_numbers":["Unique organisation numbers","Unike organisasjonsnumre"], "chk.all_family_states_valid":["All family states valid","Alle tilstander gyldige"],
@@ -1302,6 +1303,11 @@ function runPanel(){
       kv(t("run_p"), (ops.p50_company_ms != null ? (ops.p50_company_ms/1000).toFixed(1) + " s" : "—") + " / " + (ops.p95_company_ms != null ? (ops.p95_company_ms/1000).toFixed(1) + " s" : "—")),
       kv(t("run_jobs"), r.jobs_feed ? t("run_jobs_v", nf(r.jobs_feed.ads_indexed||0), r.jobs_feed.window_days) : "—"),
       kv(t("run_agent"), r.agent_version)),
+    r.website_diagnostics ? [el("dl",{class:"kv"},
+      kv(t("run_web_attempted"), nf(r.website_diagnostics.companies_attempted)),
+      kv(t("run_web_completed"), nf(r.website_diagnostics.companies_with_completed_check)),
+      kv(t("run_web_budget"), nf(r.website_diagnostics.companies_budget_unattempted))),
+      el("p",{class:"small muted"},t("run_web_note"))] : null,
     Object.keys(checks).length ? [el("h3",{style:"margin:16px 0 8px"}, t("run_valid")), el("ul",{class:"checks"}, Object.entries(checks).map(([k,ok]) => el("li",null, el("span",{style:"color:var(--"+(ok?"ok":"fail")+")","aria-hidden":"true"}, ok ? "✓" : "✕"), el("span",null, D["chk."+k] ? t("chk."+k) : k.replace(/_/g," "), el("span",{class:"sr"}, ok ? " — pass" : " — fail")))))] : null,
     phases.length ? [el("h3",{style:"margin:16px 0 6px"}, t("run_phases")), phases.map(([p,s]) => el("div",{class:"hbar"}, el("span",{class:"mono small"}, p), el("div",{class:"t"}, el("span",{style:"width:"+(s/pmax*100)+"%"})), el("span",{class:"n"}, s.toFixed(1)+" s")))] : null);
 }

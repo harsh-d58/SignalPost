@@ -2,6 +2,10 @@
 
 Updated 12 November 2026 after implementing and testing the follow-up fixes. This document is the active backlog. The earlier [batch diagnosis](batch-accuracy-diagnosis.md), [fix record](batch-accuracy-fix-plan.md) and [analysis](../../analysis.md) preserve historical results.
 
+## Bulk website benchmark plan
+
+The [deep website search plan](deep-website-search-plan.md) defines a proposed 1,500-company, up-to-3,000-candidate benchmark, independent ownership labels, random/positive/adversarial cohorts, and separate discovery/attribution/extraction tests. It is a plan; the new corpus and harness are not yet built.
+
 ## Latest release pass — 12 November
 
 The latest [release report](../../reports/release-readiness-20261112.md) supersedes earlier open statuses for filing-history checks and verification/enrichment sequencing. The final suite passes **267 tests** on pinned Python 3.12. The fresh scale run returned 1,100 valid envelopes in 429.3 seconds with 1,920 requests; the direct smoke returned 100 valid envelopes in 220.1 seconds with 607 requests. Both cost $0 externally and passed source audits. The smoke's 928 filing-history claims now pass their source-specific checks.
@@ -171,3 +175,11 @@ For every item use `observed → reproduced → implemented → regression passe
 ```
 
 New probes live in [test_remaining_risks.py](../../eval/diagnostics/test_remaining_risks.py). The expanded run's JUnit artifact is `.test-tmp/remaining-risks.xml`. **Result: 222 cases, 218 passed, 4 failed, 0 errors in 36.27 seconds.** The original 217 cases still pass, plus the new missing-ad control. The initial attempt hit a Windows permission error in the shared pytest temp directory; the workspace-local rerun separates that environment issue from product failures.
+
+## Website pilot completed — 12 November 2026
+
+See [pilot measurements and diagnosis](../../reports/website-pilot-20261112.md). A fresh 100-company cohort and 82 initial candidates are available locally, with 100 blank independent review tasks. The org-only baseline produced 23 websites, 9 social-profile companies and 100 valid outputs in 239.6 seconds / 1,137 requests. No probe-accepted website was missed by the baseline. Prioritize independent labels for 23 publications, 61 unresolved candidate cases and 16 no-candidate cases before tuning discovery or attribution. All 275 unique Python tests pass. Precision/recall are not yet measured; the larger corpus, extraction-only harness and held-out evaluation remain pending.
+
+## Scheduling checkpoint — 13 November 2026
+
+The first implementation increment is described in [the scheduling report](../../reports/scheduling-improvement-20261113.md). Breadth-first rounds are opt-in; the default retains existing allocation until independent review and matched validation. The scale experiment published 38 websites versus 29 historically at 1,920 requests, but lost three earlier websites and took longer. Identity traversal now fails closed on interruption. Both frontend surfaces expose attempt/completion/budget diagnostics without calling them accuracy. Remaining programme items and promotion gates are in [the root plan](../../plan.md).

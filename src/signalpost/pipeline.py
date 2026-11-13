@@ -35,7 +35,7 @@ from .refresh import diff, load_previous
 from .registry import (ACCOUNTS_URL, GROUP_URL, HISTORY_URL, ROLES_URL, SUBUNITS_URL, accounts_claims, history_claims, pace_history, activity_claims, entity_claims,
                        fetch_activity, fetch_entities, group_claims, load_bulk, roles_claims, subunit_claims)
 from .synthesis import build_brief
-from .web import enrich_company_owned, research_website, valid_orgnr
+from .web import domain_candidates, enrich_company_owned, research_website, valid_orgnr
 from .wikidata import websites as wikidata_websites
 
 
@@ -105,6 +105,7 @@ class Runner:
                  max_requests: int, max_minutes: float, max_cost: float, workers: int, job_days: int, web: bool = True, bulk_files: bool = False, events: bool = False,
                  registry_snapshot: str | None = None, registry_snapshot_at: str | None = None,
                  evidence_cutoff: str | None = None, allow_public_nav_token: bool = False,
+                 website_strategy: str = "auto",
                  log=print):
         self.orgs = orgs
         self.out_dir = out_dir
@@ -125,6 +126,9 @@ class Runner:
         self.write_lock = threading.Lock()
         self.previous_path = previous
         self.workers = workers
+        if website_strategy not in {"auto", "legacy", "breadth"}:
+            raise ValueError("Unknown website strategy")
+        self.website_strategy = "legacy" if website_strategy == "auto" else website_strategy
         self.web_enabled = web
         self.bulk_files = bulk_files
         self.events = events
@@ -220,7 +224,7 @@ class Runner:
                 if self.stop.is_set():
                     break
                 self._official_step(pb, org, family, phase, url, handler)
-            if self.web_enabled and not self.stop.is_set() and entity:
+            if self.web_enabled and self.website_strategy == "legacy" and not self.stop.is_set() and entity:
                 self._website_step(pb, org, entity)
         except BudgetExhausted as exc:
             pb.error("run", f"budget: {exc}")
@@ -273,13 +277,79 @@ class Runner:
                 pb.set_state(family, "failed", f"could not parse source response: {type(exc).__name__}", snap.url)
                 pb.error(family, f"parse: {exc}", snap.url)
 
-    def _website_step(self, pb: ProfileBuilder, org: str, entity: dict) -> None:
+    def _website_step(self, pb: ProfileBuilder, org: str, entity: dict, *,
+                      candidates: list[tuple[str, str]] | None = None, max_candidates: int | None = None) -> None:
         related = {c.value.get("organisation_number") for c in pb.family_claims("group") if isinstance(c.value, dict)}
         if self.budget.phase_remaining("web") < 4:
-            pb.set_state("website", "failed", "request budget: website phase exhausted")
+            pb.extra.setdefault("website_diagnostics", {"attempts": [], "candidate_urls": [], "budget_interruptions": 0})["not_attempted_budget"] = True
+            if not any(a["completed"] for a in pb.extra["website_diagnostics"]["attempts"]):
+                pb.set_state("website", "failed", "request budget: website phase exhausted")
         else:
             research_website(pb, self.fetcher, entity, self.bulk_rows.get(org), {r for r in related if r},
-                             max_candidates=2 if len(self.orgs) > 200 else 4, defer_enrichment=True)
+                             max_candidates=max_candidates if max_candidates is not None else (2 if len(self.orgs) > 200 else 4),
+                             defer_enrichment=True, candidates=candidates)
+
+    def research_sites(self, known: list[str]) -> None:
+        """Complete one candidate per company before spending on alternatives.
+
+        Candidate visits keep the full identity gate. Only scheduling changes;
+        nothing is accepted from a shortened homepage-only identity check.
+        """
+        if not self.web_enabled or self.stop.is_set():
+            return
+        queues = {}
+        for org in known:
+            pb = self.builders[org]
+            entity = self.entities.get(org) or self.bulk_rows.get(org) or {}
+            queues[org] = domain_candidates(entity, self.bulk_rows.get(org), pb.extra.get("site_candidates"), include_guesses=False)
+            pb.extra["website_pending_candidates"] = list(queues[org])
+            pb.extra.setdefault("website_diagnostics", {"attempts": [], "candidate_urls": [], "budget_interruptions": 0})["candidate_urls"] = [u for u, _ in queues[org]]
+
+        def check(job):
+            org, candidates = job
+            pb = self.builders[org]
+            check_started = time.monotonic()
+            if self.stop.is_set() or self.budget.time_left() < 60:
+                if not any(a["completed"] for a in pb.extra["website_diagnostics"]["attempts"]):
+                    pb.set_state("website", "failed", "request budget: website scheduling deadline")
+                pb.extra["website_diagnostics"]["not_attempted_budget"] = True
+                return
+            self.fetcher.take_count()
+            try:
+                if candidates is None:
+                    if self.budget.phase_remaining("web") < 4:
+                        pb.extra["website_diagnostics"]["not_attempted_budget"] = True
+                        if not pb.extra["website_diagnostics"]["attempts"]:
+                            pb.set_state("website", "failed", "request budget: website discovery not attempted")
+                        return
+                    attempted = {a["candidate"] for a in pb.extra["website_diagnostics"]["attempts"] if a["completed"]}
+                    candidates = [(u, source) for u, source in domain_candidates(self.entities[org], self.bulk_rows.get(org), pb.extra.get("site_candidates")) if u not in attempted]
+                self._website_step(pb, org, self.entities[org], candidates=candidates, max_candidates=1)
+            except Exception as exc:
+                pb.error("website", f"candidate scheduling: {type(exc).__name__}")
+                pb.set_state("website", "failed", "website candidate check failed")
+            finally:
+                pb.requests += self.fetcher.take_count()
+                self.company_ms[org] = self.company_ms.get(org, 0) + int((time.monotonic() - check_started) * 1000)
+                self.event("company", org)
+
+        # Explicit candidates precede DNS name guesses. Each round finishes
+        # before the next starts, so a rejected company cannot monopolize it.
+        priority = {"registry_declared": 0, "registry_email_domain": 1, "wikidata_p856": 2}
+        ordered = sorted(known, key=lambda o: (priority.get(queues[o][0][1], 3) if queues[o] else 4, o))
+        with ThreadPoolExecutor(max_workers=self.workers, thread_name_prefix="website") as pool:
+            list(pool.map(check, [(o, queues[o]) for o in ordered if queues[o]]))
+            jobs = []
+            for org in ordered:
+                pb = self.builders[org]
+                if pb.family_claims("website"):
+                    continue
+                pending = pb.extra.get("website_pending_candidates", [])
+                # Resolve speculative domains lazily inside a budget-checked worker.
+                # Eagerly resolving every missing company's guesses can consume
+                # the deadline before any second-round work is even dispatched.
+                jobs.append((org, pending or None))
+            list(pool.map(check, jobs))
 
     def enrich_sites(self, known: list[str]) -> None:
         def enrich(org):
@@ -356,7 +426,7 @@ class Runner:
             try:
                 entity = self.entities.get(org) or self.bulk_rows.get(org) or {}
                 if entity and left() >= 8 and not self.stop.is_set() and self.budget.elapsed() < hard_stop:
-                    self._website_step(pb, org, entity)
+                    self._website_step(pb, org, entity, candidates=pb.extra.get("website_pending_candidates") or None)
                     mark("website", pb.families["website"].state != "failed")
             except BudgetExhausted:
                 pb.set_state("website", "failed", "request budget: website phase exhausted")
@@ -571,6 +641,11 @@ class Runner:
         if account_pool is not None:
             account_pool.shutdown(wait=False, cancel_futures=True)
         self.phase("companies", t)
+
+        t = time.monotonic()
+        if self.website_strategy == "breadth":
+            self.research_sites(known)
+        self.phase("website_verification", t)
 
         t = time.monotonic()
         self.enrich_sites(known)
@@ -802,7 +877,7 @@ class Runner:
             "phase_seconds": self.timings,
             "budget_plan": self.plan,
             "configuration": {"bulk_files": self.bulk_files, "workers": self.workers,
-                              "job_days": self.job_feed.days, "web_enabled": self.web_enabled},
+                              "job_days": self.job_feed.days, "web_enabled": self.web_enabled, "website_strategy": self.website_strategy},
             "bulk_snapshot": self.bulk_meta,
             "registry_snapshot": self.snapshot_meta,
             "evidence_cutoff": self.evidence_cutoff,
@@ -813,6 +888,24 @@ class Runner:
             "third_party_cost_usd": round(self.budget.cost_usd, 4),
             "models": [],
         }
+        diagnostics = []
+        for org in self.orgs:
+            pb = self.builders[org]
+            diag = pb.extra.get("website_diagnostics", {})
+            attempts = diag.get("attempts", [])
+            diagnostics.append({"organisation_number": org, "candidate_count": len(diag.get("candidate_urls", [])),
+                                "attempted": bool(attempts), "completed_attempts": sum(a["completed"] for a in attempts),
+                                "budget_interruptions": diag.get("budget_interruptions", 0),
+                                "pending_candidates": len(pb.extra.get("website_pending_candidates", [])),
+                                "not_attempted_budget": bool(diag.get("not_attempted_budget")) and not attempts,
+                                "attempts": attempts, "website_state": pb.families["website"].state})
+        report["website_diagnostics"] = {"companies_with_candidates": sum(d["candidate_count"] > 0 for d in diagnostics),
+                                         "companies_attempted": sum(d["attempted"] for d in diagnostics),
+                                         "companies_with_completed_check": sum(d["completed_attempts"] > 0 for d in diagnostics),
+                                         "companies_budget_unattempted": sum(d["not_attempted_budget"] for d in diagnostics),
+                                         "budget_interruptions": sum(d["budget_interruptions"] for d in diagnostics),
+                                         "limitation": "Attempt and completion counts are operational diagnostics, not accuracy or recall."}
+        (out / "website-diagnostics.json").write_text(json.dumps(diagnostics, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         (out / "run-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         (out / "identity-audit.md").write_text(identity_audit(envelopes, self.run_id), encoding="utf-8")
         self.finished.set()

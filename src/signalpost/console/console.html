@@ -441,6 +441,8 @@ function renderLiveCoverage(){
 function renderRunCoverage(run){
   $("covSrc").textContent=run.dir;
   $("cov").replaceChildren(el("div",{class:"small faint",style:"margin-bottom:6px"},`${run.run_id||""} · ${fmt(run.n)} companies · ${fmt(run.requests)} requests · ${Math.round(run.seconds||0)} s`),...coverageRows(run.states||{},run.n||0));
+  const d=run.website_diagnostics;
+  if(d)$("cov").append(el("p",{class:"small muted"},`Website checks: ${fmt(d.companies_attempted)} companies attempted; ${fmt(d.companies_with_completed_check)} with a completed candidate check; ${fmt(d.companies_budget_unattempted)} not attempted because of budget. These are execution counts, not precision or recall.`));
 }
 
 // ------------------------------------------------------------ feed + why dialog

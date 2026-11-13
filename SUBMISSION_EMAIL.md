@@ -1,49 +1,47 @@
-# Email draft — submission to Builderr
+# Email draft — revised Signalpost entry
 
 **To:** submit@builderr.ai
-**Subject:** Signalpost revision — Signalpost Agent — <short sha>
-**Attachment:** `signalpost-code.zip` (the code at the submitted commit: `git archive --format=zip -o signalpost-code.zip HEAD`)
 
-Before sending, replace `<40-char sha>` / `<short sha>` with the output of `git rev-parse HEAD` (after
-`git push origin main`) and `<your name>` with your name.
+**Subject:** Signalpost revision — Signalpost Agent — <short commit hash>
+
+Before sending: replace the commit placeholders, confirm the final committed-code smoke report, and attach `signalpost-code.zip` generated from that exact commit. This is a draft; no email has been sent.
 
 ---
 
-Hello Builderr team,
+Hello Soham and Builderr team,
 
-Please find my revised entry for the Signalpost challenge. This revision checks website ownership, social handle identity, article publication dates, and the employer of each individual vacancy before publishing those facts.
+Thank you for the audit feedback. We have worked on the website ownership, social-handle attribution, dated-news and individual-employer checks you highlighted. The agent withholds unsupported matches and preserves explicit blocked, ambiguous and incomplete states.
 
-**Agent:** Signalpost Agent
-**Builder and contact:** <your name>, harshvdn.2@gmail.com
-**Repository:** https://github.com/harshgitty58/SignalPost
-**Exact commit:** <40-char sha> — https://github.com/harshgitty58/SignalPost/commit/<40-char sha>
-**Code:** attached as `signalpost-code.zip` (identical to that commit)
+This update also fixes interrupted website identity checks and adds clearer execution diagnostics in the reports and frontend. The existing scheduler remains the default; a separate breadth-first scheduling experiment is included but is not enabled by the command below.
 
-**One command to run it**
+Agent: Signalpost Agent
+
+Contact: Harsh Dhavane, harshdhavane06@gmail.com
+
+Repository: https://github.com/harshgitty58/SignalPost
+
+Exact commit: <40-character commit hash>
+
+Commit link: https://github.com/harshgitty58/SignalPost/commit/<40-character commit hash>
+
+Install: `uv sync --frozen`
+
+Run:
+```bash
+uv run --frozen signalpost run --organisations official-batch.jsonl --registry-snapshot official-registry.jsonl --registry-snapshot-at 2026-11-09T00:00:00Z --evidence-cutoff 2026-11-10T00:00:00Z --bulk-files --website-strategy legacy --workers 8 --job-days 7 --max-requests 2000 --max-minutes 45 --max-cost 10 --out out-official
 ```
-uv run --frozen signalpost run --organisations official-batch.jsonl --registry-snapshot official-registry.jsonl --registry-snapshot-at 2026-11-09T00:00:00Z --evidence-cutoff 2026-11-10T00:00:00Z --bulk-files --workers 8 --job-days 7 --max-requests 2000 --max-minutes 45 --max-cost 10 --out out-official
-```
-Replace the example paths, timestamps and limits with the supplied evaluation values. The run writes one terminal
-envelope per input to `out-official/envelopes.jsonl`, a run report and a static showcase. Reusing the output directory
-archives the previous run and reports changes.
+Please substitute your supplied input paths, observation timestamps, cutoff and limits. The run produces one terminal envelope per input, retained evidence references, a run report and a static showcase.
 
-The 100-company smoke report is `reports/release-validation100-metrics.json`. The same-batch comparison and verification results for 1,100 companies are in `reports/release-readiness-20261112.md`. GitHub Pages builds the committed 1,000-profile sample. [Showcase](https://harshgitty58.github.io/SignalPost/) · [Sample profile](https://harshgitty58.github.io/SignalPost/#/c/999072712)
+Local verification: 282 Python tests and 16 frontend tests passed, alongside source audits, refresh replay and frontend interaction checks. The experiment results and their limitations are documented in `reports/scheduling-improvement-20261113.md`. Independent precision and recall are not claimed.
 
-**Model / API details**
-- No LLM is used.
-- Brønnøysundregistrene open APIs: Enhetsregisteret, Regnskapsregisteret, roles, sub-units, group structure, change log (NLOD 2.0).
-- NAV pam-stilling-feed requires an approved `NAV_FEED_TOKEN`. Without it, NAV is blocked and company-owned careers discovery continues.
-- Wikidata SPARQL (CC0), used only to find website candidates; every site must pass an exact-entity identity gate.
-- Company-owned websites, robots.txt honoured, published only after the identity gate.
-- No paid APIs.
+Final committed-code 100-company smoke report: <path to the verified report for this exact revision>
 
-**Expected run cost:** $0.00 in third-party / external API costs per run (limits enforced by default: 45 minutes,
-2,000 outbound requests, $10).
+Models/APIs: no LLM; Brønnøysundregistrene APIs and declared bulk records, Wikidata for website candidates only, and permitted company-owned pages with robots checks. NAV requires an approved `NAV_FEED_TOKEN`; without it the feed is reported as blocked. Source details are in `SOURCES.md`.
 
-Every published fact carries its source URL, retrieval time, reporting period (where relevant), content SHA-256,
-claim span and extraction method. Anything that cannot be tied to the exact legal entity is returned as `ambiguous`
-or `not_available` instead of being published. Source rights are in `SOURCES.md`, the outbound URL policy in
-`SECURITY.md`, and a requirement-by-requirement checklist in `SUBMISSION.md`.
+Expected external API cost: $0 per run with the current connector configuration, excluding compute and bandwidth. No paid APIs are required.
+
+The code archive attached is generated from the exact commit above. Please record this as our updated version.
 
 Thank you,
-<your name>
+
+Harsh Dhavane
