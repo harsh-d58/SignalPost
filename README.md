@@ -5,10 +5,29 @@ permitted public sources. Every fact carries its **source URL, retrieval time, r
 content SHA-256, claim span and extraction method**. Re-running it is a **refresh** that emits typed changes, and
 every run produces a static **showcase site** where each fact is one tap from its proof.
 
-**Precision first:** anything that cannot be tied to the exact legal entity is returned as `ambiguous` /
-`not_available`, never published. Missing values are never turned into zero.
+**JBOX companion site:** [Open Signalpost Research](https://build-signalpost-a-read-only-norwegian-c.sites.jboxai.com/). This is the separate public read-only experience; the repository showcase below remains the reproducible project artifact.
 
-## Current status — 13 November 2026
+**Precision first is the publication goal.** The 14 November recovery adds safeguards for the disclosed
+wrong-company cases, refresh revocation and invalid news pages. Broad accuracy and qualification remain
+unmeasured; missing financial values are not turned into zero. See the [recovery validation](reports/recovery-validation-20261114.md).
+
+## Organizer result and recovery — 14 November 2026
+
+The organizer scored **eaef804**, at **24.58/100**, rank **100/104**, with **14/22 checked claims correct**.
+The newer local HEAD (`11eee14`) was not included in that score. The recovery changes now reject the named
+OTIS regional site and revoke it during refresh. The disclosed organizer examples have regressions; six other
+wrong-company examples were not supplied. Passing tests do not establish 95% accuracy.
+
+The recovery 1,100-company run completed in 450.9 seconds with 1,920 requests. It emitted 20 websites,
+zero jobs and two news candidates that remain unreviewed. A separate fresh 100-company run completed in
+243 seconds. The final semantic safeguards passed regression tests and a named canary; no final-source large
+run or independent precision/recall estimate exists yet.
+
+Read the [full diagnosis](reports/organizer-diagnosis-20261114.md) and
+[recovery plan](docs/dev/organizer-recovery-plan.md). Independent precision/recall remain unknown.
+The organizer's entry-specific replacement-commit deadline is **15 November, 09:00 IST**.
+
+## Historical status — 13 November 2026
 
 The latest implementation and measurements are in the [scheduling report](reports/scheduling-improvement-20261113.md); the remaining programme is in [plan.md](plan.md).
 
@@ -16,7 +35,7 @@ The latest implementation and measurements are in the [scheduling report](report
 - The existing scheduler remains the default. `--website-strategy breadth` is an experimental option, pending independent attribution review and matched validation.
 - The scale experiment returned **1,100/1,100 valid profiles**, **38 published websites**, **1,920 requests**, **567.9 seconds** and **$0 declared API cost**. These are experimental results, not default-mode performance or measured recall.
 - Final state-preservation, timing and default-selection fixes were regression-tested after those live runs; a final committed-code live run remains a submission gate.
-- Independent precision, recall, F1 and official rank remain **unmeasured**. The 82-point plan target is not a forecast.
+- At that checkpoint, independent precision, recall, F1 and official rank were **unmeasured**. See the newer organizer result above; the 82-point plan target is not a forecast.
 
 The scoring contract checked on 12 November uses **50 recall, 30 evidence, 12 synthesis and 8 UX**. Use the organizer's supplied inputs, timestamps and limits. Earlier measurements remain in the [12 November release report](reports/release-readiness-20261112.md) and historical report sections below.
 

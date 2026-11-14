@@ -102,3 +102,27 @@ for (const report of [{}, {website_diagnostics: {companies_attempted: 50, compan
     } finally {dom.window.close();}
   });
 }
+
+test('stale official links are excluded from current profile and compare data', async () => {
+  const {dom, w} = page();
+  try {
+    const pending = w.testAPI.load('900000000');
+    w.SP_LOAD('900000000', {claims: [
+      {field: 'official_website', value: 'https://parent.example/', stale_since: '2026-11-14', availability: 'available'},
+      {field: 'legal_name', value: 'Exact Company AS', availability: 'available'},
+    ]});
+    const data = await pending;
+    assert.equal(data.claims.length, 1);
+    assert.equal(data.claims[0].field, 'legal_name');
+    assert.equal(data.historical_claims.length, 1);
+  } finally {dom.window.close();}
+});
+
+test('limited public sample declares its scope on every route', () => {
+  const {dom, w} = page('#/companies', undefined, {mode: 'public_sample'});
+  try {
+    const note = w.document.getElementById('sample-note');
+    assert.equal(note.hidden, false);
+    assert.ok(note.textContent.includes('not included in this sample'));
+  } finally {dom.window.close();}
+});

@@ -1,0 +1,9 @@
+{
+  "seed": 20261114,
+  "companies": 100,
+  "excluded_eval_orgs": 3722,
+  "eligible_pool": 407439,
+  "input_sha256": "df4741c869552767f8e77ab2fd193cb9633ea180d2affaea772c7715ba53859d",
+  "source_archive_sha256": "1c89710e5b01f8617e86d09fbdff4a52f2f8dbbba297e74f7164b5984f5a0384",
+  "scope": "Random development validation sample excluding existing eval cohorts; not independently labelled and not an official benchmark."
+}

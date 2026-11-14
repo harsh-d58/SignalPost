@@ -1,8 +1,10 @@
-# Submission and push checklist — 13 November 2026
+# Submission and push checklist — 14 November 2026
 
 Repository: https://github.com/harshgitty58/SignalPost. Current local branch: `main`.
 
-This revision is ready for the user to review and push as an engineering update. It is **not a measured top-three entry or an independently qualified release**. Before emailing a competition revision, freeze the exact commit and complete the final committed-code run and ownership review below.
+The repository includes the 14 November recovery changes and validation report. It is **not a measured top-three entry or an independently qualified release**. Organizer score remains attached to old commit `eaef804`; the final source needs a frozen commit and independently reviewed accuracy before a score claim.
+
+JBOX companion: [Signalpost read-only company research](https://build-signalpost-a-read-only-norwegian-c.sites.jboxai.com/). The site link is included for discovery; verify its search, compare, evidence and mobile flows before describing them as tested or claiming bonus qualification.
 
 ## What this update contains
 
@@ -14,6 +16,8 @@ This revision is ready for the user to review and push as an engineering update.
 Verification: **282 Python tests and 16 frontend tests passed**; console/showcase interaction checks, source audits and refresh replay passed. See [implementation report](reports/scheduling-improvement-20261113.md) and [run manifest](reports/scheduling-improvement-20261113.json). The live experiments preceded the final state/timing/default corrections; those corrections have regression coverage, not a new final-code scale measurement.
 
 ## Reported performance and source declarations
+
+The latest recovery measurements are **100/100 valid in 243.0 seconds (623 requests)** and **1,100/1,100 valid in 450.9 seconds (1,920 requests)**. The large run emitted 20 websites, two unreviewed news candidates and zero jobs. It predates the final two semantic safeguards; see [recovery validation](reports/recovery-validation-20261114.md) for provenance. Do not treat these counts as precision or recall.
 
 | Run | Profiles | Websites | Requests | Seconds | Declared API cost |
 |---|---:|---:|---:|---:|---:|

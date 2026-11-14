@@ -27,7 +27,7 @@ def report(run: Path) -> str:
     envs = [json.loads(line) for line in (run / "envelopes.jsonl").open(encoding="utf-8") if line.strip()]
     rep = json.loads((run / "run-report.json").read_text(encoding="utf-8"))
     n = len(envs)
-    pub = lambda e: [c for c in e["claims"] if c.get("availability", "available") == "available"]  # noqa: E731
+    pub = lambda e: [c for c in e["claims"] if c.get("availability", "available") == "available" and not c.get("stale_since")]  # noqa: E731
     lines = [f"### {run.name} — {rep.get('run_id')} @ {rep.get('agent_version')}", "",
              f"{n} companies · valid={rep['validation']['passed']} · requests={rep['operations']['requests']} · "
              f"time={rep['operations']['elapsed_seconds']}s · cost=${rep.get('third_party_cost_usd', 0)} · "

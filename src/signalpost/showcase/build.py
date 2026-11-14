@@ -27,7 +27,8 @@ KOMMUNENUMMER = re.compile(r'"kommunenummer":\s*"(\d{4})"')
 
 
 def _published(env: dict[str, Any]) -> list[dict[str, Any]]:
-    return [c for c in env.get("claims", []) if c.get("availability", "available") == "available"]
+    return [c for c in env.get("claims", []) if c.get("availability", "available") == "available"
+            and not c.get("stale_since")]
 
 
 def _county(env: dict[str, Any], claims: list[dict[str, Any]]) -> str | None:

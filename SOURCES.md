@@ -1,5 +1,12 @@
 # Sources, rights and access policy
 
+The recovery revision also uses the [Greenhouse Job Board public GET API](https://docs.greenhouse.io/job-board.html).
+Only a board linked from an exact-company page is queried (at most one board and two individual ads per company).
+Publication requires the detail response's `company_name` to equal the full legal name, `first_published` to be valid,
+and any application deadline to remain open. `updated_at` is never used as a publication date. Prospect posts are excluded.
+No application is submitted, no credentials are needed, and API responses are retained as evidence excerpts.
+Other ATS providers remain unsupported; their presence does not authorize scraping.
+
 | Source | Endpoint(s) | Licence / terms | Access pattern |
 |---|---|---|---|
 | Enhetsregisteret | `data.brreg.no/enhetsregisteret/api/enheter?organisasjonsnummer=…` (≤100 per call), `/enheter/{org}/roller`, `/underenheter?overordnetEnhet={org}`, `/konsernstruktur/{org}`, `/oppdateringer/enheter`, `/oppdateringer/roller` | NLOD 2.0 open data | documented open API, ≤8 concurrent |

@@ -32,7 +32,9 @@ SUBUNITS_BULK = "https://data.brreg.no/enhetsregisteret/api/underenheter/lastned
 def _download(url: str, budget: Budget, phase: str, accept: str, attempts: int = 2, metadata: dict | None = None) -> str:
     fd, path = tempfile.mkstemp(suffix=".gz", prefix="signalpost-bulk-")
     os.close(fd)
-    deadline = time.monotonic() + min(480.0, max(0.0, budget.time_left() - 90))
+    # Large archives must not consume nearly the whole research window. Keep
+    # at least three quarters of the remaining time for useful bounded fallback.
+    deadline = time.monotonic() + min(180.0, max(0.0, budget.time_left() * 0.25))
     try:
         for attempt in range(attempts):
             current = url

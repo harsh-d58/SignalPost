@@ -1,0 +1,891 @@
+{
+  "audit_date": "2026-11-14",
+  "release_status": "blocked",
+  "inspected_commit": "11eee14f62de53c42904541f923a39677ce7fc41",
+  "organizer_evaluated_commit": "eaef80456aa6954b40a969892945b4d448e738f7",
+  "organizer_result": {
+    "rank": 100,
+    "scored_entries": 104,
+    "score": 24.58,
+    "checked_correct": 14,
+    "checked_wrong_company": 8,
+    "checked_total": 22,
+    "checked_accuracy": 0.6363636363636364
+  },
+  "resubmission_deadline": "2026-11-15T09:00:00+05:30",
+  "tests": {
+    "python_passed": 289,
+    "python_seconds": 83.54,
+    "frontend_resilience_passed": 16,
+    "limitation": "Passing implementation regressions do not establish semantic correctness; no new browser visual audit."
+  },
+  "live_named": {
+    "run_id": "run-20261114T052014Z",
+    "agent_version": "11eee14f62de",
+    "code_sha256": "537e1d16f3a4296887226e831413accf2802b64463120d08d99fbea522a3b9f1",
+    "input_sha256": "26028c011147a164520453cefe9ca9b7ec4e0b1fb1bf5e94cdf116b5e8150cd4",
+    "started_at": "2026-11-14T05:20:14Z",
+    "completed_at": "2026-11-14T05:20:33Z",
+    "input_count": 2,
+    "emitted_envelopes": 2,
+    "validation": {
+      "passed": true,
+      "checks": {
+        "one_envelope_per_input": true,
+        "unique_organisation_numbers": true,
+        "all_family_states_valid": true,
+        "every_claim_has_evidence": true,
+        "no_null_values_published": true,
+        "all_families_present": true,
+        "snapshot_references_resolve": true,
+        "within_execution_limits": true,
+        "no_failed_terminal_envelopes": true
+      },
+      "invalid_states": []
+    },
+    "configuration": {
+      "bulk_files": false,
+      "workers": 2,
+      "job_days": 7,
+      "web_enabled": true,
+      "website_strategy": "legacy"
+    },
+    "website_diagnostics": {
+      "companies_with_candidates": 2,
+      "companies_attempted": 2,
+      "companies_with_completed_check": 2,
+      "companies_budget_unattempted": 0,
+      "budget_interruptions": 0,
+      "limitation": "Attempt and completion counts are operational diagnostics, not accuracy or recall."
+    },
+    "notes": [],
+    "third_party_cost_usd": 0.0,
+    "models": [],
+    "nav_access": "credential_required",
+    "operations": {
+      "requests": 32,
+      "max_requests": 150,
+      "elapsed_seconds": 19.1,
+      "max_seconds": 300.0,
+      "third_party_cost_usd": 0.0,
+      "max_cost_usd": 0.0,
+      "requests_by_host": {
+        "www.otis.com": 12,
+        "data.brreg.no": 11,
+        "www.gbbl.no": 6,
+        "skien.bbl.no": 2,
+        "query.wikidata.org": 1
+      },
+      "requests_by_phase": {
+        "registry": 2,
+        "activity": 2,
+        "accounts": 2,
+        "history": 2,
+        "roles": 2,
+        "locations": 2,
+        "web": 14,
+        "web_news": 6
+      },
+      "phase_caps": {
+        "registry": 5,
+        "activity": 6,
+        "jobs": 23,
+        "accounts": 4,
+        "roles": 4,
+        "locations": 4,
+        "group": 4,
+        "jobs_verify": 10,
+        "history": 4,
+        "web": 51,
+        "web_news": 9
+      },
+      "refused_by_budget": {},
+      "p50_company_ms": 8515,
+      "p95_company_ms": 8515
+    }
+  },
+  "live_named_source_audit": {
+    "evidence": 215,
+    "source_locators_verified": 211,
+    "excerpt_artifacts_verified": 4,
+    "missing_references": 0,
+    "invalid_objects": 0,
+    "invalid_locators": 0,
+    "history_claims_verified": 30,
+    "history_claims_unverified": 0,
+    "invalid_history_claims": 0,
+    "account_claims_verified": 97,
+    "account_claims_unverified": 0,
+    "invalid_account_claims": 0,
+    "financial_fields": {
+      "accounting_rules": {
+        "verified": 6,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "audit_status": {
+        "verified": 6,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "cash": {
+        "verified": 5,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "current_assets": {
+        "verified": 6,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "equity": {
+        "verified": 6,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "filed_annual_accounts": {
+        "verified": 30,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "fixed_assets": {
+        "verified": 6,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "long_term_debt": {
+        "verified": 6,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "net_financial_items": {
+        "verified": 6,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "net_result": {
+        "verified": 6,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "operating_expenses": {
+        "verified": 6,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "operating_result": {
+        "verified": 6,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "profit_before_tax": {
+        "verified": 5,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "revenue": {
+        "verified": 6,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "sales_revenue": {
+        "verified": 3,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "short_term_debt": {
+        "verified": 6,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "total_assets": {
+        "verified": 6,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "total_debt": {
+        "verified": 6,
+        "unverified": 0,
+        "invalid": 0
+      }
+    },
+    "unique_objects": 14,
+    "passed": true,
+    "errors": [],
+    "limitation": "Excerpt integrity does not independently establish full-page support or exact-company precision."
+  },
+  "probes": {
+    "website_and_social": [
+      {
+        "case": "Lift Manufacturing Company, Elevators & Escalators | Otis India",
+        "observed": "accepted",
+        "reason": "the company's registered e-mail domain is this site's domain and the legal name is in its identity fields",
+        "expectation": "reject foreign regional/parent title; exact legal-name control may pass",
+        "unexpected_accept": true
+      },
+      {
+        "case": "Otis Worldwide",
+        "observed": "accepted",
+        "reason": "the company's registered e-mail domain is this site's domain and the legal name is in its identity fields",
+        "expectation": "reject foreign regional/parent title; exact legal-name control may pass",
+        "unexpected_accept": true
+      },
+      {
+        "case": "OTIS AS",
+        "observed": "accepted",
+        "reason": "the company's registered e-mail domain is this site's domain and the legal name is in its identity fields",
+        "expectation": "reject foreign regional/parent title; exact legal-name control may pass",
+        "unexpected_accept": false
+      },
+      {
+        "case": "https://www.youtube.com/user/OtisElevatorCompany",
+        "accepted": false,
+        "note": "Named organizer URL must fail; bare shared brand remains a risk, not an independently proven account owner."
+      },
+      {
+        "case": "https://www.youtube.com/user/otis",
+        "accepted": true,
+        "note": "Named organizer URL must fail; bare shared brand remains a risk, not an independently proven account owner."
+      }
+    ],
+    "refresh": {
+      "carried": [
+        {
+          "id": "old-manager-site",
+          "family": "website",
+          "field": "official_website",
+          "key": "official_website",
+          "value": "https://www.gbbl.no/",
+          "evidence_ids": [
+            "old-proof"
+          ],
+          "stale_since": "2026-11-14T00:00:00Z",
+          "availability": "available"
+        }
+      ],
+      "showcase_website": "https://www.gbbl.no/",
+      "scope": "Synthetic prior bad publication; not an assertion about a historical submitted row."
+    },
+    "news": [
+      {
+        "case": "Kontakt oss",
+        "published_news": [
+          {
+            "title": "Kontakt oss",
+            "url": "https://example.no/kontakt-oss",
+            "date": "2026-11-13T05:33:53.209507+00:00"
+          }
+        ],
+        "unexpected_publish": true
+      },
+      {
+        "case": "Ledige stillinger",
+        "published_news": [
+          {
+            "title": "Ledige stillinger",
+            "url": "https://example.no/kontakt-oss/ledige-stillinger",
+            "date": "2026-11-13T05:33:53.209507+00:00"
+          }
+        ],
+        "unexpected_publish": true
+      }
+    ]
+  },
+  "scale_run": {
+    "run_id": "run-20261114T052156Z",
+    "agent_version": "11eee14f62de",
+    "code_sha256": "537e1d16f3a4296887226e831413accf2802b64463120d08d99fbea522a3b9f1",
+    "input_sha256": "a3aa26751e682ba853f0b165e4a169dcf9a084af300534237d43d4910615e9fe",
+    "started_at": "2026-11-14T05:21:57Z",
+    "completed_at": "2026-11-14T05:32:01Z",
+    "input_count": 1100,
+    "emitted_envelopes": 1100,
+    "validation": {
+      "passed": true,
+      "checks": {
+        "one_envelope_per_input": true,
+        "unique_organisation_numbers": true,
+        "all_family_states_valid": true,
+        "every_claim_has_evidence": true,
+        "no_null_values_published": true,
+        "all_families_present": true,
+        "snapshot_references_resolve": true,
+        "within_execution_limits": true,
+        "no_failed_terminal_envelopes": true
+      },
+      "invalid_states": []
+    },
+    "configuration": {
+      "bulk_files": true,
+      "workers": 8,
+      "job_days": 7,
+      "web_enabled": true,
+      "website_strategy": "legacy"
+    },
+    "website_diagnostics": {
+      "companies_with_candidates": 74,
+      "companies_attempted": 74,
+      "companies_with_completed_check": 71,
+      "companies_budget_unattempted": 1023,
+      "budget_interruptions": 5,
+      "limitation": "Attempt and completion counts are operational diagnostics, not accuracy or recall."
+    },
+    "notes": [
+      "large batch (1100): roles and workplaces from Brreg bulk files",
+      "large batch (1100); per-company official sources scaled to fit 1920 requests",
+      "bulk roles failed: RemoteProtocolError",
+      "bulk locations failed: BudgetExhausted",
+      "bulk roles incomplete: bounded direct fallback, absence not inferred",
+      "bulk locations incomplete: bounded direct fallback, absence not inferred"
+    ],
+    "third_party_cost_usd": 0.0,
+    "models": [],
+    "nav_access": "credential_required",
+    "operations": {
+      "requests": 1920,
+      "max_requests": 2000,
+      "elapsed_seconds": 612.2,
+      "max_seconds": 900.0,
+      "third_party_cost_usd": 0.0,
+      "max_cost_usd": 0.0,
+      "requests_by_host": {
+        "data.brreg.no": 1348,
+        "vestbo.no": 34,
+        "mallofnorway.com": 15,
+        "vaagsgatalegesenter.no": 14,
+        "www.fondsfinans.no": 12,
+        "www.hafslund.no": 12,
+        "viden.no": 12,
+        "www.nordseter.no": 12,
+        "query.wikidata.org": 11,
+        "www.smartsignmanager.com": 11,
+        "www.egecarpets.com": 11,
+        "novaspektrum.no": 11,
+        "www.logistea.se": 11,
+        "www.uks.no": 11,
+        "www.gamlastovo.no": 11,
+        "www.sularorbuer.no": 10,
+        "hande.no": 9,
+        "www.crispideas.com": 9,
+        "a2g.no": 9,
+        "thermotank.no": 9,
+        "unifor.no": 9,
+        "www.loenfjord.no": 9,
+        "www.abbl.no": 8,
+        "www.planday.com": 8,
+        "bildata.no": 8,
+        "nkl.no": 8,
+        "www.advokater.co": 7,
+        "codex.no": 6,
+        "econor.no": 6,
+        "osu.no": 6,
+        "kirurgivest.no": 6,
+        "storefjell.no": 6,
+        "northstore.no": 6,
+        "www.fabi.no": 6,
+        "www.lettenfoundation.com": 6,
+        "formue.no": 6,
+        "www.mastermal.no": 6,
+        "www.norice.no": 5,
+        "this.no": 5,
+        "www.vestbo.no": 5,
+        "globalen.no": 5,
+        "www.bonord.no": 5,
+        "www.truebeauty.no": 5,
+        "www.osu.no": 5,
+        "www.holmenveien20.no": 5,
+        "www.van-bergen.no": 5,
+        "www.jbf.no": 5,
+        "kjoretoydata.no": 5,
+        "www.prefab.heidelbergmaterials.no": 5,
+        "buskerudmuseene.no": 4,
+        "www.oslo-takst.no": 4,
+        "espira.no": 4,
+        "www.diakonhjemmetomsorg.no": 4,
+        "messe.no": 4,
+        "logistea.se": 4,
+        "jtob.no": 4,
+        "fabkirk.no": 4,
+        "godetall.no": 4,
+        "buskerudmuseet.no": 3,
+        "www.logistea.no": 3,
+        "ctgruppen.no": 3,
+        "intergolf.no": 3,
+        "www.utleiefolketshus.no": 3,
+        "www.missingx.com": 3,
+        "www.econoras.no": 2,
+        "www.this.no": 2,
+        "www.codex.no": 2,
+        "abbl.no": 2,
+        "planday.com": 2,
+        "bonord.no": 2,
+        "www.vaagsgatalegesenter.no": 2,
+        "www.buskerudmuseene.no": 2,
+        "fondsfinans.no": 2,
+        "hafslund.no": 2,
+        "www.hande.no": 2,
+        "www.kirurgivest.no": 2,
+        "www.storefjell.no": 2,
+        "www.smartsign.se": 2,
+        "www.viden.no": 2,
+        "crispideas.com": 2,
+        "www.a2g.no": 2,
+        "hamar-montering.no": 2,
+        "www.egecarpets.dk": 2,
+        "www.diakonhjemmet.no": 2,
+        "advokater.co": 2,
+        "smartsign.se": 2,
+        "www.messe.no": 2,
+        "egecarpets.com": 2,
+        "www.bildata.no": 2,
+        "www.jtob.no": 2,
+        "www.ctgruppen.no": 2,
+        "www.northstore.no": 2,
+        "holmenveien20.no": 2,
+        "www.fabkirk.no": 2,
+        "www.godetall.no": 2,
+        "www.unifor.no": 2,
+        "uks.no": 2,
+        "sularorbuer.no": 2,
+        "nordseter.no": 2,
+        "www.mallofnorway.com": 2,
+        "prefab.heidelbergmaterials.no": 2,
+        "sagasouvenir.no": 2,
+        "www.nkl.no": 2,
+        "www.formue.no": 2,
+        "www.telemarkbil.no": 2,
+        "fykse706.no": 2,
+        "mastermal.no": 2,
+        "telemarkbilruter.no": 2,
+        "www.leikny.no": 1,
+        "www.nrg.no": 1,
+        "nrg.no": 1,
+        "www.kartro.com": 1,
+        "itw.no": 1,
+        "www.fintechneo.com": 1,
+        "www.norron.com": 1,
+        "fintechneo.no": 1,
+        "norron.com": 1,
+        "www.buskerudmedia.no": 1,
+        "buskerudmedia.no": 1,
+        "www.thermotank.no": 1,
+        "jfg.no": 1,
+        "www.hjerneslag.no": 1,
+        "www.maskegruppen.no": 1,
+        "www.armec.no": 1,
+        "www.telemarkbilruter.no": 1,
+        "armec.no": 1,
+        "www.qicraft.no": 1
+      },
+      "requests_by_phase": {
+        "registry": 22,
+        "accounts": 1104,
+        "locations": 101,
+        "roles": 102,
+        "activity": 22,
+        "group": 8,
+        "web": 541,
+        "web_news": 20
+      },
+      "phase_caps": {
+        "registry": 35,
+        "activity": 46,
+        "jobs": 23,
+        "accounts": 1157,
+        "roles": 102,
+        "locations": 101,
+        "group": 8,
+        "jobs_verify": 6,
+        "history": 0,
+        "web": 541,
+        "web_news": 95
+      },
+      "refused_by_budget": {
+        "group": 70,
+        "web": 5,
+        "roles": 997,
+        "locations": 997,
+        "web_news": 16
+      },
+      "p50_company_ms": 16,
+      "p95_company_ms": 5030
+    }
+  },
+  "scale_metrics": {
+    "run_id": "run-20261114T052156Z",
+    "code_version": "11eee14f62de",
+    "companies": 1100,
+    "measurement_mode": "baseline",
+    "replay_provenance": null,
+    "terminal_completion": 1.0,
+    "validation": {
+      "passed": true,
+      "checks": {
+        "one_envelope_per_input": true,
+        "unique_organisation_numbers": true,
+        "all_family_states_valid": true,
+        "every_claim_has_evidence": true,
+        "no_null_values_published": true,
+        "all_families_present": true,
+        "snapshot_references_resolve": true,
+        "within_execution_limits": true,
+        "no_failed_terminal_envelopes": true
+      },
+      "invalid_states": []
+    },
+    "families": {
+      "activity": {
+        "companies_with_current_claims": 1096,
+        "company_coverage": 0.9963636363636363,
+        "distinct_claims": 4266,
+        "availability": {
+          "available": 1096,
+          "not_available": 4
+        }
+      },
+      "contact": {
+        "companies_with_current_claims": 234,
+        "company_coverage": 0.21272727272727274,
+        "distinct_claims": 243,
+        "availability": {
+          "failed": 840,
+          "available": 234,
+          "not_available": 12,
+          "ambiguous": 12,
+          "blocked": 2
+        }
+      },
+      "description": {
+        "companies_with_current_claims": 14,
+        "company_coverage": 0.012727272727272728,
+        "distinct_claims": 14,
+        "availability": {
+          "failed": 1028,
+          "not_available": 17,
+          "ambiguous": 34,
+          "available": 14,
+          "blocked": 7
+        }
+      },
+      "financials": {
+        "companies_with_current_claims": 1090,
+        "company_coverage": 0.990909090909091,
+        "distinct_claims": 48707,
+        "availability": {
+          "available": 1090,
+          "not_available": 3,
+          "failed": 7
+        }
+      },
+      "group": {
+        "companies_with_current_claims": 8,
+        "company_coverage": 0.007272727272727273,
+        "distinct_claims": 15,
+        "availability": {
+          "not_applicable": 1019,
+          "not_available": 3,
+          "failed": 70,
+          "available": 8
+        }
+      },
+      "identity": {
+        "companies_with_current_claims": 1097,
+        "company_coverage": 0.9972727272727273,
+        "distinct_claims": 15080,
+        "availability": {
+          "available": 1097,
+          "not_available": 3
+        }
+      },
+      "industry": {
+        "companies_with_current_claims": 1097,
+        "company_coverage": 0.9972727272727273,
+        "distinct_claims": 1112,
+        "availability": {
+          "available": 1097,
+          "not_available": 3
+        }
+      },
+      "jobs": {
+        "companies_with_current_claims": 0,
+        "company_coverage": 0.0,
+        "distinct_claims": 0,
+        "availability": {
+          "blocked": 1097,
+          "not_available": 3
+        }
+      },
+      "leadership": {
+        "companies_with_current_claims": 100,
+        "company_coverage": 0.09090909090909091,
+        "distinct_claims": 613,
+        "availability": {
+          "failed": 997,
+          "not_available": 3,
+          "available": 100
+        }
+      },
+      "locations": {
+        "companies_with_current_claims": 93,
+        "company_coverage": 0.08454545454545455,
+        "distinct_claims": 151,
+        "availability": {
+          "failed": 997,
+          "not_available": 10,
+          "available": 93
+        }
+      },
+      "social_profiles": {
+        "companies_with_current_claims": 11,
+        "company_coverage": 0.01,
+        "distinct_claims": 13,
+        "availability": {
+          "failed": 1028,
+          "not_available": 20,
+          "ambiguous": 34,
+          "available": 11,
+          "blocked": 7
+        }
+      },
+      "status": {
+        "companies_with_current_claims": 1097,
+        "company_coverage": 0.9972727272727273,
+        "distinct_claims": 1104,
+        "availability": {
+          "available": 1097,
+          "not_available": 3
+        }
+      },
+      "website": {
+        "companies_with_current_claims": 23,
+        "company_coverage": 0.02090909090909091,
+        "distinct_claims": 23,
+        "availability": {
+          "failed": 1028,
+          "not_available": 8,
+          "ambiguous": 34,
+          "available": 23,
+          "blocked": 7
+        }
+      }
+    },
+    "requests": 1920,
+    "requests_per_company": 1.7454545454545454,
+    "elapsed_seconds": 612.2,
+    "p50_company_ms": 16,
+    "p95_company_ms": 5030,
+    "external_cost_usd": 0.0,
+    "external_cost_per_company_usd": 0.0,
+    "snapshot_retention_counts": {
+      "privacy_minimized_json": 4216,
+      "excerpt_only": 302
+    },
+    "models": [],
+    "code_sha256": "537e1d16f3a4296887226e831413accf2802b64463120d08d99fbea522a3b9f1",
+    "published_current_claims": 71341,
+    "specific_fields": {
+      "company_news": {
+        "companies": 1,
+        "claims": 2
+      },
+      "registry_event": {
+        "companies": 1096,
+        "claims": 4264
+      },
+      "job_posting": {
+        "companies": 0,
+        "claims": 0
+      },
+      "filed_annual_accounts": {
+        "companies": 0,
+        "claims": 0
+      }
+    },
+    "precision": null,
+    "wrong_company_publications": null,
+    "official_score": null,
+    "reason_unmeasured": "No independent per-claim attribution audit or Builderr reference collection supplied. Coverage and artifact integrity do not establish precision or recall."
+  },
+  "scale_source_audit": {
+    "evidence": 71285,
+    "source_locators_verified": 70983,
+    "excerpt_artifacts_verified": 302,
+    "missing_references": 0,
+    "invalid_objects": 0,
+    "invalid_locators": 0,
+    "history_claims_verified": 0,
+    "history_claims_unverified": 0,
+    "invalid_history_claims": 0,
+    "account_claims_verified": 48707,
+    "account_claims_unverified": 0,
+    "invalid_account_claims": 0,
+    "financial_fields": {
+      "accounting_rules": {
+        "verified": 3067,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "audit_status": {
+        "verified": 3067,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "cash": {
+        "verified": 2953,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "current_assets": {
+        "verified": 3055,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "equity": {
+        "verified": 3064,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "fixed_assets": {
+        "verified": 2932,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "long_term_debt": {
+        "verified": 2458,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "net_financial_items": {
+        "verified": 2818,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "net_result": {
+        "verified": 3067,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "operating_expenses": {
+        "verified": 3019,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "operating_result": {
+        "verified": 3024,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "profit_before_tax": {
+        "verified": 3022,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "revenue": {
+        "verified": 2403,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "sales_revenue": {
+        "verified": 1760,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "short_term_debt": {
+        "verified": 2892,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "total_assets": {
+        "verified": 3067,
+        "unverified": 0,
+        "invalid": 0
+      },
+      "total_debt": {
+        "verified": 3039,
+        "unverified": 0,
+        "invalid": 0
+      }
+    },
+    "unique_objects": 1624,
+    "passed": true,
+    "errors": [],
+    "limitation": "Excerpt integrity does not independently establish full-page support or exact-company precision."
+  },
+  "committed_sample": {
+    "sample_profiles": 1000,
+    "run_ids": [
+      "run-1000-rev18b"
+    ],
+    "external_fields": {
+      "official_website": 3,
+      "company_news": 4,
+      "job_posting": 0,
+      "self_description": 3
+    },
+    "named_cases": []
+  },
+  "review_queue": {
+    "input_sha256": "91d873e2ba33f53fde2c1d6dae5ec08cf02e7a9fc840bcfb6cc3db6f35cc1dc3",
+    "tasks": 227,
+    "families": {
+      "activity": 22,
+      "contact": 20,
+      "description": 14,
+      "financials": 20,
+      "group": 15,
+      "identity": 20,
+      "industry": 20,
+      "leadership": 20,
+      "locations": 20,
+      "social_profiles": 13,
+      "status": 20,
+      "website": 23
+    },
+    "per_family_sample": 20,
+    "labels_completed": 0,
+    "sampling": "all website/social/job/news claims; deterministic hash sample in other families",
+    "limitation": "Development review queue only. Not an independent reference pool, population sample or blinded release set."
+  },
+  "confirmed_current_findings": [
+    {
+      "id": "D1",
+      "kind": "wrong_company",
+      "org": "919419105",
+      "fields": [
+        "official_website",
+        "self_description"
+      ],
+      "url": "https://www.otis.com/en/in/",
+      "basis": "Fresh live output explicitly attributes India page and description to OTIS AS."
+    },
+    {
+      "id": "D2",
+      "kind": "refresh_and_ui",
+      "basis": "Synthetic prior manager URL survives ownership-conflict refresh and remains showcase official link."
+    },
+    {
+      "id": "D4",
+      "kind": "not_news",
+      "org": "920008259",
+      "urls": [
+        "https://www.diakonhjemmetomsorg.no/kontakt-oss",
+        "https://www.diakonhjemmetomsorg.no/kontakt-oss/ledige-stillinger"
+      ],
+      "published_items": 2,
+      "valid_news_items_after_review": 0,
+      "basis": "Live emitted claims plus source-page inspection; utility pages despite publication metadata."
+    }
+  ],
+  "measurement_limits": [
+    "Existing scale cohort, not blinded or official test set.",
+    "No independent overall current precision, recall, F1 or official score measured.",
+    "Remaining six organizer wrong-company examples unavailable.",
+    "API costs exclude compute, bandwidth and development tools.",
+    "Evidence artifact checks do not prove entity attribution."
+  ],
+  "artifact_hashes": {
+    "out-organizer-diagnosis\\live-named\\envelopes.jsonl": "60ce4e7ba8bc7b144662ea24853ed8fe55eb5162325064ae01d1ab09a70d382c",
+    "out-organizer-diagnosis\\scale1100\\envelopes.jsonl": "91d873e2ba33f53fde2c1d6dae5ec08cf02e7a9fc840bcfb6cc3db6f35cc1dc3",
+    "eval\\organizer_attribution_probes.py": "2f324c021eace4ccc59d31ed82ef8624ecd3291b94291c80c929f7a0bc50dcdd"
+  }
+}

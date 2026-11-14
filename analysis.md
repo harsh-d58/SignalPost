@@ -1,5 +1,10 @@
 # SignalPost analysis
 
+> **14 November update:** follow the [recovery validation](reports/recovery-validation-20261114.md) for current
+> changes and measured limits. Targeted safeguards now reject and revoke the disclosed OTIS India claims and
+> reject utility pages as news. Only two organizer examples were disclosed; independent accuracy remains unknown.
+> The analysis below is historical and its metrics are not current-source measurements.
+
 **11 November 2026** · Diagnosis, implementation and verification of the accuracy improvement programme.
 
 The most consequential defect was in financial evidence attribution. Eleven published claims pointed to the wrong account scope even though their values agreed with the cited records. The old audit passed because it checked whether a locator resolved to its recorded value. The revised audit also checks whether the locator supports the published claim. It rejects all 11 original mismatches. After re-extracting the evidence from the same retained sources, it verified all 42,616 claims carrying account-record pointers. All 1,100 envelopes preserved their claim content and produced zero refresh changes.

@@ -611,7 +611,7 @@ class Runner:
         if self.bulk_mode:
             for key in ("roles", "locations"):
                 if self.bulk[key] is None:
-                    self.budget.set_phase_cap(key, self.budget.per_phase[key] + min(100, self.budget.phase_remaining("web") // 3))
+                    self.budget.set_phase_cap(key, self.budget.per_phase[key] + min(40, self.budget.phase_remaining("web") // 10))
                     self.notes.append(f"bulk {key} incomplete: bounded direct fallback, absence not inferred")
         # per-company pool with watchdog
         t = time.monotonic()
@@ -708,6 +708,9 @@ class Runner:
             "refresh": {},
             "incomplete_families": pb.extra.get("incomplete_families", {}),
             "closed_jobs": pb.extra.get("closed_jobs", {}),
+            "website_identity": pb.extra.get("website_identity"),
+            "discovery_diagnostics": {"news_rejections": pb.extra.get("news_rejections", [])[:30],
+                                      "job_rejections": pb.extra.get("job_rejections", [])[:30]},
             "brief": {},
             "unpublished_candidates": pb.candidates[:20],
             "errors": pb.errors[:20],
@@ -840,7 +843,8 @@ class Runner:
             for cand in env.get("unpublished_candidates", []):
                 if cand.get("family") == "website":
                     gate[cand["decision"]] = gate.get(cand["decision"], 0) + 1
-            if any(c["field"] == "official_website" for c in env["claims"]):
+            if any(c["field"] == "official_website" and c.get("availability", "available") == "available"
+                   and not c.get("stale_since") for c in env["claims"]):
                 gate["accepted"] = gate.get("accepted", 0) + 1
         # N9: website candidate yield per discovery source (which sources are worth their requests)
         by_source: dict[str, dict[str, int]] = {}
@@ -905,6 +909,15 @@ class Runner:
                                          "companies_budget_unattempted": sum(d["not_attempted_budget"] for d in diagnostics),
                                          "budget_interruptions": sum(d["budget_interruptions"] for d in diagnostics),
                                          "limitation": "Attempt and completion counts are operational diagnostics, not accuracy or recall."}
+        report["external_fields"] = {
+            field: {"companies": sum(any(c["field"] == field and c.get("availability", "available") == "available"
+                                         and not c.get("stale_since") for c in e["claims"]) for e in envelopes),
+                    "claims": sum(c["field"] == field and c.get("availability", "available") == "available"
+                                  and not c.get("stale_since") for e in envelopes for c in e["claims"])}
+            for field in ("official_website", "company_news", "registry_event", "job_posting")}
+        report["discovery_rejections"] = {
+            kind: dict(Counter(r["reason_code"] for pb in self.builders.values() for r in pb.extra.get(kind, [])))
+            for kind in ("news_rejections", "job_rejections")}
         (out / "website-diagnostics.json").write_text(json.dumps(diagnostics, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         (out / "run-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         (out / "identity-audit.md").write_text(identity_audit(envelopes, self.run_id), encoding="utf-8")

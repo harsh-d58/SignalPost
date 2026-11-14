@@ -22,6 +22,8 @@ def snap(html, url="https://fjord.no/", final=None, status=200):
 
 
 def page(body="", nodes=None, url="https://fjord.no/"):
+    if "/news/" in url:
+        body += '<main><p>Our new service office opened in Bergen today. The team will support local marine customers with repairs, installation and scheduled maintenance from next week.</p></main>'
     script = '<script type="application/ld+json">' + json.dumps(nodes or []) + '</script>'
     return Page(snap('<html><title>' + NAME + '</title>' + script + '<body>' + body + '</body></html>', url))
 
@@ -214,6 +216,7 @@ def test_job_listing_payload_is_discovery_only():
 
 def test_feed_product_is_not_news_but_article_is_verified():
     pb = ProfileBuilder(ORG)
+    pb.extra["legal_name"] = NAME
     p = page()
     p.feeds = ['https://fjord.no/feed']
     feed = '<rss><channel><item><title>Our new factory opens</title><link>https://fjord.no/news/factory</link><pubDate>' + TODAY + '</pubDate></item></channel></rss>'

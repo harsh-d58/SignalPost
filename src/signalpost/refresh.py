@@ -66,6 +66,23 @@ def diff(previous: dict[str, Any] | None, current: dict[str, Any], *, detected_a
     cur_claims = _index(current)
     prev_evidence = {e["id"]: e for e in previous.get("evidence", [])}
     states = current.get("availability", {})
+    # Identity ambiguity is not a transport outage. Never revive an old external
+    # assertion after the current ownership check fails, even for legacy inputs.
+    ownership_lost = (states.get("website") or {}).get("state") == "ambiguous"
+    old_sites = {c["value"] for c in prev_claims.values() if c["field"] == "official_website" and isinstance(c["value"], str)}
+    new_sites = {c["value"] for c in cur_claims.values() if c["field"] == "official_website" and isinstance(c["value"], str)}
+    ownership_lost = ownership_lost or bool(old_sites and new_sites and old_sites != new_sites)
+    revoked = []
+    if ownership_lost:
+        for key, claim in list(prev_claims.items()):
+            external = (claim["family"] in {"website", "social_profiles", "description"}
+                        or claim["field"] in {"company_news", "public_brand"}
+                        or (claim["family"] in {"contact", "jobs"} and
+                            any(prev_evidence.get(eid, {}).get("source_class") == "company_owned"
+                                for eid in claim.get("evidence_ids", []))))
+            if external and key not in cur_claims:
+                revoked.append(claim)
+                del prev_claims[key]
     incomplete = current.get("incomplete_families", {})
     closed = current.get("closed_jobs", {})
     prev_started = previous.get("run", {}).get("started_at") or previous.get("run", {}).get("completed_at")
@@ -79,7 +96,13 @@ def diff(previous: dict[str, Any] | None, current: dict[str, Any], *, detected_a
             twin = cur_claims.get((claim["family"], claim.get("key") or claim["field"])) or {}
             for f in ("first_seen", "last_seen", "times_seen"):
                 claim[f] = twin.get(f, detected_at if f != "times_seen" else 1)
-    changes: list[dict] = []
+    changes: list[dict] = [{
+        "id": f"chg-{c['id']}-revoked", "type": "ownership_revoked", "material": True,
+        "family": c["family"], "field": c["field"], "key": c.get("key") or c["field"],
+        "label": c.get("label"), "previous": c["value"], "current": None,
+        "evidence_ids": [], "previous_evidence_ids": c.get("evidence_ids", []),
+        "detected_at": detected_at, "reason_code": "identity_unproven",
+    } for c in revoked]
     not_compared: list[str] = []
     compared: list[str] = []
     families = sorted({f for f, _ in prev_claims} | {f for f, _ in cur_claims})

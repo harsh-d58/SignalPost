@@ -58,6 +58,8 @@ def snapshot(body, url, status=200, content_type="text/html"):
 
 
 def page(path="/", nodes=None, body="", title=NAME):
+    if "/news/" in path:
+        body += '<main><p>Our new service office opened in Bergen today. The team will support local marine customers with repairs, installation and scheduled maintenance from next week.</p></main>'
     markup = f'<html><head><title>{title}</title><script type="application/ld+json">'
     markup += json.dumps(nodes or []) + f"</script></head><body>{body}</body></html>"
     return Page(snapshot(markup, BASE + path))

@@ -87,6 +87,8 @@ class SnapshotStore:
                               access_policy="NLOD-2.0", source_class="official_registry")
         if host == "pam-stilling-feed.nav.no":
             record.update(access_policy="NAV-credential-required", source_class="public_api")
+        if host == "boards-api.greenhouse.io":
+            record.update(access_policy="Greenhouse-public-Job-Board-GET", source_class="public_api")
         if getattr(snap, "provenance", None):
             record["provenance"] = snap.provenance
             if snap.provenance.get("kind") == "supplied_registry_row":

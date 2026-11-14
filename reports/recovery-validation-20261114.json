@@ -1,0 +1,1009 @@
+{
+  "date": "2026-11-14",
+  "status": "known blockers fixed; qualification and broad accuracy not established",
+  "base_commit": "11eee14f62de53c42904541f923a39677ce7fc41",
+  "current_working_tree_sha256": "04906cd10003ec517063b9e8857a629eb7d8bcfdcb98c3131210d2cfc81e2efc",
+  "tests": {
+    "python": 318,
+    "python_seconds": 75.38,
+    "frontend": 18,
+    "public_ui_errors": 0,
+    "public_ui_problems": 0
+  },
+  "fresh100": {
+    "run_id": "run-20261114T113815Z",
+    "agent_version": "11eee14f62de-dirty",
+    "code_sha256": "8b1278738910b6c3e479c2816ba677d48a51f7f986472e186049b41bb9bf470f",
+    "input_sha256": "113c74ee58187b53364174420874fcf81b44a52fef4cdd8fd7644d7478c0a046",
+    "input_count": 100,
+    "emitted_envelopes": 100,
+    "configuration": {
+      "bulk_files": false,
+      "workers": 8,
+      "job_days": 7,
+      "web_enabled": true,
+      "website_strategy": "legacy"
+    },
+    "validation": {
+      "passed": true,
+      "checks": {
+        "one_envelope_per_input": true,
+        "unique_organisation_numbers": true,
+        "all_family_states_valid": true,
+        "every_claim_has_evidence": true,
+        "no_null_values_published": true,
+        "all_families_present": true,
+        "snapshot_references_resolve": true,
+        "within_execution_limits": true,
+        "no_failed_terminal_envelopes": true
+      },
+      "invalid_states": []
+    },
+    "external_fields": {
+      "official_website": {
+        "companies": 3,
+        "claims": 3
+      },
+      "company_news": {
+        "companies": 0,
+        "claims": 0
+      },
+      "registry_event": {
+        "companies": 100,
+        "claims": 375
+      },
+      "job_posting": {
+        "companies": 0,
+        "claims": 0
+      }
+    },
+    "website_diagnostics": {
+      "companies_with_candidates": 39,
+      "companies_attempted": 39,
+      "companies_with_completed_check": 39,
+      "companies_budget_unattempted": 0,
+      "budget_interruptions": 0,
+      "limitation": "Attempt and completion counts are operational diagnostics, not accuracy or recall."
+    },
+    "operations": {
+      "requests": 623,
+      "max_requests": 2000,
+      "elapsed_seconds": 243.0,
+      "max_seconds": 720.0,
+      "third_party_cost_usd": 0.0,
+      "max_cost_usd": 0.0,
+      "requests_by_host": {
+        "data.brreg.no": 409,
+        "www.diller.io": 11,
+        "vestbo.no": 10,
+        "hosthelse.no": 10,
+        "4human.no": 10,
+        "www.hytorc.no": 8,
+        "www.obf.no": 7,
+        "mester-ror.no": 7,
+        "styrerommet.no": 7,
+        "holmeiendom.no": 6,
+        "oslomaraton.no": 6,
+        "www.pettersen-bygg.no": 6,
+        "www.unisea.no": 6,
+        "selmers.no": 5,
+        "www.legria.no": 5,
+        "skudebygg.no": 5,
+        "amautosalg.no": 5,
+        "www.fridlogistics.no": 5,
+        "gabler.no": 5,
+        "www.duofrisor.no": 5,
+        "imosholding.com": 5,
+        "www.hydrawell.no": 5,
+        "www.biogaarden.no": 4,
+        "www.styrerommet.no": 3,
+        "www.holmeiendom.no": 2,
+        "www.hosthelse.no": 2,
+        "www.ringbo.no": 2,
+        "www.mercurc.no": 2,
+        "hytorc.no": 2,
+        "www.vestbo.no": 2,
+        "www.oslomaraton.no": 2,
+        "mercurc.no": 2,
+        "obf.no": 2,
+        "www.mester-ror.no": 2,
+        "www.4human.no": 2,
+        "diller.io": 2,
+        "diller.no": 2,
+        "legria.no": 2,
+        "rotatrading.no": 2,
+        "pettersen-bygg.no": 2,
+        "fridlogistics.no": 2,
+        "bteam.no": 2,
+        "duofrisor.no": 2,
+        "unisea.no": 2,
+        "styrerommet.net": 2,
+        "voltfashion.no": 2,
+        "biogaarden.no": 2,
+        "query.wikidata.org": 1,
+        "ringbo.no": 1,
+        "adgruppen.no": 1,
+        "maovass.no": 1,
+        "kvaalen.no": 1,
+        "host-helse.no": 1,
+        "regnskapspesialistene.no": 1,
+        "spesialistene.no": 1,
+        "pettersenbygg.no": 1,
+        "bodmannen.no": 1,
+        "liantuningservice.no": 1,
+        "altitudeinsight.no": 1,
+        "frid-logistics.no": 1,
+        "investor.no": 1,
+        "investoras.no": 1,
+        "johansen-trafikkskole.no": 1,
+        "santer.no": 1,
+        "ardent.no": 1,
+        "volt.no": 1,
+        "nysnee.no": 1,
+        "voltfashion.com": 1,
+        "tampnet.com": 1
+      },
+      "requests_by_phase": {
+        "registry": 2,
+        "activity": 2,
+        "accounts": 102,
+        "history": 100,
+        "roles": 100,
+        "locations": 100,
+        "web": 207,
+        "group": 4,
+        "web_news": 6
+      },
+      "phase_caps": {
+        "registry": 5,
+        "activity": 6,
+        "jobs": 23,
+        "accounts": 107,
+        "roles": 107,
+        "locations": 107,
+        "group": 37,
+        "jobs_verify": 60,
+        "history": 102,
+        "web": 1161,
+        "web_news": 204
+      },
+      "refused_by_budget": {},
+      "p50_company_ms": 14717,
+      "p95_company_ms": 31530
+    },
+    "notes": []
+  },
+  "scale1100": {
+    "run_id": "run-20261114T114312Z",
+    "agent_version": "11eee14f62de-dirty",
+    "code_sha256": "8b1278738910b6c3e479c2816ba677d48a51f7f986472e186049b41bb9bf470f",
+    "input_sha256": "a3aa26751e682ba853f0b165e4a169dcf9a084af300534237d43d4910615e9fe",
+    "input_count": 1100,
+    "emitted_envelopes": 1100,
+    "configuration": {
+      "bulk_files": true,
+      "workers": 8,
+      "job_days": 7,
+      "web_enabled": true,
+      "website_strategy": "legacy"
+    },
+    "validation": {
+      "passed": true,
+      "checks": {
+        "one_envelope_per_input": true,
+        "unique_organisation_numbers": true,
+        "all_family_states_valid": true,
+        "every_claim_has_evidence": true,
+        "no_null_values_published": true,
+        "all_families_present": true,
+        "snapshot_references_resolve": true,
+        "within_execution_limits": true,
+        "no_failed_terminal_envelopes": true
+      },
+      "invalid_states": []
+    },
+    "external_fields": {
+      "official_website": {
+        "companies": 20,
+        "claims": 20
+      },
+      "company_news": {
+        "companies": 1,
+        "claims": 2
+      },
+      "registry_event": {
+        "companies": 1096,
+        "claims": 4259
+      },
+      "job_posting": {
+        "companies": 0,
+        "claims": 0
+      }
+    },
+    "website_diagnostics": {
+      "companies_with_candidates": 78,
+      "companies_attempted": 78,
+      "companies_with_completed_check": 76,
+      "companies_budget_unattempted": 1019,
+      "budget_interruptions": 7,
+      "limitation": "Attempt and completion counts are operational diagnostics, not accuracy or recall."
+    },
+    "operations": {
+      "requests": 1920,
+      "max_requests": 2000,
+      "elapsed_seconds": 450.9,
+      "max_seconds": 900.0,
+      "third_party_cost_usd": 0.0,
+      "max_cost_usd": 0.0,
+      "requests_by_host": {
+        "data.brreg.no": 1312,
+        "vestbo.no": 34,
+        "vaagsgatalegesenter.no": 14,
+        "www.loenfjord.no": 14,
+        "www.fondsfinans.no": 12,
+        "www.hafslund.no": 12,
+        "viden.no": 12,
+        "query.wikidata.org": 11,
+        "www.smartsignmanager.com": 11,
+        "www.egecarpets.com": 11,
+        "novaspektrum.no": 11,
+        "www.logistea.se": 11,
+        "www.uks.no": 11,
+        "godetall.no": 10,
+        "www.sularorbuer.no": 10,
+        "www.missingx.com": 10,
+        "hande.no": 9,
+        "www.crispideas.com": 9,
+        "a2g.no": 9,
+        "www.diakonhjemmetomsorg.no": 9,
+        "northstore.no": 9,
+        "unifor.no": 9,
+        "nkl.no": 9,
+        "www.abbl.no": 8,
+        "www.planday.com": 8,
+        "buskerudmuseene.no": 8,
+        "www.oslo-takst.no": 8,
+        "bildata.no": 8,
+        "www.fabi.no": 8,
+        "www.prefab.heidelbergmaterials.no": 8,
+        "mallofnorway.com": 8,
+        "this.no": 7,
+        "storefjell.no": 7,
+        "www.advokater.co": 7,
+        "www.van-bergen.no": 7,
+        "www.nordseter.no": 7,
+        "www.heidelbergmaterials.com": 7,
+        "www.norice.no": 6,
+        "codex.no": 6,
+        "econor.no": 6,
+        "osu.no": 6,
+        "kirurgivest.no": 6,
+        "intergolf.no": 6,
+        "www.lettenfoundation.com": 6,
+        "formue.no": 6,
+        "www.mastermal.no": 6,
+        "www.vestbo.no": 5,
+        "www.osu.no": 5,
+        "www.truebeauty.no": 5,
+        "hamar-montering.no": 5,
+        "www.jbf.no": 5,
+        "kjoretoydata.no": 5,
+        "www.gamlastovo.no": 5,
+        "norcap.no": 5,
+        "espira.no": 4,
+        "messe.no": 4,
+        "logistea.se": 4,
+        "jtob.no": 4,
+        "fabkirk.no": 4,
+        "www.logistea.no": 3,
+        "ctgruppen.no": 3,
+        "www.utleiefolketshus.no": 3,
+        "www.econoras.no": 2,
+        "www.codex.no": 2,
+        "www.this.no": 2,
+        "abbl.no": 2,
+        "www.vaagsgatalegesenter.no": 2,
+        "planday.com": 2,
+        "fondsfinans.no": 2,
+        "hafslund.no": 2,
+        "bonord.no": 2,
+        "www.bonord.no": 2,
+        "www.hande.no": 2,
+        "www.kirurgivest.no": 2,
+        "crispideas.com": 2,
+        "www.storefjell.no": 2,
+        "www.smartsign.se": 2,
+        "www.viden.no": 2,
+        "www.a2g.no": 2,
+        "www.egecarpets.dk": 2,
+        "www.diakonhjemmet.no": 2,
+        "egecarpets.com": 2,
+        "advokater.co": 2,
+        "www.bildata.no": 2,
+        "www.ctgruppen.no": 2,
+        "www.messe.no": 2,
+        "www.northstore.no": 2,
+        "smartsign.se": 2,
+        "www.jtob.no": 2,
+        "www.holmenveien20.no": 2,
+        "www.fabkirk.no": 2,
+        "www.godetall.no": 2,
+        "www.unifor.no": 2,
+        "www.mallofnorway.com": 2,
+        "prefab.heidelbergmaterials.no": 2,
+        "uks.no": 2,
+        "sularorbuer.no": 2,
+        "heidelbergmaterials.com": 2,
+        "loenfjord.no": 2,
+        "www.nkl.no": 2,
+        "www.formue.no": 2,
+        "sagasouvenir.no": 2,
+        "mastermal.no": 2,
+        "www.armec.no": 2,
+        "maske.no": 2,
+        "www.norcap.no": 2,
+        "missingx.com": 2,
+        "www.nrg.no": 1,
+        "www.leikny.no": 1,
+        "nrg.no": 1,
+        "globalen.no": 1,
+        "globalenreklame.no": 1,
+        "www.buskerudmuseene.no": 1,
+        "www.kartro.com": 1,
+        "itw.no": 1,
+        "www.fintechneo.com": 1,
+        "www.norron.com": 1,
+        "fintechneo.no": 1,
+        "norron.com": 1,
+        "www.buskerudmedia.no": 1,
+        "holmenveien20.no": 1,
+        "buskerudmedia.no": 1,
+        "nordseter.no": 1,
+        "jfg.no": 1,
+        "www.thermotank.no": 1,
+        "thermotank.no": 1,
+        "www.hjerneslag.no": 1,
+        "www.maskegruppen.no": 1,
+        "www.telemarkbil.no": 1,
+        "fykse706.no": 1,
+        "telemarkbil.no": 1,
+        "www.qicraft.no": 1,
+        "www.maske.no": 1,
+        "www.kiwaniski.org": 1,
+        "armec.no": 1,
+        "advimoss.no": 1,
+        "www.pgaofnorway.no": 1,
+        "qicraft.no": 1,
+        "kiwanisnorden.no": 1
+      },
+      "requests_by_phase": {
+        "registry": 22,
+        "accounts": 1104,
+        "locations": 82,
+        "roles": 83,
+        "activity": 22,
+        "group": 10,
+        "web": 541,
+        "web_news": 56
+      },
+      "phase_caps": {
+        "registry": 35,
+        "activity": 46,
+        "jobs": 23,
+        "accounts": 1189,
+        "roles": 126,
+        "locations": 126,
+        "group": 93,
+        "jobs_verify": 6,
+        "history": 0,
+        "web": 626,
+        "web_news": 95
+      },
+      "refused_by_budget": {
+        "roles": 1057,
+        "locations": 1057,
+        "group": 70,
+        "web": 7
+      },
+      "p50_company_ms": 0,
+      "p95_company_ms": 9093
+    },
+    "notes": [
+      "large batch (1100): roles and workplaces from Brreg bulk files",
+      "large batch (1100); per-company official sources scaled to fit 1920 requests",
+      "bulk locations failed: BudgetExhausted",
+      "bulk roles failed: BudgetExhausted",
+      "bulk roles incomplete: bounded direct fallback, absence not inferred",
+      "bulk locations incomplete: bounded direct fallback, absence not inferred",
+      "tail pass: 85 requests left unused by the per-phase caps were spent on families that had failed only for budget; filled: {'leadership': 42, 'locations': 41, 'group': 2}"
+    ]
+  },
+  "final_canary": {
+    "run_id": "run-20261114T115518Z",
+    "agent_version": "11eee14f62de-dirty",
+    "code_sha256": "a71100b0e900b53bae482a3398048f77ab183e038267f6a50982ac305e3e665c",
+    "input_sha256": "26028c011147a164520453cefe9ca9b7ec4e0b1fb1bf5e94cdf116b5e8150cd4",
+    "input_count": 2,
+    "emitted_envelopes": 2,
+    "configuration": {
+      "bulk_files": false,
+      "workers": 2,
+      "job_days": 7,
+      "web_enabled": true,
+      "website_strategy": "legacy"
+    },
+    "validation": {
+      "passed": true,
+      "checks": {
+        "one_envelope_per_input": true,
+        "unique_organisation_numbers": true,
+        "all_family_states_valid": true,
+        "every_claim_has_evidence": true,
+        "no_null_values_published": true,
+        "all_families_present": true,
+        "snapshot_references_resolve": true,
+        "within_execution_limits": true,
+        "no_failed_terminal_envelopes": true
+      },
+      "invalid_states": []
+    },
+    "external_fields": {
+      "official_website": {
+        "companies": 0,
+        "claims": 0
+      },
+      "company_news": {
+        "companies": 0,
+        "claims": 0
+      },
+      "registry_event": {
+        "companies": 2,
+        "claims": 27
+      },
+      "job_posting": {
+        "companies": 0,
+        "claims": 0
+      }
+    },
+    "website_diagnostics": {
+      "companies_with_candidates": 2,
+      "companies_attempted": 2,
+      "companies_with_completed_check": 2,
+      "companies_budget_unattempted": 0,
+      "budget_interruptions": 0,
+      "limitation": "Attempt and completion counts are operational diagnostics, not accuracy or recall."
+    },
+    "operations": {
+      "requests": 30,
+      "max_requests": 150,
+      "elapsed_seconds": 32.5,
+      "max_seconds": 300.0,
+      "third_party_cost_usd": 0.0,
+      "max_cost_usd": 0.0,
+      "requests_by_host": {
+        "www.otis.com": 13,
+        "data.brreg.no": 11,
+        "otis.com": 2,
+        "query.wikidata.org": 1,
+        "www.heis-knutsen.no": 1,
+        "heis-knutsen.no": 1,
+        "skien.bbl.no": 1
+      },
+      "requests_by_phase": {
+        "registry": 2,
+        "activity": 2,
+        "accounts": 2,
+        "history": 2,
+        "roles": 2,
+        "locations": 2,
+        "web": 18
+      },
+      "phase_caps": {
+        "registry": 5,
+        "activity": 6,
+        "jobs": 23,
+        "accounts": 4,
+        "roles": 4,
+        "locations": 4,
+        "group": 4,
+        "jobs_verify": 10,
+        "history": 4,
+        "web": 51,
+        "web_news": 9
+      },
+      "refused_by_budget": {},
+      "p50_company_ms": 18687,
+      "p95_company_ms": 18687
+    },
+    "notes": []
+  },
+  "audits": {
+    "fresh100": {
+      "evidence": 7770,
+      "source_locators_verified": 7743,
+      "excerpt_artifacts_verified": 27,
+      "missing_references": 0,
+      "invalid_objects": 0,
+      "invalid_locators": 0,
+      "history_claims_verified": 920,
+      "history_claims_unverified": 0,
+      "invalid_history_claims": 0,
+      "account_claims_verified": 4400,
+      "account_claims_unverified": 0,
+      "invalid_account_claims": 0,
+      "financial_fields": {
+        "accounting_rules": {
+          "verified": 278,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "audit_status": {
+          "verified": 278,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "cash": {
+          "verified": 261,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "current_assets": {
+          "verified": 277,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "equity": {
+          "verified": 277,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "filed_annual_accounts": {
+          "verified": 920,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "fixed_assets": {
+          "verified": 270,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "long_term_debt": {
+          "verified": 219,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "net_financial_items": {
+          "verified": 261,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "net_result": {
+          "verified": 278,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "operating_expenses": {
+          "verified": 268,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "operating_result": {
+          "verified": 269,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "profit_before_tax": {
+          "verified": 270,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "revenue": {
+          "verified": 221,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "sales_revenue": {
+          "verified": 165,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "short_term_debt": {
+          "verified": 256,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "total_assets": {
+          "verified": 278,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "total_debt": {
+          "verified": 274,
+          "unverified": 0,
+          "invalid": 0
+        }
+      },
+      "unique_objects": 326,
+      "passed": true,
+      "errors": [],
+      "limitation": "Excerpt integrity does not independently establish full-page support or exact-company precision."
+    },
+    "scale1100": {
+      "evidence": 70989,
+      "source_locators_verified": 70700,
+      "excerpt_artifacts_verified": 289,
+      "missing_references": 0,
+      "invalid_objects": 0,
+      "invalid_locators": 0,
+      "history_claims_verified": 0,
+      "history_claims_unverified": 0,
+      "invalid_history_claims": 0,
+      "account_claims_verified": 48707,
+      "account_claims_unverified": 0,
+      "invalid_account_claims": 0,
+      "financial_fields": {
+        "accounting_rules": {
+          "verified": 3067,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "audit_status": {
+          "verified": 3067,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "cash": {
+          "verified": 2953,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "current_assets": {
+          "verified": 3055,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "equity": {
+          "verified": 3064,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "fixed_assets": {
+          "verified": 2932,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "long_term_debt": {
+          "verified": 2458,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "net_financial_items": {
+          "verified": 2818,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "net_result": {
+          "verified": 3067,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "operating_expenses": {
+          "verified": 3019,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "operating_result": {
+          "verified": 3024,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "profit_before_tax": {
+          "verified": 3022,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "revenue": {
+          "verified": 2403,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "sales_revenue": {
+          "verified": 1760,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "short_term_debt": {
+          "verified": 2892,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "total_assets": {
+          "verified": 3067,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "total_debt": {
+          "verified": 3039,
+          "unverified": 0,
+          "invalid": 0
+        }
+      },
+      "unique_objects": 1568,
+      "passed": true,
+      "errors": [],
+      "limitation": "Excerpt integrity does not independently establish full-page support or exact-company precision."
+    },
+    "final-canary": {
+      "evidence": 215,
+      "source_locators_verified": 211,
+      "excerpt_artifacts_verified": 4,
+      "missing_references": 0,
+      "invalid_objects": 0,
+      "invalid_locators": 0,
+      "history_claims_verified": 30,
+      "history_claims_unverified": 0,
+      "invalid_history_claims": 0,
+      "account_claims_verified": 97,
+      "account_claims_unverified": 0,
+      "invalid_account_claims": 0,
+      "financial_fields": {
+        "accounting_rules": {
+          "verified": 6,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "audit_status": {
+          "verified": 6,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "cash": {
+          "verified": 5,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "current_assets": {
+          "verified": 6,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "equity": {
+          "verified": 6,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "filed_annual_accounts": {
+          "verified": 30,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "fixed_assets": {
+          "verified": 6,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "long_term_debt": {
+          "verified": 6,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "net_financial_items": {
+          "verified": 6,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "net_result": {
+          "verified": 6,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "operating_expenses": {
+          "verified": 6,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "operating_result": {
+          "verified": 6,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "profit_before_tax": {
+          "verified": 5,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "revenue": {
+          "verified": 6,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "sales_revenue": {
+          "verified": 3,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "short_term_debt": {
+          "verified": 6,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "total_assets": {
+          "verified": 6,
+          "unverified": 0,
+          "invalid": 0
+        },
+        "total_debt": {
+          "verified": 6,
+          "unverified": 0,
+          "invalid": 0
+        }
+      },
+      "unique_objects": 14,
+      "passed": true,
+      "errors": [],
+      "limitation": "Excerpt integrity does not independently establish full-page support or exact-company precision."
+    }
+  },
+  "probes": {
+    "website_and_social": [
+      {
+        "case": "Lift Manufacturing Company, Elevators & Escalators | Otis India",
+        "observed": "ambiguous",
+        "reason": "no organisation number and insufficient name/contact evidence",
+        "expectation": "reject foreign regional/parent title; exact legal-name control may pass",
+        "unexpected_accept": false
+      },
+      {
+        "case": "Otis Worldwide",
+        "observed": "ambiguous",
+        "reason": "no organisation number and insufficient name/contact evidence",
+        "expectation": "reject foreign regional/parent title; exact legal-name control may pass",
+        "unexpected_accept": false
+      },
+      {
+        "case": "OTIS AS",
+        "observed": "accepted",
+        "reason": "the company's registered e-mail domain is this site's domain and the legal name is in its identity fields",
+        "expectation": "reject foreign regional/parent title; exact legal-name control may pass",
+        "unexpected_accept": false
+      },
+      {
+        "case": "https://www.youtube.com/user/OtisElevatorCompany",
+        "accepted": false,
+        "note": "Named organizer URL must fail; bare shared brand remains a risk, not an independently proven account owner."
+      },
+      {
+        "case": "https://www.youtube.com/user/otis",
+        "accepted": false,
+        "note": "Named organizer URL must fail; bare shared brand remains a risk, not an independently proven account owner."
+      }
+    ],
+    "refresh": {
+      "carried": [],
+      "showcase_website": null,
+      "scope": "Synthetic prior bad publication; not an assertion about a historical submitted row."
+    },
+    "news": [
+      {
+        "case": "Kontakt oss",
+        "published_news": [],
+        "unexpected_publish": false
+      },
+      {
+        "case": "Ledige stillinger",
+        "published_news": [],
+        "unexpected_publish": false
+      }
+    ]
+  },
+  "public_sample": {
+    "mode": "public_sample",
+    "run_id": "public-sample-20261114",
+    "input_count": 1000,
+    "emitted_envelopes": 1000,
+    "agent_version": "11eee14f62de-dirty",
+    "code_sha256": "8b1278738910b6c3e479c2816ba677d48a51f7f986472e186049b41bb9bf470f",
+    "started_at": "2026-11-14T11:43:12Z",
+    "completed_at": "2026-11-14T11:50:33Z",
+    "source_run_id": "run-20261114T114312Z",
+    "source_sha256": "31756fe47def221b381d61880fb5066fcfd11535c8da22ee5f809158ccfa6cf3",
+    "output_sha256": "327eca5648e4280de6325df8a1114763e3259ba57625c3582110da5bfb222913",
+    "validation": {
+      "passed": true,
+      "checks": {
+        "one_envelope_per_input": true,
+        "unique_organisation_numbers": true,
+        "all_family_states_valid": true,
+        "every_claim_has_evidence": true,
+        "no_null_values_published": true,
+        "all_families_present": true,
+        "snapshot_references_resolve": true
+      },
+      "invalid_states": []
+    },
+    "sample_policy": "Only selected exact-key NLOD registry facts. External facts await independent review.",
+    "notes": [
+      "Derived public display sample, not an independently scored research run. Source snapshots remain in the private run directory."
+    ],
+    "models": [],
+    "third_party_cost_usd": 0,
+    "family_states": {
+      "identity": {
+        "available": 1000,
+        "not_available": 0
+      },
+      "status": {
+        "available": 0,
+        "not_available": 1000
+      },
+      "industry": {
+        "available": 1000,
+        "not_available": 0
+      },
+      "financials": {
+        "available": 994,
+        "not_available": 6
+      },
+      "leadership": {
+        "available": 0,
+        "not_available": 1000
+      },
+      "locations": {
+        "available": 0,
+        "not_available": 1000
+      },
+      "group": {
+        "available": 0,
+        "not_available": 1000
+      },
+      "website": {
+        "available": 0,
+        "not_available": 1000
+      },
+      "social_profiles": {
+        "available": 0,
+        "not_available": 1000
+      },
+      "contact": {
+        "available": 0,
+        "not_available": 1000
+      },
+      "description": {
+        "available": 0,
+        "not_available": 1000
+      },
+      "jobs": {
+        "available": 0,
+        "not_available": 1000
+      },
+      "activity": {
+        "available": 0,
+        "not_available": 1000
+      }
+    },
+    "coverage": {
+      "identity": 1.0,
+      "status": 0.0,
+      "industry": 1.0,
+      "financials": 0.994,
+      "leadership": 0.0,
+      "locations": 0.0,
+      "group": 0.0,
+      "website": 0.0,
+      "social_profiles": 0.0,
+      "contact": 0.0,
+      "description": 0.0,
+      "jobs": 0.0,
+      "activity": 0.0
+    }
+  },
+  "limits": [
+    "Fresh100 and scale runs preceded two final semantic safeguards (primary utility-schema rejection and no inheritance from customer org mentions). These were covered by the final full Python suite and final live named-case refresh.",
+    "Final public-sample notice is a renderer-only change covered by frontend checks.",
+    "Two scale news claims require independent review; re-fetch failed, so no verified-news metric asserted.",
+    "No jobs found in either batch; Greenhouse adapter has fixture validation only.",
+    "Other six organizer mismatches undisclosed, as confirmed by the user.",
+    "3 websites source-reviewed by this agent, not blind independent population adjudication.",
+    "Official score, population precision, recall and F1 remain unknown."
+  ]
+}

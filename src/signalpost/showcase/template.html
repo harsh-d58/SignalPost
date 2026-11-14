@@ -539,6 +539,7 @@ thead th{background:color-mix(in srgb,var(--surface) 88%,transparent)}
     <button class="iconbtn" id="help" type="button"><span aria-hidden="true">?</span><span class="sr" id="helpLabel"></span></button>
   </div>
 </div></header>
+<p id="sample-note" class="small muted" role="note" hidden style="max-width:1200px;margin:16px auto;padding:0 24px"></p>
 <main id="app" tabindex="-1"></main>
 <div class="scrim" id="scrim"></div>
 <aside id="drawer" role="dialog" aria-modal="true" aria-labelledby="dtitle" aria-hidden="true" inert>
@@ -784,7 +785,7 @@ function showTip(e, text){ tip.textContent = text; tip.classList.add("on"); cons
 function hideTip(){ tip.classList.remove("on"); }
 
 // ================================================================ data loading
-window.SP_LOAD = function(org, data){ data.claims = (data.claims||[]).filter(c => (c.availability||"available") === "available"); cache[org] = data; (waiters[org]||[]).forEach(w => w.resolve(data)); delete waiters[org]; };
+window.SP_LOAD = function(org, data){ data.historical_claims = (data.claims||[]).filter(c => c.stale_since); data.claims = (data.claims||[]).filter(c => (c.availability||"available") === "available" && !c.stale_since); cache[org] = data; (waiters[org]||[]).forEach(w => w.resolve(data)); delete waiters[org]; };
 function load(org){
   if (cache[org]) return Promise.resolve(cache[org]);
   return new Promise((resolve, reject) => {
@@ -972,6 +973,10 @@ function goSearch(v, items){
 const ROUTES = [["","nav_overview","o"],["companies","nav_companies","c"],["changes","nav_changes","h"],["compare","nav_compare","x"],["method","nav_method","m"]];
 let CURRENT = "";
 function renderNav(){
+  const note = document.getElementById("sample-note");
+  note.hidden = REPORT.mode !== "public_sample";
+  note.textContent = LANG === "no" ? "Datert utvalg av registeropplysninger. Nettsider, nyheter og stillinger er ikke inkludert i dette utvalget."
+    : "Dated sample of selected registry facts. Websites, news and jobs are not included in this sample.";
   const nav = document.getElementById("nav");
   nav.setAttribute("aria-label", LANG === "no" ? "Seksjoner" : "Sections");
   nav.replaceChildren(...ROUTES.map(([r,k]) => el("a",{href:"#/"+r,"aria-current":CURRENT === r ? "page" : null}, t(k), r === "compare" && CMP.length ? el("span",{class:"count"}, CMP.length) : null)));

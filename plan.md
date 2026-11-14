@@ -1,5 +1,13 @@
 # SignalPost: plan to outperform the current leader
 
+> **14 November priority override:** targeted fixes for disclosed attribution and refresh/publication failures
+> are implemented. Follow [the organizer recovery plan](docs/dev/organizer-recovery-plan.md)
+> and [diagnosis](reports/organizer-diagnosis-20261114.md) before ranking optimizations. The organizer scored
+> `eaef804` at 24.58/100 (14/22 checked claims correct), not the newer local HEAD. The board now has the
+> leader at 69.27 and no qualified entries; qualification requires 65 points and at least 95% checked-claim
+> accuracy. The entry-specific deadline is **15 November, 09:00 IST**. Leaderboard figures and generic
+> deadlines below describe the earlier planning snapshot, not current release guidance.
+
 Date: 12 November 2026. Status: proposed implementation programme, grounded in completed local tests. This document does not claim that the proposed changes are implemented or that a competition score has been measured.
 
 ## 1. Objective and decision rules

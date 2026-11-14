@@ -1,0 +1,101 @@
+{
+  "mode": "public_sample",
+  "run_id": "public-sample-20261114",
+  "input_count": 1000,
+  "emitted_envelopes": 1000,
+  "agent_version": "11eee14f62de-dirty",
+  "code_sha256": "8b1278738910b6c3e479c2816ba677d48a51f7f986472e186049b41bb9bf470f",
+  "started_at": "2026-11-14T11:43:12Z",
+  "completed_at": "2026-11-14T11:50:33Z",
+  "source_run_id": "run-20261114T114312Z",
+  "source_sha256": "31756fe47def221b381d61880fb5066fcfd11535c8da22ee5f809158ccfa6cf3",
+  "output_sha256": "327eca5648e4280de6325df8a1114763e3259ba57625c3582110da5bfb222913",
+  "validation": {
+    "passed": true,
+    "checks": {
+      "one_envelope_per_input": true,
+      "unique_organisation_numbers": true,
+      "all_family_states_valid": true,
+      "every_claim_has_evidence": true,
+      "no_null_values_published": true,
+      "all_families_present": true,
+      "snapshot_references_resolve": true
+    },
+    "invalid_states": []
+  },
+  "sample_policy": "Only selected exact-key NLOD registry facts. External facts await independent review.",
+  "notes": [
+    "Derived public display sample, not an independently scored research run. Source snapshots remain in the private run directory."
+  ],
+  "models": [],
+  "third_party_cost_usd": 0,
+  "family_states": {
+    "identity": {
+      "available": 1000,
+      "not_available": 0
+    },
+    "status": {
+      "available": 0,
+      "not_available": 1000
+    },
+    "industry": {
+      "available": 1000,
+      "not_available": 0
+    },
+    "financials": {
+      "available": 994,
+      "not_available": 6
+    },
+    "leadership": {
+      "available": 0,
+      "not_available": 1000
+    },
+    "locations": {
+      "available": 0,
+      "not_available": 1000
+    },
+    "group": {
+      "available": 0,
+      "not_available": 1000
+    },
+    "website": {
+      "available": 0,
+      "not_available": 1000
+    },
+    "social_profiles": {
+      "available": 0,
+      "not_available": 1000
+    },
+    "contact": {
+      "available": 0,
+      "not_available": 1000
+    },
+    "description": {
+      "available": 0,
+      "not_available": 1000
+    },
+    "jobs": {
+      "available": 0,
+      "not_available": 1000
+    },
+    "activity": {
+      "available": 0,
+      "not_available": 1000
+    }
+  },
+  "coverage": {
+    "identity": 1.0,
+    "status": 0.0,
+    "industry": 1.0,
+    "financials": 0.994,
+    "leadership": 0.0,
+    "locations": 0.0,
+    "group": 0.0,
+    "website": 0.0,
+    "social_profiles": 0.0,
+    "contact": 0.0,
+    "description": 0.0,
+    "jobs": 0.0,
+    "activity": 0.0
+  }
+}
