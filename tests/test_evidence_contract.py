@@ -73,7 +73,7 @@ def test_frozen_identity_authoritative_and_missing_anchor_explicit(tmp_path, mon
     path.write_text(json.dumps({"organisasjonsnummer": ORG, "navn": "Frozen AS"}) + "\n")
     r = runner(tmp_path / "run", registry_snapshot=str(path), registry_snapshot_at=AT)
     monkeypatch.setattr("signalpost.pipeline.fetch_entities", lambda *_: pytest.fail("live identity must not override frozen identity"))
-    monkeypatch.setattr("signalpost.pipeline.fetch_activity", lambda *_: ({}, {}, []))
+    monkeypatch.setattr("signalpost.pipeline.fetch_activity", lambda *_, **kwargs: ({}, {}, []))
     monkeypatch.setattr(r, "company", lambda *_: None)
     monkeypatch.setattr(r, "tail_pass", lambda *_: None)
     try:
@@ -89,7 +89,7 @@ def test_frozen_identity_authoritative_and_missing_anchor_explicit(tmp_path, mon
 
 def test_cutoff_suppresses_ineligible_claims(tmp_path):
     r = runner(tmp_path, evidence_cutoff="2026-11-08T23:00:00Z")
-    snap = source([{"eiendeler": {"sumEiendeler": 10}, "valuta": "NOK"}])
+    snap = source([{"regnskapstype": "SELSKAP", "regnskapsperiode": {"fraDato": "2025-01-01", "tilDato": "2025-12-31"}, "eiendeler": {"sumEiendeler": 10}, "valuta": "NOK"}])
     try:
         r.store.capture(snap)
         accounts_claims(r.builders[ORG], snap)
@@ -100,11 +100,30 @@ def test_cutoff_suppresses_ineligible_claims(tmp_path):
         r.fetcher.close()
 
 
+@pytest.mark.parametrize("end,year,expected", [("2026-11-09", "2026", True), ("2026-11-10", "2027", False)])
+def test_cutoff_compares_calendar_precision(tmp_path, end, year, expected):
+    from signalpost.registry import HISTORY_URL, history_claims
+    r = runner(tmp_path, evidence_cutoff=AT)
+    try:
+        accounts = source([{"regnskapstype": "SELSKAP", "valuta": "NOK", "eiendeler": {"sumEiendeler": 0},
+                            "regnskapsperiode": {"fraDato": "2026-01-01", "tilDato": end}}])
+        history = source([year], HISTORY_URL.format(org=ORG))
+        for snap, parse in ((accounts, accounts_claims), (history, history_claims)):
+            r.store.capture(snap)
+            parse(r.builders[ORG], snap)
+        env = r.envelope(ORG, AT, None)
+        fields = {c["field"] for c in env["claims"]}
+        assert ("total_assets" in fields) is expected
+        assert ("filed_annual_accounts" in fields) is expected
+    finally:
+        r.fetcher.close()
+
+
 def test_source_failure_refresh_carries_snapshot_to_new_directory(tmp_path):
     old = runner(tmp_path / "old")
     new = runner(tmp_path / "new")
     try:
-        snap = source([{"eiendeler": {"sumEiendeler": 0}, "valuta": "NOK"}])
+        snap = source([{"regnskapstype": "SELSKAP", "regnskapsperiode": {"fraDato": "2025-01-01", "tilDato": "2025-12-31"}, "eiendeler": {"sumEiendeler": 0}, "valuta": "NOK"}])
         old.store.capture(snap)
         accounts_claims(old.builders[ORG], snap)
         previous = old.envelope(ORG, AT, None)

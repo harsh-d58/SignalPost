@@ -93,20 +93,27 @@ def measure(run: Path, pool: Path | None = None) -> dict:
     if pool:
         targets = {e["organisation_number"] for e in envs}
         labels = [c for line in pool.read_text(encoding="utf-8").splitlines() if line.strip() for c in [json.loads(line)] if c["organisation_number"] in targets]
-        opportunities = {(c["organisation_number"], c["family"]) for c in labels}
+        def external_label(c):
+            return (c["family"] in {"website", "social_profiles", "jobs", "description"}
+                    or c["field"] in {"company_news", "public_brand"})
+
+        external = [c for c in labels if external_label(c)]
+        opportunities = {(c["organisation_number"], c["family"]) for c in external}
         positive_families = {c["family"] for c in labels}
-        sparse = len(opportunities) < 15 or len(positive_families) < 3
+        sparse = len(opportunities) < 15 or len({family for _, family in opportunities}) < 3
         recalled = {}
         actual = {reference_signature(e["organisation_number"], c) for e in envs for c in claims(e)}
         for fam in sorted(positive_families):
-            reference = {reference_signature(c["organisation_number"], c) for c in labels if c["family"] == fam}
+            scored_labels = [c for c in external if c["family"] == fam]
+            family_labels = scored_labels or [c for c in labels if c["family"] == fam]
+            reference = {reference_signature(c["organisation_number"], c) for c in family_labels}
             matched = reference & actual
             ref_orgs = {json.loads(s)[0] for s in reference}
             found_orgs = {json.loads(s)[0] for s in matched}
             company_recall, claim_recall = len(found_orgs) / len(ref_orgs), len(matched) / len(reference)
             recalled[fam] = {"reference_companies": len(ref_orgs), "reference_claims": len(reference),
                              "matched_claims": len(matched), "company_recall": company_recall, "claim_recall": claim_recall,
-                             "weighted_recall": None if sparse else .7 * company_recall + .3 * claim_recall}
+                             "weighted_recall": None if sparse or not scored_labels else .7 * company_recall + .3 * claim_recall}
         result["local_pool"] = {"sha256": hashlib.sha256(pool.read_bytes()).hexdigest(), "matching": "semantic_v1", "sparse_not_measured": sparse,
                                 "company_field_opportunities": len(opportunities), "families": recalled,
                                 "scope": "Only this independently labeled local pool; no official score inferred."}

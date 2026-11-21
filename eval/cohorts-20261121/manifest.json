@@ -1,0 +1,33 @@
+{
+  "seed": 20261121,
+  "universe_rows": 411160,
+  "universe_content_sha256": "b82d6a3e7231d1759a958c282bc4366b80ec2fab8095053d8ed7fa9cd01bc838",
+  "excluded_companies": 5128,
+  "splits": {
+    "development": {
+      "path": "development-100.jsonl",
+      "count": 100,
+      "sha256": "cb8105bc26493627a278cc508d2ba62507ba8a084c630393e79c9bec325e12d4",
+      "known_host_count": 13
+    },
+    "validation": {
+      "path": "validation-100.jsonl",
+      "count": 100,
+      "sha256": "e2178bd084d3714c1f5fbe5f93f55883c24f1cf7767742656ff37f6700685fff",
+      "known_host_count": 13
+    },
+    "smoke": {
+      "path": "smoke-100.jsonl",
+      "count": 100,
+      "sha256": "36d20e5aba1c7570198e03b6a0d0d58db24af9c33358bdc62aa6d925fc1edc56",
+      "known_host_count": 8
+    },
+    "scale": {
+      "path": "scale-1100.jsonl",
+      "count": 1100,
+      "sha256": "d794eb9876aea3b1354f0fb2db71d8888af1c38cca31b423030dcee02c969b5b",
+      "known_host_count": 108
+    }
+  },
+  "limitations": "Split isolation covers exact known hosts only. Parent-group and registrable-domain overlap is not independently labeled; these are engineering holdouts, not a precision/recall ground truth."
+}

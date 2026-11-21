@@ -9,7 +9,7 @@ JBOX companion: [Signalpost read-only company research](https://build-signalpost
 ## What this update contains
 
 - Interrupted website identity traversal now stays unpublished instead of falling through to weaker evidence.
-- Existing scheduling remains the default (`auto` resolves to `legacy`). Breadth-first candidate rounds are available explicitly with `--website-strategy breadth` for experiments.
+- Automatic scheduling uses breadth-first candidate rounds with `--bulk-files` and legacy scheduling otherwise.
 - Website attempt/completion/budget diagnostics are included in reports and displayed by both frontend surfaces. Older reports remain compatible.
 - A fresh 100-company research pilot, corpus/probe/comparison tools, regression tests and the detailed improvement plan are included. Private generated inputs, snapshots and review tasks remain local.
 
@@ -67,7 +67,7 @@ A push touching the showcase template can trigger the existing Pages workflow. I
 - Run the final committed code on the supplied or newly frozen inputs. Review ownership of published websites/social/news/jobs and audit source support.
 - Produce a public 100-company smoke report from that revision. Existing reports are supporting historical evidence, not a new exact-commit run.
 - Preserve exactly one terminal envelope per input, source dates, hashes, reporting periods, explicit missing/blocked states and refresh evidence.
-- Keep the submitted strategy explicit. Use `legacy` unless independent validation has justified promoting `breadth`.
+- Record the resolved scheduling strategy and bulk-file setting from the submitted run report.
 - Supply repository link, exact 40-character commit hash, command, model/API details and expected external API costs. Larger precomputed profile files are not the current official scoring input.
 - Update [the email draft](SUBMISSION_EMAIL.md) with the actual hash and final report. The user's supplied contact is Harsh Dhavane, harshdhavane06@gmail.com.
 
@@ -76,7 +76,7 @@ A push touching the showcase template can trigger the existing Pages workflow. I
 Install with `uv sync --frozen`, then use this single run command. Replace the example files, timestamps and resource limits with the organizer's supplied values:
 
 ```bash
-uv run --frozen signalpost run --organisations official-batch.jsonl --registry-snapshot official-registry.jsonl --registry-snapshot-at 2026-11-09T00:00:00Z --evidence-cutoff 2026-11-10T00:00:00Z --bulk-files --website-strategy legacy --workers 8 --job-days 7 --max-requests 2000 --max-minutes 45 --max-cost 10 --out out-official
+uv run --frozen signalpost run --organisations official-batch.jsonl --registry-snapshot official-registry.jsonl --registry-snapshot-at 2026-11-09T00:00:00Z --evidence-cutoff 2026-11-10T00:00:00Z --website-strategy auto --workers 2 --job-days 7 --max-requests 2000 --max-minutes 45 --max-cost 0 --no-showcase --out out-official
 ```
 
 For live local testing without a supplied identity snapshot, omit both registry snapshot arguments. Do not treat an old universe download as a current authoritative anchor. Optional NAV credentials must be supplied securely and reproducibly; the agent does not read `.env` automatically.

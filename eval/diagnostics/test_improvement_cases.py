@@ -24,6 +24,7 @@ from signalpost.jobs import JobFeed
 from signalpost.model import ProfileBuilder
 from signalpost.synthesis import build_brief
 from signalpost.web import Page, SiteVisit, _news, _site_jobs, visit_site
+from signalpost.web import enrich_company_owned
 
 ORG = "923609016"
 OTHER = "984661185"
@@ -83,6 +84,181 @@ class Pages:
         return self.pages.get(url, snapshot("", url, status=404))
 
 
+@pytest.mark.parametrize("href,street,operator,accepted", [
+    ("/", "Kaia 17", NAME, True), ("/customer", "Kaia 17", NAME, False),
+    ("/", "Kaia 18", NAME, False), ("/", "Kaia 17", "Parent AS", False),
+])
+def test_registered_email_footer_operator(href, street, operator, accepted):
+    body = (f'<meta property="og:site_name" content="{operator} | Our site">'
+            + "<p>Marine equipment services and support.</p>" * 5
+            + f'<div class="footer-info"><a href="{href}">{NAME}</a><p>{street}, 4870 Fevik</p></div>'
+            + '<footer>Powered by a theme</footer>')
+    home = page(body=body, title="Marine")
+    entity = {"epostadresse": "post@fjord.example.no",
+              "forretningsadresse": {"adresse": ["Kaia 17"], "postnummer": "4870"}}
+    visit = visit_site(Pages(home.snap), home.url, "registry_email_domain", ORG, entity, NAME, set())
+    assert (visit.decision == "accepted") == accepted
+
+
+@pytest.mark.parametrize("title,expected", [("Engineer", True), ("Mechanic", False), ("", False)])
+def test_structured_closure_at_reused_url(title, expected):
+    from signalpost.refresh import diff
+    ad = page("/jobs/current", nodes=[{"@type": "JobPosting", "title": title,
+              "hiringOrganization": {"name": NAME}, "url": BASE + "/jobs/current"}],
+              body="<main><p>Applications are closed.</p></main>")
+    pb = ProfileBuilder(ORG)
+    pb.extra["legal_name"] = NAME
+    _site_jobs(pb, verified(ad))
+    key = "sitejob:" + ad.url
+    old = {"id": "old", "family": "jobs", "field": "job_posting", "key": key,
+           "value": {"title": "Engineer", "expires": "2026-12-01"}, "evidence_ids": []}
+    current = {"claims": [], "evidence": [], "closed_jobs": pb.extra.get("closed_jobs", {}),
+               "availability": {"jobs": {"state": "blocked"}}, "incomplete_families": {"jobs": "partial"}}
+    changes, _ = diff({"claims": [old]}, current, detected_at=STAMP)
+    assert [c["type"] for c in changes] == (["closed_job"] if expected else [])
+    if expected:
+        assert any("Engineer" in pb.evidence[eid].to_dict()["claim_span"] for eid in changes[0]["evidence_ids"])
+
+
+@pytest.mark.parametrize("title,local_name,footer,accepted", [
+    (NAME, "Fjord Marine Service", "Sandvikgata 30A, 6250 Stordal", True),
+    (NAME, "Fjord Marine Service", "<div><p>Sandvikgata 30A,</p><p>6250 Stordal</p></div>", True),
+    ("Our customer " + NAME, "Fjord Marine Service", "Sandvikgata 30A, 6250 Stordal", False),
+    (NAME, "Parent Group", "Sandvikgata 30A, 6250 Stordal", False),
+    (NAME, "Fjord Marine Service", "Sandvikgata 30B, 6250 Stordal", False),
+    (NAME, "Fjord Marine Service", "Managed by Parent. Sandvikgata 30A, 6250 Stordal", False),
+])
+def test_homepage_business_address(title, local_name, footer, accepted):
+    from signalpost.web import in_verified_scope
+    entity = {"forretningsadresse": {"adresse": ["Sandvikgata 30A"], "postnummer": "6250", "poststed": "STORDAL"}}
+    local = {"@type": "LocalBusiness", "name": local_name, "url": BASE,
+             "address": {"addressCountry": "NO", "addressLocality": "Stordal", "postalCode": "6250"}}
+    body = ('<meta property="og:site_name" content="Fjord Marine Service">'
+            + '<p>Independent marine services.</p>' * 8 + f'<footer>{footer}</footer>')
+    home = page(nodes=[local], body=body, title=title + " | Marine equipment")
+    visit = visit_site(Pages(home.snap), home.url, "registry_declared", ORG, entity, NAME, set())
+    assert (visit.decision == "accepted") == accepted
+    if accepted:
+        assert visit.contact_field == "business_address"
+        assert in_verified_scope(home, visit, ORG, NAME)
+        assert not in_verified_scope(page("/parent-jobs", nodes=[local], body=body), visit, ORG, NAME)
+
+
+@pytest.mark.parametrize("label,expected", [("Publisert:", 1), ("Oppdatert:", 0)])
+def test_release_detail_precedes_investor_navigation(label, expected):
+    home = page(body='<a href="/investor/overview">Investor</a><a href="/borsmelding/results">Release</a>')
+    release = page("/borsmelding/results", body=f'<article><h1>Quarterly results</h1><aside><h4>{label}</h4>'
+                   '<div>10.11.2026</div></aside><p>' + 'The company reported increased production this quarter. ' * 3 + '</p></article>')
+    pb = ProfileBuilder(ORG)
+    pb.extra["legal_name"] = NAME
+    fetch = Pages(release.snap)
+    _news(pb, fetch, verified(home), home.url)
+    assert fetch.calls[0] == release.url
+    assert len(pb.family_claims("activity")) == expected
+
+
+@pytest.mark.parametrize("employer,prior,closes", [(NAME, "Engineer", True), (NAME, "Manager", False),
+                                                   ("Parent Group AS", "Engineer", False)])
+def test_html_early_closure_requires_same_employer_and_role(employer, prior, closes):
+    from signalpost.refresh import diff
+    from signalpost.web import html_vacancy
+    ad = page("/jobs/engineer", body=f'<main><h1>Engineer</h1><p>Arbeidsgiver: {employer}</p>'
+              '<p>Stillingen er besatt.</p></main>')
+    pb = ProfileBuilder(ORG)
+    pb.extra["legal_name"] = NAME
+    html_vacancy(pb, verified(ad), ad, BASE)
+    old = {"id": "previous-ad", "family": "jobs", "field": "job_posting", "key": "sitejob:" + ad.url,
+           "value": {"title": prior, "expires": "2026-12-01"}, "evidence_ids": []}
+    current = {"claims": [], "evidence": [], "closed_jobs": pb.extra.get("closed_jobs", {}),
+               "availability": {"jobs": {"state": "blocked"}}, "incomplete_families": {"jobs": "partial"}}
+    changes, _ = diff({"claims": [old]}, current, detected_at=STAMP)
+    assert [c["type"] for c in changes] == (["closed_job"] if closes else [])
+    if closes:
+        assert all(eid in pb.evidence for eid in changes[0]["evidence_ids"])
+
+
+@pytest.mark.parametrize("label,operator,zip_code,accepted", [
+    ("Postadresse", NAME, "1324", True), ("Kunde", NAME, "1324", False),
+    ("Postadresse", "Fjord Group AS", "1324", False), ("Postadresse", NAME, "1400", False)])
+def test_registry_contact_scoped_to_named_operator(label, operator, zip_code, accepted):
+    from signalpost.web import in_verified_scope
+    footer = f"<footer><h4>{label}</h4><p>{operator}<br>P.O Box 65<br>NO-{zip_code} Lysaker</p></footer>"
+    body = '<meta property="og:site_name" content="Fjord Marine Service">' + footer + '<p>Marine services and support. </p>' * 12
+    home = page(body=body, title="Marine")
+    visit = visit_site(Pages(home.snap), home.url, "registry_declared", ORG,
+                       {"postadresse": {"adresse": ["Postboks 65"], "postnummer": "1324"}}, NAME, set())
+    assert (visit.decision == "accepted") == accepted
+    if accepted:
+        assert in_verified_scope(page("/job", body=body), visit, ORG, NAME)
+        assert not in_verified_scope(page("/parent", body="Parent Group", title="Group"), visit, ORG, NAME)
+
+
+@pytest.mark.parametrize("employer,deadline,posted,outcome", [
+    (NAME, "1. desember 2026", "Publisert: 10.11.2026", "published"),
+    ("Fjord Group AS", "1. desember 2026", "Publisert: 10.11.2026", "employer_unproven"),
+    (NAME, "1. november 2026", "Oppstart: 1. januar 2027", "expired"),
+    (NAME, "1. desember 2026", "Oppdatert: 10.11.2026", "publication_unproven"),
+    (NAME, "1. desember 2026", "Publisert: 10.11.2026</p><p><strong>Søknadsfrist:</strong> 01.12.2026. Søk nå.", "published"),
+    (NAME, "1. desember 2026", "Publisert: 10.11.2026</p><p>Søknadsfrist: 02.12.2026", "open_status_unproven"),
+    (NAME, "1. desember 2026", "Publisert: 10.11.2026</p><p>På vegne av vår kunde", "employer_unproven"),
+])
+def test_visible_job_fields_on_careers_route(employer, deadline, posted, outcome):
+    home = page(body='<a href="mailto:team@fjord.example.no?subject=Bestilling">Bestilling av time</a>'
+                     '<a href="/jobs/engineer">Jobb</a>')
+    detail = page("/jobs/engineer", body=f'<main><h1>Marine engineer</h1><p>Arbeidsgiver: {employer}</p>'
+                  f'<p>{posted}</p><p>Søknadsfrist: {deadline}</p><a href="/apply/engineer">Søk her</a></main>')
+    fetch = Pages(detail.snap)
+    pb = ProfileBuilder(ORG)
+    pb.extra["legal_name"] = NAME
+    enrich_company_owned(pb, fetch, verified(home), want_news=False)
+    assert fetch.calls == [detail.url]
+    assert len(pb.family_claims("jobs")) == int(outcome == "published")
+    assert any(r["outcome"] == outcome for r in pb.extra["discovery_trace"])
+
+
+@pytest.mark.parametrize("label,expected", [("Publisert", 1), ("Oppdatert", 0)])
+def test_newsroom_card_with_unmarked_slug(label, expected):
+    home = page(body='<a href="/newsroom">Newsroom</a>')
+    hub = page("/newsroom", body='<main><h2><a href="/bergen-office">New Bergen office</a></h2></main>')
+    detail = page("/bergen-office", body=f'<article><h1>New Bergen office</h1><span>{label}: 10.11.2026</span>'
+                  '<p>Our Bergen office opens today and will serve customers along the coast with marine repairs '
+                  'and scheduled maintenance.</p></article>')
+    pb = ProfileBuilder(ORG)
+    pb.extra["legal_name"] = NAME
+    fetch = Pages(hub.snap, detail.snap)
+    _news(pb, fetch, verified(home), home.url)
+    assert fetch.calls == [hub.url, detail.url]
+    assert len(pb.family_claims("activity")) == expected
+    assert any(row["discovery_url"] == hub.url and row["url"] == detail.url for row in pb.extra["discovery_trace"])
+
+
+@pytest.mark.parametrize("employer,deadline,outcome", [
+    (NAME, "2026-12-11", "published"), ("Fjord Group AS", "2026-12-11", "wrong_employer"),
+    (NAME, "2026-11-01", "expired_or_invalid_deadline"),
+])
+def test_careers_detail_before_second_navigation_link(employer, deadline, outcome):
+    home = page(body='<a href="/careers">Careers</a><a href="/jobs">Jobs</a>')
+    hub = page("/careers", body='<a href="/jobs/engineer">Marine engineer</a>')
+    detail = page("/jobs/engineer", nodes=[{"@type": "JobPosting", "title": "Marine engineer",
+                  "datePosted": DATE, "validThrough": deadline, "hiringOrganization": {"name": employer}}])
+    pb = ProfileBuilder(ORG)
+    pb.extra["legal_name"] = NAME
+    fetch = Pages(hub.snap, detail.snap)
+    enrich_company_owned(pb, fetch, verified(home), want_news=False)
+    assert fetch.calls == [hub.url, detail.url]
+    assert len(pb.family_claims("jobs")) == int(outcome == "published")
+    assert any(row["url"] == detail.url and row["outcome"] == outcome for row in pb.extra["discovery_trace"])
+
+
+def test_related_story_publication_date_cannot_date_main_story():
+    detail = page("/news/bergen-office", body='<article><h1>New Bergen office</h1>'
+                  '<section><h2>Related release</h2><span>Published: 10.11.2026</span></section></article>')
+    pb = ProfileBuilder(ORG)
+    pb.extra["legal_name"] = NAME
+    _news(pb, Pages(), verified(detail), detail.url)
+    assert not pb.family_claims("activity")
+
+
 @pytest.mark.parametrize("contact_title, accepted", [(NAME, True), ("Fjord Marine Service ASA", False)])
 def test_D01_contact_page_name_and_registry_phone_prove_entity(contact_title, accepted):
     home = page(body='Marine equipment and engineering services. ' * 8 + '<a href="/contact">Contact</a>', title="Fjord")
@@ -92,6 +268,7 @@ def test_D01_contact_page_name_and_registry_phone_prove_entity(contact_title, ac
     assert (result.decision == "accepted") is accepted, f"{result.decision}; {result.reason}"
     if accepted:
         assert result.proof_page.url == contact.url
+        assert result.contact_spans == ["22 33 44 55"]
 
 
 def test_D02_news_retained_source_proves_publication_date(tmp_path):

@@ -1,0 +1,337 @@
+{
+  "run_id": "run-20261120T034542Z",
+  "agent_version": "6a87ab71d7c0-dirty",
+  "code_sha256": "1a7b3a27109c04a40ea05b97eb57609526d246fca70569e25e2777a9a4b8d3bb",
+  "started_at": "2026-11-20T03:45:42Z",
+  "completed_at": "2026-11-20T03:50:29Z",
+  "input_count": 100,
+  "emitted_envelopes": 100,
+  "validation": {
+    "passed": true,
+    "checks": {
+      "one_envelope_per_input": true,
+      "unique_organisation_numbers": true,
+      "all_family_states_valid": true,
+      "every_claim_has_evidence": true,
+      "no_null_values_published": true,
+      "all_families_present": true,
+      "snapshot_references_resolve": true,
+      "within_execution_limits": true,
+      "no_failed_terminal_envelopes": true
+    },
+    "invalid_states": []
+  },
+  "mode": "baseline",
+  "changes_detected": 0,
+  "family_states": {
+    "identity": {
+      "available": 99,
+      "not_available": 1
+    },
+    "status": {
+      "available": 99,
+      "not_available": 1
+    },
+    "industry": {
+      "available": 99,
+      "not_available": 1
+    },
+    "financials": {
+      "available": 99,
+      "not_available": 1
+    },
+    "leadership": {
+      "available": 99,
+      "not_available": 1
+    },
+    "locations": {
+      "available": 79,
+      "not_available": 21
+    },
+    "group": {
+      "not_applicable": 94,
+      "available": 5,
+      "not_available": 1
+    },
+    "website": {
+      "blocked": 15,
+      "not_available": 53,
+      "ambiguous": 30,
+      "available": 2
+    },
+    "social_profiles": {
+      "blocked": 15,
+      "not_available": 54,
+      "ambiguous": 30,
+      "available": 1
+    },
+    "contact": {
+      "blocked": 11,
+      "available": 29,
+      "not_available": 44,
+      "ambiguous": 16
+    },
+    "description": {
+      "blocked": 15,
+      "not_available": 53,
+      "ambiguous": 30,
+      "available": 2
+    },
+    "jobs": {
+      "blocked": 99,
+      "not_available": 1
+    },
+    "activity": {
+      "available": 98,
+      "not_available": 2
+    }
+  },
+  "family_coverage": {
+    "identity": 0.99,
+    "status": 0.99,
+    "industry": 0.99,
+    "financials": 0.99,
+    "leadership": 0.99,
+    "locations": 0.79,
+    "group": 0.05,
+    "website": 0.02,
+    "social_profiles": 0.01,
+    "contact": 0.29,
+    "description": 0.02,
+    "jobs": 0.0,
+    "activity": 0.98
+  },
+  "claims_total": 8296,
+  "current_published_claims": 7707,
+  "identity_gate": {
+    "blocked": 19,
+    "rejected": 11,
+    "ambiguous": 29,
+    "unreachable": 3,
+    "accepted": 2
+  },
+  "identity_gate_by_source": {
+    "name_slug_guess": {
+      "blocked": 10,
+      "ambiguous": 11,
+      "rejected": 4,
+      "accepted": 1
+    },
+    "registry_declared": {
+      "ambiguous": 7,
+      "unreachable": 2,
+      "rejected": 2,
+      "blocked": 2
+    },
+    "registry_email_domain": {
+      "blocked": 6,
+      "rejected": 2,
+      "ambiguous": 10,
+      "unreachable": 1,
+      "accepted": 1
+    },
+    "subunit_declared": {
+      "rejected": 2,
+      "ambiguous": 1
+    },
+    "subunit_email_domain": {
+      "rejected": 1,
+      "blocked": 1
+    }
+  },
+  "jobs_feed": {
+    "pages": 0,
+    "ads_indexed": 0,
+    "window_days": 60,
+    "error": "blocked: NAV_FEED_TOKEN required; public token is experimental only"
+  },
+  "operations": {
+    "requests": 672,
+    "max_requests": 2000,
+    "elapsed_seconds": 288.3,
+    "max_seconds": 1800.0,
+    "third_party_cost_usd": 0.0,
+    "max_cost_usd": 0.0,
+    "requests_by_host": {
+      "data.brreg.no": 404,
+      "www.dialogeiendom.no": 14,
+      "kpmg.com": 12,
+      "www.vbbl.no": 10,
+      "larsjonsson.no": 10,
+      "www.gsseat.no": 9,
+      "styrerommet.no": 9,
+      "dentalradiologi.no": 9,
+      "www.lindreverket.no": 8,
+      "metier.no": 7,
+      "comomexico.no": 6,
+      "www.hermes2.no": 6,
+      "www.wicklund-hansen.no": 6,
+      "www.varigbolig.no": 6,
+      "www.holmgaard.no": 6,
+      "dintannforsikring.no": 5,
+      "www.ihus.no": 5,
+      "www.skien.kommune.no": 5,
+      "tjottagjestegaard.no": 5,
+      "www.aktivtmed.no": 5,
+      "safeclean.no": 5,
+      "torsta.no": 5,
+      "sophi.no": 5,
+      "compcon.no": 5,
+      "vivax.no": 5,
+      "flamex.no": 5,
+      "www.mylnasport.no": 5,
+      "www.bos.no": 4,
+      "www.kpmg.no": 4,
+      "www.fruits.co": 4,
+      "home.kpmg": 3,
+      "whi.no": 3,
+      "www.malerfirmaputz.no": 3,
+      "www.metier.no": 3,
+      "lindreverket.no": 2,
+      "hermes2.no": 2,
+      "hermesii.no": 2,
+      "vbbl.no": 2,
+      "kpmg.no": 2,
+      "dialogeiendom.no": 2,
+      "dialogeiendomsmegling.no": 2,
+      "www.whi.no": 2,
+      "gsseat.no": 2,
+      "wicklund-hansen.no": 2,
+      "aktivtmed.no": 2,
+      "malerfirmaputz.no": 2,
+      "frantzenavluna.no": 2,
+      "prosjektledelse.no": 2,
+      "varigbolig.no": 2,
+      "www.sia.no": 2,
+      "sia.no": 2,
+      "telemarksnekkertjenester.no": 2,
+      "holmgaard.no": 2,
+      "www.larsjonsson.no": 2,
+      "fikt.no": 2,
+      "mylnasport.no": 2,
+      "query.wikidata.org": 1,
+      "www.dintannforsikring.no": 1,
+      "como-mexico.no": 1,
+      "www.expedinor.no": 1,
+      "expedinor.no": 1,
+      "sakg.no": 1,
+      "kvinnesland.no": 1,
+      "oyamaritim.no": 1,
+      "digipointsolution.no": 1,
+      "parabox.no": 1,
+      "laegreid.no": 1,
+      "sjoseth.no": 1,
+      "madeslow.no": 1,
+      "kompetansevei.no": 1,
+      "ringdal.no": 1,
+      "quantoshi.com": 1,
+      "www.quantoshi.com": 1,
+      "systemair.se": 1,
+      "www.systemair.com": 1,
+      "www.marin-ingenior.no": 1,
+      "bekkevold.no": 1,
+      "karriere.wicklund-hansen.no": 1
+    },
+    "requests_by_phase": {
+      "registry": 2,
+      "activity": 2,
+      "accounts": 99,
+      "history": 99,
+      "roles": 99,
+      "locations": 99,
+      "web": 261,
+      "group": 5,
+      "web_news": 6
+    },
+    "phase_caps": {
+      "registry": 5,
+      "activity": 6,
+      "jobs": 133,
+      "accounts": 107,
+      "roles": 107,
+      "locations": 107,
+      "group": 37,
+      "jobs_verify": 60,
+      "history": 102,
+      "web": 1067,
+      "web_news": 188
+    },
+    "refused_by_budget": {},
+    "p50_company_ms": 3951,
+    "p95_company_ms": 14917
+  },
+  "phase_seconds": {
+    "bulk_snapshot": 0.0,
+    "registry": 2.6,
+    "activity": 1.9,
+    "companies": 275.6,
+    "website_verification": 0.0,
+    "website_enrichment": 5.6,
+    "jobs": 0.0,
+    "tail": 0.0,
+    "finalise": 0.8
+  },
+  "budget_plan": {
+    "registry": 5,
+    "activity": 6,
+    "jobs": 133,
+    "accounts": 107,
+    "roles": 107,
+    "locations": 107,
+    "group": 37,
+    "jobs_verify": 60,
+    "history": 102,
+    "web": 1256,
+    "web_news": 0
+  },
+  "configuration": {
+    "bulk_files": false,
+    "workers": 2,
+    "job_days": 60,
+    "web_enabled": true,
+    "website_strategy": "legacy"
+  },
+  "bulk_snapshot": {
+    "note": "no bulk snapshot supplied; live registry API only"
+  },
+  "registry_snapshot": {},
+  "evidence_cutoff": null,
+  "source_policy_version": "signalpost-sources/2",
+  "nav_access": "credential_required",
+  "input_sha256": "ee6027ca2032af324cbcb7e0cc8aa8fb0b413b060422e179b12d4ceff84e8301",
+  "notes": [],
+  "third_party_cost_usd": 0.0,
+  "models": [],
+  "website_diagnostics": {
+    "companies_with_candidates": 48,
+    "companies_attempted": 48,
+    "companies_with_completed_check": 48,
+    "companies_budget_unattempted": 0,
+    "budget_interruptions": 0,
+    "limitation": "Attempt and completion counts are operational diagnostics, not accuracy or recall."
+  },
+  "external_fields": {
+    "official_website": {
+      "companies": 2,
+      "claims": 2
+    },
+    "company_news": {
+      "companies": 0,
+      "claims": 0
+    },
+    "registry_event": {
+      "companies": 98,
+      "claims": 394
+    },
+    "job_posting": {
+      "companies": 0,
+      "claims": 0
+    }
+  },
+  "discovery_rejections": {
+    "news_rejections": {
+      "not_article": 5
+    },
+    "job_rejections": {}
+  }
+}

@@ -11,7 +11,7 @@ import hashlib
 import io
 import json
 import math
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -364,6 +364,17 @@ def _num(value: Any) -> Any:
     return value
 
 
+def audit_status(record: dict) -> str | None:
+    if not isinstance(record, dict):
+        return None
+    flags = (record.get("ikkeRevidertAarsregnskap"), record.get("fravalgRevisjon"))
+    if any(flag is True for flag in flags):
+        return "not audited"
+    if all(flag is False for flag in flags):
+        return "audited"
+    return None
+
+
 def accounts_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
     records = snap.json() if snap.ok else []
     if not isinstance(records, list) or not records:
@@ -379,14 +390,27 @@ def accounts_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
             continue
         period = rec.get("regnskapsperiode") or {}
         p = {"from": period.get("fraDato"), "to": period.get("tilDato")}
+        try:
+            valid_period = date.fromisoformat(p["from"]) <= date.fromisoformat(p["to"])
+        except (ValueError, TypeError):
+            valid_period = False
+        if not valid_period:
+            pb.extra.setdefault("incomplete_families", {})["financials"] = "account record lacks a valid reporting period"
+            continue
         source_scope = rec.get("regnskapstype")
-        account_type = (source_scope or "SELSKAP").upper()
+        account_type = str(source_scope or "").upper()
+        if account_type not in {"SELSKAP", "KONSERN"}:
+            pb.extra.setdefault("incomplete_families", {})["financials"] = "account record has unknown scope"
+            continue
         currency = rec.get("valuta") or None
         scope = "company" if account_type == "SELSKAP" else "group (consolidated)"
         for field, label, path in FIN_FIELDS:
             value = _get(rec, *path)
             if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value):
                 continue  # missing stays missing — never zero
+            if not isinstance(currency, str) or not currency.strip():
+                pb.extra.setdefault("incomplete_families", {})["financials"] = "monetary value lacks a source currency"
+                continue
             value = _num(value)
             ev = pb.add_evidence(Evidence(url, "official_registry", snap.retrieved_at, snap.sha256, span(path[-1], value),
                                           f"regnskapsregisteret_api:{'.'.join(path)}", NLOD, identity_reason="exact organisation-number key",
@@ -402,8 +426,8 @@ def accounts_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
                     "currency": currency, "period": p, **({"account_type": account_type} if source_scope else {})}
 
         audit = rec.get("revisjon") or {}
-        if audit:
-            audited = "not audited" if audit.get("ikkeRevidertAarsregnskap") or audit.get("fravalgRevisjon") else "audited"
+        audited = audit_status(audit)
+        if audited is not None:
             ev = pb.add_evidence(Evidence(url, "official_registry", snap.retrieved_at, snap.sha256, span("revisjon", audit),
                                           "regnskapsregisteret_api:revisjon", NLOD, reporting_period=p, locator=record_locator("revisjon", audit)))
             pb.add(Claim("financials", "audit_status", audited, [ev], label=f"Audit status ({scope})", period=p, key=f"audit:{account_type}:{p['to']}"))
@@ -413,7 +437,12 @@ def accounts_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
                                           "regnskapsregisteret_api:regnkapsprinsipper", NLOD, reporting_period=p,
                                           locator=record_locator("regnkapsprinsipper/regnskapsregler", rules)))
             pb.add(Claim("financials", "accounting_rules", rules, [ev], label=f"Accounting rules ({scope})", period=p, key=f"rules:{account_type}:{p['to']}"))
-    pb.set_state("financials", "available", "official annual accounts", url)
+    if pb.family_claims("financials"):
+        pb.set_state("financials", "available", "official annual accounts", url)
+    elif pb.extra.get("incomplete_families", {}).get("financials"):
+        pb.set_state("financials", "ambiguous", pb.extra["incomplete_families"]["financials"], url)
+    else:
+        pb.set_state("financials", "not_available", "no publishable account values", url)
 
 
 def history_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
@@ -428,10 +457,9 @@ def history_claims(pb: ProfileBuilder, snap: Snapshot) -> None:
                     and str(y).isascii() and str(y).isdigit()}, reverse=True)
     for year in years[:20]:
         ev = pb.add_evidence(Evidence(snap.url, "official_registry", snap.retrieved_at, snap.sha256, snap.text()[:600],
-                                      "regnskapsregisteret_kopi_api:aar", NLOD, identity_reason="exact organisation-number key",
-                                      reporting_period={"from": f"{year}-01-01", "to": f"{year}-12-31"}))
+                                      "regnskapsregisteret_kopi_api:aar", NLOD, identity_reason="exact organisation-number key"))
         pb.add(Claim("financials", "filed_annual_accounts", {"year": year, "official_copy": HISTORY_PDF.format(org=pb.org, year=year)}, [ev],
-                     label="Annual accounts filed (official copy)", key=f"filing:{year}", period={"from": f"{year}-01-01", "to": f"{year}-12-31"}))
+                     label="Annual accounts filed (official copy)", key=f"filing:{year}"))
 
 
 # ---------------------------------------------------------------------------------------------
@@ -620,29 +648,71 @@ def _describe(changes: list[dict]) -> tuple[str, list[dict]] | None:
     return "; ".join(labels), detail
 
 
-def fetch_activity(fetcher: Fetcher, orgs: list[str], *, days: int = 730, phase: str = "activity") -> tuple[dict[str, list[tuple[dict, Snapshot]]], dict[str, list[tuple[dict, Snapshot]]], list[str]]:
+def fetch_activity(fetcher: Fetcher, orgs: list[str], *, days: int = 730, phase: str = "activity", cursor=None) -> tuple[dict[str, list[tuple[dict, Snapshot]]], dict[str, list[tuple[dict, Snapshot]]], list[str]]:
     since_dt = datetime.now(timezone.utc) - timedelta(days=days)
     since = since_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
     entity_events: dict[str, list[tuple[dict, Snapshot]]] = {}
     role_events: dict[str, list[tuple[dict, Snapshot]]] = {}
     errors: list[str] = []
     for i in range(0, len(orgs), 100):
-        chunk = ",".join(orgs[i:i + 100])
+        batch = orgs[i:i + 100]
+        chunk = ",".join(batch)
+        wanted = set(batch)
+        pages, prior_events, high = cursor.restore(chunk, since) if cursor else ([], {}, 0)
+        for (org, _), event in prior_events.items():
+            entity_events.setdefault(org, []).append(event)
+        seen = set(prior_events)
+        resumed = high > 0
+        base = ENTITY_UPDATES_URL.format(orgs=chunk, since=since, size=2000)
+        if high:
+            base = base.replace(f"&dato={since}", f"&oppdateringsid={high}")
+        cursor_eligible = True
         try:
             page = 0
             while True:
-                snap = fetcher.get_json(ENTITY_UPDATES_URL.format(orgs=chunk, since=since, size=2000) + f"&page={page}", phase=phase, retries=1, timeout=60)
+                snap = fetcher.get_json(base + f"&page={page}", phase=phase, retries=1, timeout=60)
                 if not snap.ok:
                     errors.append(f"entity updates HTTP {snap.status}")
                     break
                 body = snap.json()
                 if not isinstance(body, dict) or not isinstance(body.get("_embedded", {}), dict) or "enheter" in body.get("_embedded", {}):
                     raise ValueError("unexpected activity response schema")
+                page_info = body.get("page") or {}
+                if page_info.get("number") != page or page_info.get("totalPages") is None:
+                    cursor_eligible = False
+                if page_info.get("totalElements") and not isinstance(_get(body, "_embedded", "oppdaterteEnheter"), list):
+                    raise ValueError("missing entity-update rows")
+                page_has_new_id = False
                 for item in _get(body, "_embedded", "oppdaterteEnheter") or []:
-                    entity_events.setdefault(str(item.get("organisasjonsnummer")), []).append((item, snap))
+                    org = str(item.get("organisasjonsnummer"))
+                    if org not in wanted:
+                        cursor_eligible = False
+                        continue
+                    uid = str(item.get("oppdateringsid"))
+                    if uid.isdecimal():
+                        key = (org, int(uid))
+                        high = max(high, key[1])
+                        if key in seen:
+                            continue
+                        seen.add(key)
+                        page_has_new_id = True
+                    else:
+                        cursor_eligible = False
+                    when = item.get("dato")
+                    if cursor and (not isinstance(when, str) or not when):
+                        cursor_eligible = False
+                    if not resumed or (isinstance(when, str) and datetime.fromisoformat(when) >= since_dt):
+                        entity_events.setdefault(org, []).append((item, snap))
+                if cursor and page_has_new_id:
+                    pages.append(cursor.save_page(snap))
                 info = body.get("page") or {}
                 page += 1
-                if page >= int(info.get("totalPages") or 0) or (page + 1) * 2000 > 10000:
+                if page >= int(info.get("totalPages") or 0):
+                    if cursor and cursor_eligible and "totalPages" in info and info.get("number") == page - 1:
+                        cursor.stage(chunk, since, pages, high)
+                    break
+                if (page + 1) * 2000 > 10000:
+                    errors.append("entity updates pagination limit")
                     break
             snap = fetcher.get_json(ROLE_UPDATES_URL.format(orgs=chunk, since=since, size=5000), phase=phase, retries=1, timeout=60)
             if snap.ok:

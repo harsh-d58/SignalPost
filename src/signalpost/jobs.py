@@ -150,10 +150,12 @@ def job_claims(pb: ProfileBuilder, feed: JobFeed, names: list[str], valid_orgs: 
         pb.set_state("jobs", "failed", "job feed not ready before deadline", BASE)
         return
     if feed.error and not feed.ads:
+        pb.trace_discovery("nav", BASE, BASE + "/api/v1/feed", "feed_unavailable")
         pb.set_state("jobs", "blocked" if any(s in feed.error for s in ("403", "401", "blocked:")) else "failed", f"NAV feed unavailable: {feed.error}", BASE)
         return
     cands = feed.candidates(names)
     if not cands:
+        pb.trace_discovery("nav", BASE, BASE + "/api/v1/feed", "no_employer_candidates")
         pb.set_state("jobs", "failed" if feed.error else "not_available",
                      f"NAV feed incomplete: {feed.error}" if feed.error else f"no active NAV postings for this employer in the last {feed.days} days", BASE + "/api/v1/feed")
         return

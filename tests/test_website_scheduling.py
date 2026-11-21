@@ -51,6 +51,39 @@ def test_explicit_candidate_discovery_does_not_probe_speculative_dns(monkeypatch
                              include_guesses=False) == [('https://fjord.no/', 'registry_declared')]
 
 
+def test_breadth_reaches_supported_site_on_identical_responses(tmp_path, monkeypatch):
+    monkeypatch.setattr('signalpost.web.host_is_public', lambda _: False)
+    target = ORGS[-1]
+    positive = 'https://site2.no/'
+    measured = {}
+    for strategy in ('legacy', 'breadth'):
+        r = runner(tmp_path / strategy, strategy)
+        try:
+            def get(url, *, phase, **kwargs):
+                r.budget.acquire('fixture.no', phase)
+                if url == positive:
+                    body = f'<footer>Fjord Marine Service AS Org.nr {target}</footer>'
+                else:
+                    body = '<title>Unrelated business</title><p>' + 'Customer service and consulting. ' * 8 + '</p>'
+                raw = body.encode()
+                return Snapshot(url, url, 200, '2026-11-20T00:00:00Z', body=raw,
+                                content_type='text/html', sha256=hashlib.sha256(raw).hexdigest())
+            monkeypatch.setattr(r.fetcher, 'get', get)
+            if strategy == 'breadth':
+                r.research_sites(ORGS)
+            else:
+                for org in ORGS:
+                    r._website_step(r.builders[org], org, r.entities[org])
+            published = [(org, c.value) for org, pb in r.builders.items() for c in pb.family_claims('website')]
+            assert all(pair == (target, positive) for pair in published)
+            measured[strategy] = len(published), r.budget.requests
+        finally:
+            r.fetcher.close()
+    assert measured['legacy'][0] == 0
+    assert measured['breadth'][0] == 1
+    assert all(0 < requests <= 12 for _, requests in measured.values())
+
+
 def test_interrupted_identity_traversal_cannot_fall_back_to_declared_name(monkeypatch):
     monkeypatch.setattr('signalpost.web.host_is_public', lambda *_: True)
     html = b'<html><title>Fjord Marine Service AS</title><body><p>We provide marine engineering, inspections, repairs and service to customers throughout Norway.</p><a href="/kontakt">Kontakt</a></body></html>'

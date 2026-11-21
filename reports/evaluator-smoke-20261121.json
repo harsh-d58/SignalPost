@@ -1,0 +1,339 @@
+{
+  "run_id": "run-20261121T134558Z",
+  "agent_version": "6a87ab71d7c0-dirty",
+  "code_sha256": "80c3fa683325fda84a76128c60bd499fa12b7dab5e17f24b8427ef2d3bdfbd5d",
+  "started_at": "2026-11-21T13:45:58Z",
+  "completed_at": "2026-11-21T13:50:29Z",
+  "input_count": 100,
+  "emitted_envelopes": 100,
+  "validation": {
+    "passed": true,
+    "checks": {
+      "one_envelope_per_input": true,
+      "unique_organisation_numbers": true,
+      "all_family_states_valid": true,
+      "every_claim_has_evidence": true,
+      "no_null_values_published": true,
+      "all_families_present": true,
+      "snapshot_references_resolve": true,
+      "within_execution_limits": true,
+      "no_failed_terminal_envelopes": true
+    },
+    "invalid_states": []
+  },
+  "mode": "baseline",
+  "changes_detected": 0,
+  "family_states": {
+    "identity": {
+      "available": 98,
+      "not_available": 2
+    },
+    "status": {
+      "available": 98,
+      "not_available": 2
+    },
+    "industry": {
+      "available": 98,
+      "not_available": 2
+    },
+    "financials": {
+      "available": 98,
+      "not_available": 2
+    },
+    "leadership": {
+      "available": 98,
+      "not_available": 2
+    },
+    "locations": {
+      "available": 76,
+      "not_available": 24
+    },
+    "group": {
+      "not_applicable": 94,
+      "not_available": 2,
+      "available": 4
+    },
+    "website": {
+      "not_available": 61,
+      "ambiguous": 25,
+      "available": 3,
+      "blocked": 11
+    },
+    "social_profiles": {
+      "not_available": 63,
+      "ambiguous": 25,
+      "blocked": 11,
+      "available": 1
+    },
+    "contact": {
+      "not_available": 60,
+      "ambiguous": 19,
+      "available": 14,
+      "blocked": 7
+    },
+    "description": {
+      "not_available": 62,
+      "ambiguous": 25,
+      "available": 2,
+      "blocked": 11
+    },
+    "jobs": {
+      "blocked": 98,
+      "not_available": 2
+    },
+    "activity": {
+      "available": 98,
+      "not_available": 2
+    }
+  },
+  "family_coverage": {
+    "identity": 0.98,
+    "status": 0.98,
+    "industry": 0.98,
+    "financials": 0.98,
+    "leadership": 0.98,
+    "locations": 0.76,
+    "group": 0.04,
+    "website": 0.03,
+    "social_profiles": 0.01,
+    "contact": 0.14,
+    "description": 0.02,
+    "jobs": 0.0,
+    "activity": 0.98
+  },
+  "claims_total": 8147,
+  "current_published_claims": 7535,
+  "identity_gate": {
+    "ambiguous": 25,
+    "rejected": 10,
+    "accepted": 3,
+    "blocked": 20,
+    "unreachable": 2
+  },
+  "identity_gate_by_source": {
+    "name_slug_guess": {
+      "ambiguous": 13,
+      "rejected": 4,
+      "blocked": 11,
+      "unreachable": 1,
+      "accepted": 1
+    },
+    "registry_declared": {
+      "accepted": 2,
+      "ambiguous": 5,
+      "blocked": 4,
+      "rejected": 2
+    },
+    "registry_email_domain": {
+      "ambiguous": 7,
+      "blocked": 5,
+      "unreachable": 1,
+      "rejected": 4
+    }
+  },
+  "jobs_feed": {
+    "pages": 0,
+    "ads_indexed": 0,
+    "window_days": 7,
+    "error": "blocked: NAV_FEED_TOKEN required; public token is experimental only"
+  },
+  "operations": {
+    "requests": 653,
+    "max_requests": 2000,
+    "elapsed_seconds": 272.2,
+    "max_seconds": 2700.0,
+    "third_party_cost_usd": 0.0,
+    "max_cost_usd": 0.0,
+    "requests_by_host": {
+      "data.brreg.no": 400,
+      "www.smartvarslingdrift.no": 12,
+      "sealengineering.no": 10,
+      "www.simekas.no": 9,
+      "styrerommet.no": 9,
+      "www.passivenergi.no": 9,
+      "www.obf.no": 7,
+      "www.lofotenvanlife.no": 7,
+      "gideon.no": 7,
+      "knive.no": 7,
+      "www.autonordas.no": 7,
+      "agilitek.no": 7,
+      "www.obos.no": 6,
+      "www.easyx.no": 6,
+      "www.simek.no": 5,
+      "www.lillespecial.no": 5,
+      "stasnytorvet.no": 5,
+      "stallgp.no": 5,
+      "www.frl.no": 5,
+      "smartvarslingdrift.no": 5,
+      "www.hckjoleservice.no": 5,
+      "rorinspeksjon.no": 5,
+      "oleng.no": 5,
+      "www.eikeneset.no": 5,
+      "autonord.no": 5,
+      "unifor.no": 5,
+      "fvbk.no": 5,
+      "ankerlokkeneigedom.no": 5,
+      "www.borealex.no": 4,
+      "aquanext.no": 4,
+      "tinyelephant.no": 3,
+      "www.studiolimi.com": 3,
+      "www.agilitek.no": 3,
+      "obf.no": 2,
+      "lofotenvanlife.no": 2,
+      "borealex.no": 2,
+      "www.gideon.no": 2,
+      "simekas.no": 2,
+      "simek.no": 2,
+      "passivenergi.no": 2,
+      "www.sealengineering.no": 2,
+      "knive.as": 2,
+      "hermansenplanter.no": 2,
+      "frl.no": 2,
+      "hckjoleservice.no": 2,
+      "smartvarsling.no": 2,
+      "easyx.no": 2,
+      "trosterud-engineering.no": 2,
+      "studiolimi.no": 2,
+      "eikeneset.no": 2,
+      "autonordas.no": 2,
+      "frydfrisor.no": 2,
+      "mollevik.no": 2,
+      "query.wikidata.org": 1,
+      "eiendomsforvaltning.norian.no": 1,
+      "norian.no": 1,
+      "www.yanmar.no": 1,
+      "yanmar.com": 1,
+      "www.yanmar.com": 1,
+      "yanmar.no": 1,
+      "lillespecial.no": 1,
+      "www.nuskin.com": 1,
+      "nuskin.no": 1,
+      "www.tinyelephant.no": 1,
+      "supertune.no": 1,
+      "shaca.no": 1,
+      "trefellinginnlandet.no": 1,
+      "trefelling-innlandet.no": 1,
+      "www.trefellinginnlandet.no": 1,
+      "locusensjo.no": 1,
+      "locus-ensjo.no": 1,
+      "reiret.no": 1,
+      "interhaus.no": 1,
+      "turbinas.no": 1,
+      "moelven.no": 1,
+      "www.moelven.no": 1
+    },
+    "requests_by_phase": {
+      "registry": 2,
+      "activity": 2,
+      "accounts": 98,
+      "history": 99,
+      "roles": 98,
+      "locations": 98,
+      "web": 244,
+      "group": 4,
+      "web_news": 8
+    },
+    "phase_caps": {
+      "registry": 5,
+      "activity": 6,
+      "jobs": 23,
+      "accounts": 107,
+      "roles": 107,
+      "locations": 107,
+      "group": 37,
+      "jobs_verify": 60,
+      "history": 102,
+      "web": 1161,
+      "web_news": 204
+    },
+    "refused_by_budget": {},
+    "p50_company_ms": 4156,
+    "p95_company_ms": 17531
+  },
+  "phase_seconds": {
+    "bulk_snapshot": 0.0,
+    "registry": 2.5,
+    "activity": 1.2,
+    "companies": 261.5,
+    "website_verification": 0.0,
+    "website_enrichment": 4.6,
+    "jobs": 0.0,
+    "tail": 0.0,
+    "finalise": 0.6
+  },
+  "budget_plan": {
+    "registry": 5,
+    "activity": 6,
+    "jobs": 23,
+    "accounts": 107,
+    "roles": 107,
+    "locations": 107,
+    "group": 37,
+    "jobs_verify": 60,
+    "history": 102,
+    "web": 1366,
+    "web_news": 0
+  },
+  "configuration": {
+    "bulk_files": false,
+    "workers": 2,
+    "job_days": 7,
+    "web_enabled": true,
+    "website_strategy": "legacy"
+  },
+  "bulk_snapshot": {
+    "note": "no bulk snapshot supplied; live registry API only"
+  },
+  "bulk_transfers": {},
+  "registry_snapshot": {},
+  "evidence_cutoff": null,
+  "source_policy_version": "signalpost-sources/2",
+  "nav_access": "credential_required",
+  "input_sha256": "761d992286066fcf95f45698712c495c3404ac025341c0c417d04fb815b10b0f",
+  "notes": [],
+  "third_party_cost_usd": 0.0,
+  "models": [],
+  "website_diagnostics": {
+    "companies_with_candidates": 41,
+    "companies_attempted": 41,
+    "companies_with_completed_check": 41,
+    "companies_budget_unattempted": 0,
+    "budget_interruptions": 0,
+    "limitation": "Attempt and completion counts are operational diagnostics, not accuracy or recall."
+  },
+  "external_fields": {
+    "official_website": {
+      "companies": 3,
+      "claims": 3
+    },
+    "company_news": {
+      "companies": 0,
+      "claims": 0
+    },
+    "registry_event": {
+      "companies": 98,
+      "claims": 335
+    },
+    "job_posting": {
+      "companies": 0,
+      "claims": 0
+    }
+  },
+  "discovery_rejections": {
+    "news_rejections": {
+      "not_article": 1
+    },
+    "job_rejections": {}
+  },
+  "discovery_routes": {
+    "nav:feed_unavailable": 98,
+    "careers:no_careers_link": 3,
+    "greenhouse:no_verified_board_link": 3,
+    "news:fetched": 2
+  },
+  "entity_update_cursor": {
+    "sha256": "9d7651ab357e3babf1bf258298c0f89903323ab0acedf3ebbbbd0a783b653546",
+    "resumed_chunks": 0,
+    "complete_chunks": 1
+  }
+}

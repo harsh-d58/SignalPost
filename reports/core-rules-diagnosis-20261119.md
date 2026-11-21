@@ -1,0 +1,44 @@
+# Signalpost core rules diagnosis, 19 November 2026
+
+**Release decision: hold this revision.** The current publication path accepts a demonstrably wrong company in an offline control. Real output also contains unsupported filing dates. The diagnosis applies to the working tree tested on November 19. The historical Builderr score applies to `eaef804`. The clean-install probe below used committed HEAD `6a87ab7`.
+
+## Rules checked against the live brief
+
+Builderr requires a complete batch, exact-company evidence and reproducible refresh. Qualification needs an official score of 65 and 95% checked precision. A material wrong-company attribution can independently disqualify a run. The score allocates 50 points to recall, 30 to precision and evidence, 12 to synthesis and 8 to UX. The explicit submission instructions request the runner and a 100-company smoke report, even though the board header still mentions 1,000 profiles. The contract identifies Builderr’s own 100-profile product sample at `/signalpost`. [Participant brief](https://builderr.ai/starter-briefs/signalpost.md) · [Evaluation contract](https://builderr.ai/docs/signalpost-evaluation-harness.md) · [Live scoring](https://builderr.ai/challenges/signalpost#scoring) · [Source policy](../SIGNALPOST-SOURCE-POLICY.md)
+
+## Findings in release order
+
+| Priority | Difference from the rules | Observation and acceptance test |
+|---|---|---|
+| 1. Exact legal owner | A whole matching title can still identify a customer. | In a synthetic registry-declared group domain, the title and site name both say Parent Group AS, the body explicitly calls OTIS AS a customer, and only the Open Graph page title says OTIS AS. The production visit and extraction functions published the site for OTIS AS with no registry email or phone corroboration. Separate page subject from operator, reject conflicting publisher evidence and keep standalone same-entity and legal-page controls. Require zero publications in the parent/customer fixture. |
+| 2. Financial reporting dates | The filing-history endpoint supplies years. The collector adds January 1 and December 31 to every filing. The snapshot auditor requires those invented boundaries and therefore agrees with the collector. | All 893 history claims in the random run used this rule. Matching by organisation and end year allowed comparison against 274 company-account periods. **13/274 disagreed across 11 companies**. For organisation 935174627, the 2025 accounts ran October 1, 2024 through September 30, 2025. Another 619 history years lacked a comparable period in these outputs. Preserve the year in the year-only record. Only attach exact dates with a filing-specific source that supplies them. Test partial, cross-year and year-only filings in extraction, evidence audit, cutoff and refresh. |
+| 3. Missing financial scope and audit flags | In an offline record with no account type, the collector labels the numeric value as company accounts. Two null audit flags produce an affirmative audited status. | The probe supplies a genuine numeric fixture value of 123 and checks the resulting labels. Its magnitude is preserved. The missing scope and audit conclusion are unsupported. In the fresh cohort all 274 saved audit-status locators contained two explicit booleans. Keep unsupported scope and audit status unknown and test each actual flag combination. |
+| 4. Eligibility for measuring recall | The local metrics tool counts any labelled family toward the external-family minimum. | Feeding it 15 synthetic company–family opportunities drawn exclusively from identity, industry and financials produced `sparse_not_measured=False`. No external discovery opportunity was present. Filter to external opportunities and distinguish registry events from dated company news before counting families. This experiment tested the scorer only. |
+| 5. Website evidence retention | For two of five published websites, the decision cites the legal name plus phone or address, but the stored ownership proof span contains just the name. | AKTIVTMED AS and TORSTA AS have name-only proof spans. The other three contain the matching organisation number. Preserve the corroborating contact span and its registry evidence, then check whether an independent reviewer can reproduce both sides of each match. Name-only spans alone do not prove these two matches wrong. |
+| 6. External discovery | The November 19 random run checked all 48 companies for which it generated site candidates. It published five sites, a social profile for one company, zero news and zero jobs. | Aker BP in the separate five-case panel missed a known release at the website ownership stage. The random batch had no independent vacancy inventory, and NAV required credentials. Add a legitimate multi-entity publisher positive paired with the parent negative, then an active exact-employer job paired with expired and group-employer controls. Keep the coverage claim tied to labelled companies and items. |
+
+## Other core checks
+
+| Area | Measured result | Remaining uncertainty |
+|---|---|---|
+| Terminal outputs and cost | Fresh 100/100 valid, 673 outbound requests, 488.3 seconds, one worker, $0. Historical scale run produced 1,100/1,100 valid envelopes. | The working-tree build has a 100-company live run. Scale results belong to an earlier build. |
+| Missing data and report totals | The 100 outputs had 8,296 claim rows, including 7,713 current published claims. Absence rows account for the difference on this baseline. | Using the report's raw claim total as the precision denominator would inflate publication volume. Builderr uses checked claims. |
+| Retention and numeric integrity | Snapshot audits passed on the 100 and historical 1,100. Fresh run had 4,348 account claims verified against retained records. | Matching a locator does not validate a transformation shared by collector and auditor. The history-period comparison establishes this directly. |
+| Refresh | Replayed all 100 fresh and 1,100 historical envelopes through the differ using the original completion time. Zero changes on identical current claims. The separate changed-input replay passed typed-change and unreadable-source checks. | This exercises the differ. Archived responses from Builderr, multiple future-dated prior observations and official cutoff behavior remain separate integration cases. |
+| Cutoff and identity input | The CLI accepts a supplied snapshot, observation time and cutoff. Current evidence is filtered by observation and claim date before generating the brief. | The November 19 smoke used live identity. Full parity with the evaluator's supplied snapshot and format is unconfirmed. |
+| Synthesis and UX | 99 of 100 profiles had brief sentences. All claim IDs referenced by sentences, signals and checks resolved to valued claims. All 18 frontend publication and resilience tests passed. | Link resolution cannot grade whether conclusions follow from the source. A hosted desktop/phone JBOX walkthrough and independent synthesis review remain outstanding. |
+| Source rights and deployment | Source declarations specify access, retention, robots, server-side NAV credentials and how blocked sources are handled. No restricted-platform fetch was needed for the published LinkedIn link. | Site-specific terms and the evaluator's deployment credentials were not independently verified. |
+| Setup and regression suite | From an archive of committed HEAD, frozen dependencies installed in an empty environment using the local package cache with explicit Python 3.13.2. The installed run command loaded. The working-tree suite passed all 324 Python tests using a writable temporary directory. | Offline automatic discovery of the pinned Python 3.12 failed on this machine. This exercise used an available compatible interpreter and checked CLI startup. A cold-cache install and full official command at the eventual submission hash remain unverified. |
+
+## Reproduction
+
+With the two saved runs present, execute from the repository root:
+
+```powershell
+uv run --group dev python -m eval.diagnostics.audit_core_rules out-cohorts-20261119/after100 out-recovery/final-scale1100
+uv run python eval/snapshot_audit.py out-cohorts-20261119/after100
+uv run python eval/refresh_replay.py out-cohorts-20261119/after100/envelopes.jsonl out-cohorts-20261119/after100-replay-audit.json
+node --test eval/ui_resilience_check.cjs
+```
+
+The scale archive had no filing-history claims for the new date comparison. Its replay result covers idempotence only. The 13 conflicts are a lower bound on conflicting history periods in the 100, and the tested ownership failure is a synthetic publication case. Neither supplies an estimate of wrong-company prevalence. Builderr’s independent pool and a blinded exact-claim audit are still needed to support a score or qualification assertion.

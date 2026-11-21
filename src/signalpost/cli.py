@@ -142,7 +142,7 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--bulk-files", action="store_true", help="roles/workplaces from Brreg bulk files; recommended for large batches, with bounded direct fallback")
     run.add_argument("--events", action="store_true", help="emit @event JSON progress lines (used by the live console)")
     run.add_argument("--website-strategy", choices=("auto", "legacy", "breadth"), default="auto",
-                     help="website scheduling: auto preserves legacy; breadth enables experimental candidate rounds")
+                     help="auto uses breadth with --bulk-files and legacy for direct lookups")
     run.add_argument("--no-web", action="store_true", help="skip website discovery (registry-only run)")
     run.add_argument("--showcase", help="where to write the static showcase site (default: <out>/site)")
     run.add_argument("--no-showcase", action="store_true")

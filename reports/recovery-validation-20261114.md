@@ -20,7 +20,9 @@ Automated validation passed **318 Python tests** (75.38 seconds) and **18 fronte
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Fresh 100 | 100/100 | 623 | 243.0 s | 3 | 1 company | 0 | 0 |
 | Universe sample 1,100 | 1,100/1,100 | 1,920 | 450.9 s | 20 | 8 companies | 2 items, one company | 0 |
-| Final-source universe sample 1,100 | 1,100/1,100 | 1,920 | 288.0 s | 22 | 10 companies | 0 | 0 |
+| November 14 final working-tree sample 1,100 | 1,100/1,100 | 1,920 | 288.0 s | 20 | 7 companies | 2 items, one company | 0 |
+
+November 19 correction: the saved report and envelopes for `run-20261114T170034Z` support the counts in this row. The previous row incorrectly listed 22 websites, 10 social companies and zero news. See the [rules audit and diagnosis](rules-diagnosis-20261119.md) for digest and review limits.
 
 The final-source large run used run ID `run-20261114T170034Z` and code digest `04906cd10003ec517063b9e8857a629eb7d8bcfdcb98c3131210d2cfc81e2efc`. It completed the supplied 1,100 inputs, of which 1,097 resolved to live registry entities. Reported company-family coverage was: financials 99%, leadership 7%, locations 6%, group 1%, websites 2%, social profiles 1%, descriptions 1%, jobs 0%; identity, status, industry and registry activity were 100%. The roles and workplace bulk files timed out; bounded fallback plus tail pass completed without exceeding request or runtime limits. NAV was blocked without `NAV_FEED_TOKEN`. These rates describe emitted availability, not recall: no independently labelled opportunity set exists. The final-source canary was run separately: 100/100 valid, 666 requests, 225.5 seconds, websites 4%, social 2%, descriptions 3%, jobs 0%.
 

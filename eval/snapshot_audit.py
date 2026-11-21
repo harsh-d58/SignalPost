@@ -100,7 +100,7 @@ def audit(root: Path) -> dict:
                     expected_url = HISTORY_URL.format(org=env["organisation_number"])
                     if (ev.get("source_url") == expected_url and record.get("requested_url") == expected_url
                             and record.get("final_url") == expected_url and record.get("status") == 200
-                            and isinstance(data, list)):
+                            and isinstance(data, list) and not ev.get("reporting_period")):
                         history_evidence[ev["id"]] = {str(y) for y in data if type(y) in (str, int) and len(str(y)) == 4 and str(y).isascii() and str(y).isdigit()}
                     else:
                         invalid_history_evidence.add(ev["id"])
@@ -128,7 +128,7 @@ def audit(root: Path) -> dict:
                 year = value.get("year") if isinstance(value, dict) else None
                 valid = (isinstance(year, str) and all(year in years for years in sources)
                          and value.get("official_copy") == HISTORY_PDF.format(org=env["organisation_number"], year=year)
-                         and claim.get("period") == {"from": f"{year}-01-01", "to": f"{year}-12-31"}
+                         and claim.get("period") is None
                          and claim.get("unit") is None)
                 counts["history_claims_verified" if valid else "invalid_history_claims"] += 1
                 fields[claim["field"]]["verified" if valid else "invalid"] += 1
@@ -147,11 +147,13 @@ def audit(root: Path) -> dict:
                 numeric = claim["field"] in ACCOUNT_FIELDS
                 if claim["field"] == "audit_status" and isinstance(expected, dict):
                     field_path = "/revisjon"
-                    expected = "not audited" if expected.get("ikkeRevidertAarsregnskap") or expected.get("fravalgRevisjon") else "audited"
+                    flags = [expected.get(key) for key in ("ikkeRevidertAarsregnskap", "fravalgRevisjon")]
+                    expected = ("not audited" if any(flag is True for flag in flags) else
+                                "audited" if all(flag is False for flag in flags) else None)
                 elif claim["field"] == "accounting_rules":
                     field_path = "/regnkapsprinsipper/regnskapsregler"
                 scope_matches = (claim.get("note") == f"account_type={str(scope).upper()}" if numeric else
-                                 claim.get("key") == f"{'audit' if claim['field'] == 'audit_status' else 'rules'}:{str(scope).upper()}:{locator['period']['to']}") if scope else "account_type" not in locator
+                                 claim.get("key") == f"{'audit' if claim['field'] == 'audit_status' else 'rules'}:{str(scope).upper()}:{locator['period']['to']}") if scope else False
                 valid = (
                     env["organisation_number"] == locator["organisation_number"]
                     and (not owner or str(owner) == env["organisation_number"])

@@ -1,0 +1,318 @@
+{
+  "run_id": "run-20261121T125644Z",
+  "agent_version": "6a87ab71d7c0-dirty",
+  "code_sha256": "957b06c4caabcd9921c55a0ab8ab2e626e97b2e3c5213bf897ff977496e13346",
+  "started_at": "2026-11-21T12:56:44Z",
+  "completed_at": "2026-11-21T13:02:11Z",
+  "input_count": 100,
+  "emitted_envelopes": 100,
+  "validation": {
+    "passed": true,
+    "checks": {
+      "one_envelope_per_input": true,
+      "unique_organisation_numbers": true,
+      "all_family_states_valid": true,
+      "every_claim_has_evidence": true,
+      "no_null_values_published": true,
+      "all_families_present": true,
+      "snapshot_references_resolve": true,
+      "within_execution_limits": true,
+      "no_failed_terminal_envelopes": true
+    },
+    "invalid_states": []
+  },
+  "mode": "baseline",
+  "changes_detected": 0,
+  "family_states": {
+    "identity": {
+      "available": 100
+    },
+    "status": {
+      "available": 100
+    },
+    "industry": {
+      "available": 100
+    },
+    "financials": {
+      "available": 100
+    },
+    "leadership": {
+      "available": 100
+    },
+    "locations": {
+      "available": 80,
+      "not_available": 20
+    },
+    "group": {
+      "not_applicable": 92,
+      "available": 8
+    },
+    "website": {
+      "not_available": 65,
+      "ambiguous": 18,
+      "blocked": 14,
+      "available": 3
+    },
+    "social_profiles": {
+      "not_available": 66,
+      "ambiguous": 18,
+      "blocked": 14,
+      "available": 2
+    },
+    "contact": {
+      "not_available": 58,
+      "available": 23,
+      "ambiguous": 8,
+      "blocked": 11
+    },
+    "description": {
+      "not_available": 66,
+      "ambiguous": 18,
+      "blocked": 14,
+      "available": 2
+    },
+    "jobs": {
+      "blocked": 100
+    },
+    "activity": {
+      "available": 100
+    }
+  },
+  "family_coverage": {
+    "identity": 1.0,
+    "status": 1.0,
+    "industry": 1.0,
+    "financials": 1.0,
+    "leadership": 1.0,
+    "locations": 0.8,
+    "group": 0.08,
+    "website": 0.03,
+    "social_profiles": 0.02,
+    "contact": 0.23,
+    "description": 0.02,
+    "jobs": 0.0,
+    "activity": 1.0
+  },
+  "claims_total": 8354,
+  "current_published_claims": 7772,
+  "identity_gate": {
+    "rejected": 11,
+    "blocked": 18,
+    "accepted": 3,
+    "related_site": 2,
+    "ambiguous": 10,
+    "unreachable": 2
+  },
+  "identity_gate_by_source": {
+    "name_slug_guess": {
+      "blocked": 10,
+      "accepted": 2,
+      "ambiguous": 5,
+      "rejected": 2
+    },
+    "registry_declared": {
+      "rejected": 3,
+      "related_site": 1,
+      "unreachable": 1,
+      "blocked": 3
+    },
+    "registry_email_domain": {
+      "rejected": 6,
+      "related_site": 1,
+      "blocked": 5,
+      "unreachable": 1,
+      "accepted": 1,
+      "ambiguous": 5
+    }
+  },
+  "jobs_feed": {
+    "pages": 0,
+    "ads_indexed": 0,
+    "window_days": 60,
+    "error": "blocked: NAV_FEED_TOKEN required; public token is experimental only"
+  },
+  "operations": {
+    "requests": 595,
+    "max_requests": 2000,
+    "elapsed_seconds": 328.3,
+    "max_seconds": 2700.0,
+    "third_party_cost_usd": 0.0,
+    "max_cost_usd": 0.0,
+    "requests_by_host": {
+      "data.brreg.no": 412,
+      "vestbo.no": 10,
+      "www.usbl.no": 10,
+      "centragruppen.no": 8,
+      "www.sportsconnection.dk": 7,
+      "oslo-advokatkontor.no": 7,
+      "antec-norge.no": 7,
+      "www.rodekors.no": 6,
+      "www.opusfinance.no": 6,
+      "www.dnb.no": 6,
+      "munibee.com": 6,
+      "www.dugnadsportalen.no": 6,
+      "helgelandbbl.no": 5,
+      "www.stoere.no": 5,
+      "bryne-elektriske.no": 5,
+      "braindrops.no": 5,
+      "medpoint.no": 5,
+      "www.unikwall.no": 5,
+      "strahltec.no": 5,
+      "komtekst.no": 5,
+      "blikkenslageren.no": 4,
+      "www.munibee.com": 3,
+      "www.antec-norge.no": 3,
+      "www.motorgrossisten.no": 2,
+      "www.centragruppen.no": 2,
+      "www.vestbo.no": 2,
+      "www.nordictrend.no": 2,
+      "redcross.no": 2,
+      "stoere.no": 2,
+      "opusfinance.no": 2,
+      "dnbnor.no": 2,
+      "sportsconnection.dk": 2,
+      "motorgrossisten.no": 2,
+      "usbl.no": 2,
+      "nordictrend.no": 2,
+      "unikwall.no": 2,
+      "munibee.no": 2,
+      "seabednordic.no": 2,
+      "pvasshaugbygg.no": 2,
+      "antecnorge.no": 2,
+      "dugnadsportalen.no": 2,
+      "query.wikidata.org": 1,
+      "www.ol.museum.no": 1,
+      "www.webhuset.no": 1,
+      "www.oslo-advokatkontor.no": 1,
+      "aarbakke-as.no": 1,
+      "lopack.no": 1,
+      "industri.no": 1,
+      "menergy.no": 1,
+      "bergenrodekors.no": 1,
+      "bryneelektriske.no": 1,
+      "cascade.no": 1,
+      "vennatro.no": 1,
+      "www.linkedin.com": 1,
+      "hargassnernorge.no": 1,
+      "svalbard-busservice.no": 1,
+      "rakas.no": 1,
+      "norvac.no": 1,
+      "whereby.no": 1
+    },
+    "requests_by_phase": {
+      "registry": 2,
+      "activity": 2,
+      "accounts": 100,
+      "history": 101,
+      "roles": 100,
+      "locations": 100,
+      "group": 8,
+      "web": 176,
+      "web_news": 6
+    },
+    "phase_caps": {
+      "registry": 5,
+      "activity": 6,
+      "jobs": 133,
+      "accounts": 107,
+      "roles": 107,
+      "locations": 107,
+      "group": 37,
+      "jobs_verify": 60,
+      "history": 102,
+      "web": 1067,
+      "web_news": 188
+    },
+    "refused_by_budget": {},
+    "p50_company_ms": 4509,
+    "p95_company_ms": 14950
+  },
+  "phase_seconds": {
+    "bulk_snapshot": 0.0,
+    "registry": 3.2,
+    "activity": 1.5,
+    "companies": 209.2,
+    "website_verification": 108.7,
+    "website_enrichment": 2.7,
+    "jobs": 0.0,
+    "tail": 0.0,
+    "finalise": 0.7
+  },
+  "budget_plan": {
+    "registry": 5,
+    "activity": 6,
+    "jobs": 133,
+    "accounts": 107,
+    "roles": 107,
+    "locations": 107,
+    "group": 37,
+    "jobs_verify": 60,
+    "history": 102,
+    "web": 1256,
+    "web_news": 0
+  },
+  "configuration": {
+    "bulk_files": false,
+    "workers": 2,
+    "job_days": 60,
+    "web_enabled": true,
+    "website_strategy": "breadth"
+  },
+  "bulk_snapshot": {
+    "note": "no bulk snapshot supplied; live registry API only"
+  },
+  "bulk_transfers": {},
+  "registry_snapshot": {},
+  "evidence_cutoff": null,
+  "source_policy_version": "signalpost-sources/2",
+  "nav_access": "credential_required",
+  "input_sha256": "84a782a560d4b4c173409a1fc40741ca1aad244a595ccf7ba64c050bb5600256",
+  "notes": [],
+  "third_party_cost_usd": 0.0,
+  "models": [],
+  "website_diagnostics": {
+    "companies_with_candidates": 36,
+    "companies_attempted": 36,
+    "companies_with_completed_check": 36,
+    "companies_budget_unattempted": 0,
+    "budget_interruptions": 0,
+    "limitation": "Attempt and completion counts are operational diagnostics, not accuracy or recall."
+  },
+  "external_fields": {
+    "official_website": {
+      "companies": 3,
+      "claims": 3
+    },
+    "company_news": {
+      "companies": 1,
+      "claims": 2
+    },
+    "registry_event": {
+      "companies": 100,
+      "claims": 327
+    },
+    "job_posting": {
+      "companies": 0,
+      "claims": 0
+    }
+  },
+  "discovery_rejections": {
+    "news_rejections": {
+      "identity_unproven": 4,
+      "not_article": 1
+    },
+    "job_rejections": {}
+  },
+  "discovery_routes": {
+    "nav:feed_unavailable": 100,
+    "careers:no_careers_link": 3,
+    "greenhouse:no_verified_board_link": 3,
+    "news:fetched": 4,
+    "news:published": 2
+  },
+  "entity_update_cursor": {
+    "sha256": "3b63e672f08dcc64283895929a62e075462eb5b3bf74f312e971c81c731c1884",
+    "resumed_chunks": 0,
+    "complete_chunks": 1
+  }
+}

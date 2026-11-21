@@ -98,6 +98,29 @@ def test_equal_account_values_keep_separate_record_locators():
         evidence = pb.evidence[claim.evidence_ids[0]]
         assert evidence.locator["record_pointer"] == f"/{index}"
 
+
+@pytest.mark.parametrize("override", [
+    {"regnskapstype": None}, {"regnskapstype": "unknown"}, {"valuta": None},
+    {"regnskapsperiode": {}}, {"regnskapsperiode": {"fraDato": "2026-02-30", "tilDato": "2026-12-31"}},
+])
+def test_missing_financial_qualifiers_withhold_amount(override):
+    record = {"organisasjonsnummer": ORG, "regnskapstype": "SELSKAP", "valuta": "NOK",
+              "regnskapsperiode": {"fraDato": "2025-03-01", "tilDato": "2025-12-31"},
+              "eiendeler": {"sumEiendeler": 123}, **override}
+    pb = ProfileBuilder(ORG)
+    accounts_claims(pb, snapshot(json.dumps([record]), "https://data.brreg.no/regnskapsregisteret/regnskap/" + ORG))
+    assert not pb.family_claims("financials")
+    assert pb.families["financials"].state == "ambiguous"
+
+
+@pytest.mark.parametrize("flags,expected", [
+    ((None, None), None), ((False, None), None), ((False, False), "audited"),
+    ((True, None), "not audited"), ((False, True), "not audited"), (("false", False), None),
+])
+def test_audit_flags_require_explicit_source_values(flags, expected):
+    from signalpost.registry import audit_status
+    assert audit_status(dict(zip(("ikkeRevidertAarsregnskap", "fravalgRevisjon"), flags))) == expected
+
 @pytest.mark.parametrize("field", ["audit_status", "accounting_rules"])
 @pytest.mark.parametrize("mutate", [False, True])
 def test_account_metadata_claims_are_bound_to_record(tmp_path, monkeypatch, field, mutate):
@@ -138,10 +161,12 @@ def test_filing_history_binds_source_entity_and_claim(tmp_path, monkeypatch, mut
     evidence = [e.to_dict() for e in pb.evidence.values()]
     sources = [store.bind(e) for e in evidence]
     claim = pb.family_claims("financials")[0].to_dict()
+    assert claim.get("period") is None
+    assert all(not ev.get("reporting_period") for ev in evidence)
     if mutation == "year":
         claim["value"]["year"] = "2023"
     elif mutation == "period":
-        claim["period"]["to"] = "2025-11-30"
+        claim["period"] = {"from": "2025-01-01", "to": "2025-12-31"}
     elif mutation == "copy":
         claim["value"]["official_copy"] = claim["value"]["official_copy"].replace(ORG, OTHER)
     env = {"organisation_number": OTHER if mutation == "owner" else ORG, "claims": [claim],

@@ -33,6 +33,7 @@ def greenhouse_jobs(pb, fetcher, pages, legal_name):
         try:
             listing = fetcher.get_json(base, phase="web_news", retries=0)
             if not listing.ok:
+                pb.trace_discovery("greenhouse", page.url, base, "fetch_failed")
                 continue
             data = listing.json()
             rows = data.get("jobs", []) if isinstance(data, dict) else []
@@ -44,6 +45,7 @@ def greenhouse_jobs(pb, fetcher, pages, legal_name):
             for job_id in ids:
                 snap = fetcher.get_json(f"{base}/{job_id}", phase="web_news", retries=0)
                 if not snap.ok:
+                    pb.trace_discovery("greenhouse", link, snap.url, "fetch_failed")
                     continue
                 job = snap.json()
                 if not isinstance(job, dict) or type(job.get("id")) is not int or job["id"] != job_id:
@@ -61,6 +63,7 @@ def greenhouse_jobs(pb, fetcher, pages, legal_name):
                 elif not isinstance(job.get("title"), str) or not job["title"].strip():
                     reason = "missing_title"
                 if reason:
+                    pb.trace_discovery("greenhouse", link, snap.url, reason)
                     pb.extra.setdefault("job_rejections", []).append({"url": snap.url, "reason_code": reason})
                     continue
                 # Use the documented hosted detail route for this exact API ID;
@@ -82,7 +85,12 @@ def greenhouse_jobs(pb, fetcher, pages, legal_name):
                 pb.add(Claim("jobs", "job_posting", value, [source, discovery],
                              label="Active job posting", key=f"greenhouse:{board}:{job_id}", effective_date=posted.isoformat()))
                 pb.set_state("jobs", "available", "exact-employer dated published Greenhouse job", snap.url)
+                pb.trace_discovery("greenhouse", link, url, "published")
+            if not ids:
+                pb.trace_discovery("greenhouse", page.url, base, "no_job_ids")
         except BudgetExhausted:
             pb.extra.setdefault("job_rejections", []).append({"url": base, "reason_code": "budget_unattempted"})
         except (ValueError, TypeError):
             pb.extra.setdefault("job_rejections", []).append({"url": base, "reason_code": "invalid_api_payload"})
+    if not candidates and pages:
+        pb.trace_discovery("greenhouse", pages[0].url, pages[0].url, "no_verified_board_link")

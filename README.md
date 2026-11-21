@@ -13,6 +13,8 @@ unmeasured; missing financial values are not turned into zero. See the [recovery
 
 ## Organizer result and recovery — 14 November 2026
 
+For the November 19–20 ownership, filing-period and cutoff corrections, see the [working-tree validation checkpoint](reports/core-fixes-checkpoint-20261119.md). It distinguishes historical artifacts, live cohorts and independently unmeasured metrics.
+
 The organizer scored **eaef804**, at **24.58/100**, rank **100/104**, with **14/22 checked claims correct**.
 The newer local HEAD (`11eee14`) was not included in that score. The recovery changes now reject the named
 OTIS regional site and revoke it during refresh. The disclosed organizer examples have regressions; six other
@@ -32,7 +34,7 @@ The organizer's entry-specific replacement-commit deadline is **15 November, 09:
 The latest implementation and measurements are in the [scheduling report](reports/scheduling-improvement-20261113.md); the remaining programme is in [plan.md](plan.md).
 
 - **282 Python tests and 16 frontend resilience tests passed.** Console/showcase interaction checks, source audits and refresh replay also passed.
-- The existing scheduler remains the default. `--website-strategy breadth` is an experimental option, pending independent attribution review and matched validation.
+- Automatic scheduling uses breadth for bulk-file runs and legacy for direct lookups.
 - The scale experiment returned **1,100/1,100 valid profiles**, **38 published websites**, **1,920 requests**, **567.9 seconds** and **$0 declared API cost**. These are experimental results, not default-mode performance or measured recall.
 - Final state-preservation, timing and default-selection fixes were regression-tested after those live runs; a final committed-code live run remains a submission gate.
 - At that checkpoint, independent precision, recall, F1 and official rank were **unmeasured**. See the newer organizer result above; the 82-point plan target is not a forecast.
@@ -42,7 +44,7 @@ The scoring contract checked on 12 November uses **50 recall, 30 evidence, 12 sy
 ### Evaluator command
 
 ```bash
-uv run --frozen signalpost run --organisations official-batch.jsonl --registry-snapshot official-registry.jsonl --registry-snapshot-at 2026-11-09T00:00:00Z --evidence-cutoff 2026-11-10T00:00:00Z --bulk-files --workers 8 --job-days 7 --max-requests 2000 --max-minutes 45 --max-cost 10 --out out-official
+uv run --frozen signalpost run --organisations official-batch.jsonl --registry-snapshot official-registry.jsonl --registry-snapshot-at 2026-11-09T00:00:00Z --evidence-cutoff 2026-11-10T00:00:00Z --website-strategy auto --workers 2 --job-days 7 --max-requests 2000 --max-minutes 45 --max-cost 0 --no-showcase --out out-official
 ```
 
 Replace the filenames, observation time, cutoff and limits with Builderr's supplied values. Snapshot rows use Brreg's `organisasjonsnummer` and `navn` fields, in JSONL, JSON array/HAL or CSV, optionally gzip. Without an evaluator snapshot, omit the two registry snapshot options for a live local run. Do not use the public universe as an authoritative current identity snapshot. `--bulk-files` explicitly enables the roles/workplaces inventory route measured on 1,100 companies; omit it for small batches or direct-mode comparison. NAV requires a suitably authorized `NAV_FEED_TOKEN`; without it that source is blocked and company-owned careers discovery continues.
@@ -69,7 +71,7 @@ Snapshot files remain private under the output directory. `--previous` preserves
 
 ## Website scheduling experiment (13 November 2026)
 
-The existing scheduler remains the default (`--website-strategy auto` resolves to `legacy`). Use `--website-strategy breadth` to test one complete candidate check per company before alternatives. This changes allocation, not ownership criteria. The 1,100-company experiment published 38 websites versus 29 in the historical baseline at the same 1,920-request ceiling; independent precision/recall are not established, and live-source timing differed. See [the measured comparison and limits](reports/scheduling-improvement-20261113.md).
+Automatic scheduling selects breadth with `--bulk-files` and legacy otherwise. Use `--website-strategy breadth` to test one complete candidate check per company before alternatives. This changes allocation, not ownership criteria. The 1,100-company experiment published 38 websites versus 29 in the historical baseline at the same 1,920-request ceiling; independent precision/recall are not established, and live-source timing differed. See [the measured comparison and limits](reports/scheduling-improvement-20261113.md).
 
 Runs now include `website-diagnostics.json` and aggregate attempt/completion/budget counts in `run-report.json`. The console and showcase display these as execution counts, not accuracy. Interrupted identity traversal cannot fall through to a weaker acceptance rule. Budget refusal on an alternative preserves an earlier completed ownership decision.
 

@@ -108,12 +108,17 @@ def diff(previous: dict[str, Any] | None, current: dict[str, Any], *, detected_a
     families = sorted({f for f, _ in prev_claims} | {f for f, _ in cur_claims})
     for family in families:
         state = (states.get(family) or {}).get("state")
-        expired = set(closed) if family == "jobs" else set()
+        expired = set()
         if family == "jobs":
             observed = parse_job_date(detected_at)
             for (fam, key), claim in prev_claims.items():
                 if fam != "jobs" or not isinstance(claim.get("value"), dict):
                     continue
+                closure = closed.get(key)
+                observed_title = closure.get("title") if closure else None
+                same_role = bool(observed_title) and observed_title == claim["value"].get("title")
+                if closure and (same_role or (not key.startswith("sitejob:") and not observed_title)):
+                    expired.add(key)
                 deadline = parse_job_date(claim["value"].get("expires"))
                 if deadline is not None and observed is not None and job_expired(deadline, observed):
                     expired.add(key)
@@ -142,6 +147,11 @@ def diff(previous: dict[str, Any] | None, current: dict[str, Any], *, detected_a
             old = prev_claims.get((family, key))
             new = cur_claims.get((family, key))
             if old and new:
+                # Older collectors invented calendar boundaries for a year-only source.
+                # Dropping them changes our representation, not the company's filing.
+                if (new["field"] == "filed_annual_accounts" and not new.get("period")
+                        and old.get("value") == new.get("value") and old.get("unit") == new.get("unit")):
+                    continue
                 if all(old.get(k) == new.get(k) for k in ("value", "unit", "period")):
                     continue
                 kind = "changed"

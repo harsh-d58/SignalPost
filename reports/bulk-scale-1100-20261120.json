@@ -1,0 +1,473 @@
+{
+  "run_id": "run-20261120T042133Z",
+  "agent_version": "6a87ab71d7c0-dirty",
+  "code_sha256": "3b3b19be84ed3e8c1e8e7aa5c2e4f57713425ee10b3eff6275f20f21aa2dbe38",
+  "started_at": "2026-11-20T04:21:33Z",
+  "completed_at": "2026-11-20T04:29:36Z",
+  "input_count": 1100,
+  "emitted_envelopes": 1100,
+  "validation": {
+    "passed": true,
+    "checks": {
+      "one_envelope_per_input": true,
+      "unique_organisation_numbers": true,
+      "all_family_states_valid": true,
+      "every_claim_has_evidence": true,
+      "no_null_values_published": true,
+      "all_families_present": true,
+      "snapshot_references_resolve": true,
+      "within_execution_limits": true,
+      "no_failed_terminal_envelopes": true
+    },
+    "invalid_states": []
+  },
+  "mode": "baseline",
+  "changes_detected": 0,
+  "family_states": {
+    "identity": {
+      "available": 1096,
+      "not_available": 4
+    },
+    "status": {
+      "available": 1096,
+      "not_available": 4
+    },
+    "industry": {
+      "available": 1096,
+      "not_available": 4
+    },
+    "financials": {
+      "available": 1089,
+      "not_available": 4,
+      "failed": 7
+    },
+    "leadership": {
+      "available": 1096,
+      "not_available": 4
+    },
+    "locations": {
+      "available": 837,
+      "not_available": 263
+    },
+    "group": {
+      "not_applicable": 1016,
+      "not_available": 4,
+      "available": 80
+    },
+    "website": {
+      "not_available": 36,
+      "available": 25,
+      "ambiguous": 67,
+      "blocked": 18,
+      "failed": 954
+    },
+    "social_profiles": {
+      "not_available": 54,
+      "ambiguous": 67,
+      "blocked": 18,
+      "failed": 954,
+      "available": 7
+    },
+    "contact": {
+      "not_available": 38,
+      "ambiguous": 27,
+      "available": 234,
+      "blocked": 6,
+      "failed": 795
+    },
+    "description": {
+      "not_available": 50,
+      "available": 11,
+      "ambiguous": 67,
+      "blocked": 18,
+      "failed": 954
+    },
+    "jobs": {
+      "blocked": 1096,
+      "not_available": 4
+    },
+    "activity": {
+      "available": 1095,
+      "not_available": 5
+    }
+  },
+  "family_coverage": {
+    "identity": 0.996,
+    "status": 0.996,
+    "industry": 0.996,
+    "financials": 0.99,
+    "leadership": 0.996,
+    "locations": 0.761,
+    "group": 0.073,
+    "website": 0.023,
+    "social_profiles": 0.006,
+    "contact": 0.213,
+    "description": 0.01,
+    "jobs": 0.0,
+    "activity": 0.995
+  },
+  "claims_total": 82698,
+  "current_published_claims": 76160,
+  "identity_gate": {
+    "accepted": 25,
+    "ambiguous": 40,
+    "unreachable": 8,
+    "blocked": 22,
+    "rejected": 25,
+    "related_site": 2
+  },
+  "identity_gate_by_source": {
+    "name_slug_guess": {
+      "accepted": 2,
+      "unreachable": 1,
+      "ambiguous": 5,
+      "blocked": 6,
+      "rejected": 4
+    },
+    "registry_declared": {
+      "rejected": 20,
+      "ambiguous": 33,
+      "accepted": 23,
+      "blocked": 14,
+      "unreachable": 6,
+      "related_site": 2
+    },
+    "registry_email_domain": {
+      "ambiguous": 2,
+      "blocked": 2,
+      "rejected": 1,
+      "unreachable": 1
+    }
+  },
+  "jobs_feed": {
+    "pages": 0,
+    "ads_indexed": 0,
+    "window_days": 60,
+    "error": "blocked: NAV_FEED_TOKEN required; public token is experimental only"
+  },
+  "operations": {
+    "requests": 1919,
+    "max_requests": 2000,
+    "elapsed_seconds": 491.0,
+    "max_seconds": 2700.0,
+    "third_party_cost_usd": 0.0,
+    "max_cost_usd": 0.0,
+    "requests_by_host": {
+      "data.brreg.no": 1218,
+      "vestbo.no": 33,
+      "vaagsgatalegesenter.no": 14,
+      "samtun.no": 14,
+      "query.wikidata.org": 11,
+      "www.logistea.se": 11,
+      "buskerudmuseene.no": 10,
+      "godetall.no": 10,
+      "www.vestbo.no": 9,
+      "www.loenfjord.no": 9,
+      "nkl.no": 9,
+      "northstore.no": 9,
+      "www.diakonhjemmetomsorg.no": 9,
+      "unifor.no": 9,
+      "www.fabi.no": 8,
+      "bildata.no": 8,
+      "www.prefab.heidelbergmaterials.no": 8,
+      "www.stavangermekaniske.no": 8,
+      "norgesgruppen.no": 8,
+      "this.no": 7,
+      "www.advokater.co": 7,
+      "armec.no": 7,
+      "viden.no": 7,
+      "globalen.no": 7,
+      "www.van-bergen.no": 7,
+      "serodus.com": 7,
+      "novaspektrum.no": 7,
+      "codex.no": 6,
+      "www.uks.no": 6,
+      "www.friskulen.no": 6,
+      "www.missingx.com": 6,
+      "intergolf.no": 6,
+      "www.smartsignmanager.com": 6,
+      "mallofnorway.com": 6,
+      "www.hafslund.no": 6,
+      "www.dolmsundet.no": 6,
+      "www.emero.no": 6,
+      "www.nordseter.no": 6,
+      "fangstr.no": 6,
+      "kirurgivest.no": 6,
+      "osterbo-vgs.no": 6,
+      "www.fondsfinans.no": 6,
+      "www.norice.no": 6,
+      "econor.no": 6,
+      "www.mastermal.no": 6,
+      "www.e-nor.no": 6,
+      "aprilarkitekter.no": 6,
+      "mobile.no": 6,
+      "www.lyngenvedsentral.no": 6,
+      "www.gamlastovo.no": 5,
+      "www.truebeauty.no": 5,
+      "www.kiwaniski.org": 5,
+      "www.transiteatret.no": 5,
+      "www.grafdirekt.no": 5,
+      "www.bergensadvokatene.com": 5,
+      "www.jbf.no": 5,
+      "www.osu.no": 5,
+      "www.lapphaugen.no": 5,
+      "www.culina.no": 5,
+      "hamar-montering.no": 5,
+      "www.sularorbuer.no": 5,
+      "www.crispideas.com": 5,
+      "hande.no": 5,
+      "a2g.no": 5,
+      "www.egecarpets.com": 5,
+      "norcap.no": 5,
+      "malvikbyggservice.no": 5,
+      "flyttevask-grunerlokka.no": 5,
+      "www.fram.no": 5,
+      "hestekrefter.no": 5,
+      "haugronning.no": 5,
+      "logistea.se": 4,
+      "www.abbl.no": 4,
+      "jtob.no": 4,
+      "www.oslo-takst.no": 4,
+      "www.telemarkbilruter.no": 4,
+      "www.norskbiogass.no": 4,
+      "www.planday.com": 4,
+      "bjella-investments.no": 4,
+      "www.listerror.no": 4,
+      "realkapital.no": 4,
+      "www.utleiefolketshus.no": 3,
+      "www.logistea.no": 3,
+      "ctgruppen.no": 3,
+      "buskerudmuseet.no": 3,
+      "www.unifor.no": 3,
+      "fabkirk.no": 3,
+      "telemarkbilruter.no": 3,
+      "messe.no": 3,
+      "www.codex.no": 2,
+      "www.holmenveien20.no": 2,
+      "www.norcap.no": 2,
+      "advimoss.no": 2,
+      "www.econoras.no": 2,
+      "www.storefjell.no": 2,
+      "www.this.no": 2,
+      "advokater.co": 2,
+      "www.bjella-investments.no": 2,
+      "www.formue.no": 2,
+      "www.egecarpets.dk": 2,
+      "www.nkl.no": 2,
+      "www.jtob.no": 2,
+      "www.northstore.no": 2,
+      "mastermal.no": 2,
+      "www.bildata.no": 2,
+      "www.ctgruppen.no": 2,
+      "www.smartsign.se": 2,
+      "www.mallofnorway.com": 2,
+      "www.buskerudmuseene.no": 2,
+      "www.diakonhjemmet.no": 2,
+      "www.armec.no": 2,
+      "www.viden.no": 2,
+      "www.vaagsgatalegesenter.no": 2,
+      "www.rekvisitt.no": 2,
+      "www.a2g.no": 2,
+      "www.fabkirk.no": 2,
+      "www.telemarkbil.no": 2,
+      "www.lutelandet.no": 2,
+      "prefab.heidelbergmaterials.no": 2,
+      "www.fisknett.no": 2,
+      "www.kirurgivest.no": 2,
+      "www.serodus.com": 2,
+      "www.godetall.no": 2,
+      "stavangermekaniske.no": 2,
+      "www.osterbo-vgs.no": 2,
+      "www.samtun.no": 2,
+      "www.messe.no": 2,
+      "www.hande.no": 2,
+      "osu.no": 2,
+      "e-nor.no": 2,
+      "megamonn.no": 2,
+      "fram.no": 2,
+      "listerror.no": 2,
+      "oustad.no": 2,
+      "lyngenvedsentral.no": 2,
+      "rewild.no": 2,
+      "karmatattoo.no": 2,
+      "holstadservice.no": 2,
+      "www.unimar.no": 1,
+      "wwww.gnisten.barnehage.no": 1,
+      "www.teamverksted.no": 1,
+      "www.nrg.no": 1,
+      "www.leikny.no": 1,
+      "storefjell.no": 1,
+      "www.gwill.no": 1,
+      "www.cds.as": 1,
+      "www.qicraft.no": 1,
+      "www.hjerneslag.no": 1,
+      "www.kartro.com": 1,
+      "regnbuenbarnehage.net": 1,
+      "www.nyenyborg.no": 1,
+      "www.frognerstrand.no": 1,
+      "www.pgaofnorway.no": 1,
+      "formue.no": 1,
+      "www.buskerudmedia.no": 1,
+      "www.abpre.no": 1,
+      "www.lifeimprovement.no": 1,
+      "www.kalimera.no": 1,
+      "kalimera.no": 1,
+      "www.thermotank.no": 1,
+      "www.lettenfoundation.com": 1,
+      "www.akademiet.no": 1,
+      "www.gbbl.no": 1,
+      "www.fgeiendom.no": 1,
+      "www.maskegruppen.no": 1,
+      "www.teamregnskap.no": 1,
+      "gimletroll.no": 1,
+      "www.gimletroll.no": 1,
+      "www.antibac.no": 1,
+      "www.kiilto.no": 1,
+      "www.fintechneo.com": 1,
+      "livelandmark.no": 1,
+      "www.advaco.no": 1,
+      "www.growgrow.no": 1,
+      "au2.no": 1,
+      "multityder.no": 1,
+      "lister.no": 1,
+      "otterbech.no": 1,
+      "rewildnorge.no": 1,
+      "nybraten.no": 1,
+      "holstad.no": 1,
+      "realkapitalutvikling.no": 1
+    },
+    "requests_by_phase": {
+      "registry": 22,
+      "accounts": 1103,
+      "activity": 22,
+      "locations": 1,
+      "roles": 1,
+      "web": 616,
+      "group": 80,
+      "web_news": 74
+    },
+    "phase_caps": {
+      "registry": 35,
+      "activity": 46,
+      "jobs": 40,
+      "accounts": 1268,
+      "roles": 166,
+      "locations": 166,
+      "group": 172,
+      "jobs_verify": 5,
+      "history": 0,
+      "web": 693,
+      "web_news": 93
+    },
+    "refused_by_budget": {
+      "group": 73,
+      "web": 2
+    },
+    "p50_company_ms": 19,
+    "p95_company_ms": 2126
+  },
+  "phase_seconds": {
+    "bulk_snapshot": 0.0,
+    "registry": 11.7,
+    "activity": 10.5,
+    "companies": 13.8,
+    "website_verification": 132.1,
+    "website_enrichment": 29.8,
+    "jobs": 0.2,
+    "tail": 47.3,
+    "finalise": 5.4
+  },
+  "budget_plan": {
+    "registry": 35,
+    "activity": 46,
+    "jobs": 40,
+    "accounts": 1157,
+    "roles": 4,
+    "locations": 4,
+    "group": 7,
+    "jobs_verify": 5,
+    "history": 0,
+    "web": 622,
+    "web_news": 0
+  },
+  "configuration": {
+    "bulk_files": true,
+    "workers": 2,
+    "job_days": 60,
+    "web_enabled": true,
+    "website_strategy": "breadth"
+  },
+  "bulk_snapshot": {
+    "note": "no bulk snapshot supplied; live registry API only"
+  },
+  "bulk_transfers": {
+    "roles": {
+      "stage": "complete",
+      "received_bytes": 129989784,
+      "last_progress_at": "2026-11-20T04:25:01Z",
+      "attempts": 1,
+      "expected_bytes": 129989784,
+      "deadline_extended": true,
+      "estimated_seconds_remaining": 17.2,
+      "elapsed_seconds": 248.47
+    },
+    "locations": {
+      "stage": "complete",
+      "received_bytes": 61942992,
+      "last_progress_at": "2026-11-20T04:23:21Z",
+      "attempts": 1,
+      "expected_bytes": 61942992,
+      "elapsed_seconds": 110.19
+    }
+  },
+  "registry_snapshot": {},
+  "evidence_cutoff": null,
+  "source_policy_version": "signalpost-sources/2",
+  "nav_access": "credential_required",
+  "input_sha256": "a3aa26751e682ba853f0b165e4a169dcf9a084af300534237d43d4910615e9fe",
+  "notes": [
+    "large batch (1100): roles and workplaces from Brreg bulk files",
+    "large batch (1100); per-company official sources scaled to fit 1920 requests",
+    "tail pass: 161 requests left unused by the per-phase caps were spent on families that had failed only for budget; filled: {'group': 73, 'website': 44}"
+  ],
+  "third_party_cost_usd": 0.0,
+  "models": [],
+  "website_diagnostics": {
+    "companies_with_candidates": 260,
+    "companies_attempted": 120,
+    "companies_with_completed_check": 118,
+    "companies_budget_unattempted": 976,
+    "budget_interruptions": 2,
+    "limitation": "Attempt and completion counts are operational diagnostics, not accuracy or recall."
+  },
+  "external_fields": {
+    "official_website": {
+      "companies": 25,
+      "claims": 25
+    },
+    "company_news": {
+      "companies": 0,
+      "claims": 0
+    },
+    "registry_event": {
+      "companies": 1095,
+      "claims": 4266
+    },
+    "job_posting": {
+      "companies": 0,
+      "claims": 0
+    }
+  },
+  "discovery_rejections": {
+    "news_rejections": {
+      "not_article": 32,
+      "identity_unproven": 31
+    },
+    "job_rejections": {}
+  },
+  "entity_update_cursor": {
+    "sha256": "11bc700b4402387d59f77d491681bf5ba42c1f365b40aaad38977c87288ad87d",
+    "resumed_chunks": 0,
+    "complete_chunks": 11
+  }
+}

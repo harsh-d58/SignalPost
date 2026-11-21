@@ -85,7 +85,7 @@ ROLE_MAILBOXES = {
     "marked", "butikk", "shop", "nettbutikk", "web", "verksted", "drift", "bedrift", "kunde", "kunder", "enquiries", "inquiries",
 }
 SUBPAGE_HINTS = re.compile(r"(kontakt|contact|om-oss|om_oss|omoss|about|personvern|privacy|vilkar|vilkår|terms|impressum|kjopsbetingelser|salgsbetingelser|firma|selskapet|company)", re.I)
-NEWS_HINTS = re.compile(r"(nyheter|aktuelt|news|blogg|blog|presse|press|artikler|articles|siste-nytt|innsikt)", re.I)
+NEWS_HINTS = re.compile(r"(nyheter|aktuelt|news|blogg|blog|presse|press|artikler|articles|siste-nytt|innsikt|borsmelding|børsmelding|investor)", re.I)
 ORG_RE = re.compile(r"(?<![\d])(\d{3})[\s .\-]?(\d{3})[\s .\-]?(\d{3})(?![\d])")
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
 
@@ -223,8 +223,22 @@ class Page:
                         parts.append(node[key])
         return [p for p in parts if p]
 
-    def identity_quote(self, legal_name: str) -> str:
-        return next((value for value in self.identity_values() if exact_name_present(legal_name, value)), "")
+    def identity_quote(self, legal_name: str, *, allow_title: bool = True) -> str:
+        # Titles can name customers, subsidiaries, or an entirely different
+        # company ending in the same legal name. Require a whole identity value.
+        expected = re.findall(r"[a-z0-9]+", fold(legal_name))
+        owners = [self.meta.get("og:site_name"), self.meta.get("application-name")]
+        for node in self.identity_nodes:
+            if schema_types(node) & {"Organization", "LocalBusiness", "Corporation", "WebSite"}:
+                owners.append(node.get("legalName") or node.get("name"))
+        owners = [value for value in owners if isinstance(value, str) and value.strip()]
+        # A page subject or one company in a portfolio cannot override operator metadata.
+        if any(re.findall(r"[a-z0-9]+", fold(value)) != expected for value in owners):
+            return ""
+        for value in owners or ([self.title] if allow_title else []):
+            if expected and re.findall(r"[a-z0-9]+", fold(value)) == expected:
+                return value
+        return ""
 
     def identity_fields(self, strict: bool = False) -> str:
         parts = self.identity_values()
@@ -287,7 +301,8 @@ def item_url(value: object, base: str) -> str | None:
 def single_item_url(url: str, family: str) -> bool:
     p = urllib.parse.urlsplit(url)
     parts = [fold(x) for x in p.path.strip("/").split("/") if x]
-    landing = {"news", "nyheter", "aktuelt", "blog", "blogg", "presse", "press", "articles", "artikler", "innsikt"}
+    landing = {"news", "nyheter", "aktuelt", "blog", "blogg", "presse", "press", "articles", "artikler", "innsikt",
+               "newsroom", "presserom", "press-releases", "press-releases-and-news", "investor", "investors", "borsmelding"}
     if family == "jobs":
         landing = {"careers", "career", "jobs", "job", "jobb", "karriere", "stillinger", "ledige-stillinger", "vacancies", "ledige-jobber",
                    "current-vacancies", "join-us", "work-with-us", "job-search", "open-positions", "opportunities"}
@@ -310,14 +325,13 @@ def article_page(page: Page) -> bool:
     heading = fold(" ".join(heads[0].text_content().split())) if heads else fold(page.title)
     if parts & utility or heading in {p.replace("-", " ") for p in utility} | {"ledige jobber", "vacancies", "our vacancies"}:
         return False
-    roots = page.doc.xpath("//article|//main")
-    body = " ".join(" ".join(r.xpath('.//p//text()[not(ancestor::nav or ancestor::footer or ancestor::aside)]')) for r in roots)
+    prose = page.doc.xpath("//p[ancestor::article or ancestor::main]//text()[not(ancestor::nav or ancestor::footer or ancestor::aside)]")
     nodes = [n for n in page.jsonld if schema_types(n) & {"Article", "NewsArticle", "BlogPosting"}]
-    body += " " + " ".join(n.get("articleBody", "") for n in nodes if isinstance(n.get("articleBody"), str))
+    bodies = [" ".join(prose)] + [n["articleBody"] for n in nodes if isinstance(n.get("articleBody"), str)]
     # Require real prose. Headings, dates, navigation and a generic Article node
     # by themselves are not a substantive post.
-    context = bool(nodes or page.doc.xpath("//article") or parts & {"news", "nyheter", "aktuelt", "blog", "blogg", "presse"})
-    return context and len(body.strip()) >= 80
+    context = bool(nodes or page.doc.xpath("//article") or parts & {"news", "nyheter", "aktuelt", "blog", "blogg", "presse", "borsmelding", "press-releases"})
+    return context and any(len(" ".join(body.split())) >= 80 for body in bodies)
 
 
 def page_attributed(page: Page, org: str, legal_name: str) -> bool:
@@ -342,6 +356,8 @@ def in_verified_scope(page: Page, visit: "SiteVisit", org: str, legal_name: str)
     a, b = urllib.parse.urlsplit(home.url), urllib.parse.urlsplit(page.url)
     if a.hostname != b.hostname or find_orgnrs(page.text) - {org}:
         return False
+    if visit.address_entity is not None:
+        return bool(address_owner(page, org, legal_name, visit.address_entity))
     if page_attributed(page, org, legal_name):
         return True
     # Inheritance requires ownership on the homepage itself, not a subsidiary
@@ -350,26 +366,25 @@ def in_verified_scope(page: Page, visit: "SiteVisit", org: str, legal_name: str)
     return page_attributed(home, org, legal_name) and (path == "/" or b.path == path or b.path.startswith(path + "/"))
 
 
-def _phone_present(phone: str | None, text: str) -> bool:
-    digits = re.sub(r"\D", "", phone or "")
-    if digits.startswith("47") and len(digits) == 10:
+def contact_proof(entity: dict, text: str) -> tuple[str, list[str]]:
+    digits = re.sub(r"\D", "", entity.get("telefon") or "")
+    if len(digits) == 10 and digits.startswith("47"):
         digits = digits[2:]
-    if len(digits) != 8:
-        return False
-    flat = re.sub(r"[\s \-.()]", "", text)
-    return digits in flat
-
-
-def _address_present(entity: dict, text: str) -> bool:
+    if len(digits) == 8:
+        pattern = r"[\s.()\-]*".join(digits)
+        match = re.search(r"(?<!\d)(?:\+?47[\s.()\-]*)?" + pattern + r"(?!\d)", text)
+        if match:
+            return "registry_phone", [match.group()]
     addr = entity.get("forretningsadresse") or entity.get("postadresse") or {}
     lines = addr.get("adresse") or []
-    street = fold(lines[0]) if lines else ""
     postcode = addr.get("postnummer") or ""
-    if not street or not postcode or len(street) < 5:
-        return False
-    ftext = fold(text)
-    street_norm = re.sub(r"\s+", " ", street).strip()
-    return street_norm in re.sub(r"\s+", " ", ftext) and re.search(rf"(?<!\d){postcode}(?!\d)", text) is not None
+    if lines and len(lines[0].strip()) >= 5 and postcode:
+        street = re.search(r"\s+".join(map(re.escape, lines[0].split())) + r"(?!\w)", text, re.I)
+        postal = re.search(rf"(?<!\d){re.escape(postcode)}(?!\d)", text)
+        if street and postal:
+            field = "business_address" if entity.get("forretningsadresse") else "postal_address"
+            return field, [street.group(), postal.group()]
+    return "", []
 
 
 def is_parked(page: Page) -> bool:
@@ -377,6 +392,77 @@ def is_parked(page: Page) -> bool:
     if len(page.text) < 120 and not page.jsonld and not find_orgnrs(page.text):
         return True
     return any(marker in sample for marker in (fold(m) for m in PARKED_MARKERS))
+
+
+def address_owner(page, org, legal_name, entity):
+    """Require a single named operator and registry contact in its footer address block."""
+    if page.doc is None or find_orgnrs(page.text) - {org}:
+        return None
+    brand = re.sub(r"\s+(?:as|asa)$", "", fold(legal_name))
+    owners = [page.meta.get("og:site_name")] + [
+        n.get("legalName") or n.get("name") for n in page.identity_nodes
+        if schema_types(n) & {"WebSite", "Organization", "Corporation", "LocalBusiness"}]
+    if not brand or fold(owners[0]) not in {brand, fold(legal_name)} or any(
+            fold(v) not in {brand, fold(legal_name)} for v in owners if isinstance(v, str)):
+        return None
+    footers = page.doc.xpath("//footer")
+    if len(footers) != 1:
+        return None
+    footer = footers[0]
+    if re.search(r"forretningsforer|forvaltet av|managed by|on behalf of|pa vegne av", fold(footer.text_content())):
+        return None
+    if any(re.search(r"\b(?:as|asa|borettslag|boligbyggelag)$", fold(t.strip()))
+           and fold(t.strip()) != fold(legal_name) for t in footer.itertext()):
+        return None
+    blocks = [h.getnext() for h in footer.xpath(".//h2|.//h3|.//h4|.//h5|.//h6|.//dt")
+              if fold(h.text_content()).strip(" :\n\t") in {"postadresse", "postal address", "mailing address"}]
+    if not blocks and urllib.parse.urlsplit(page.url).path in {"", "/"}:
+        # A small business may put its brand in the site metadata and its full
+        # legal name in the first title segment. Corroborate both on this page.
+        if fold(page.title.split("|", 1)[0].strip()) != fold(legal_name):
+            return None
+        local = [n for n in page.identity_nodes if "LocalBusiness" in schema_types(n)]
+        if (len(local) != 1 or not isinstance(local[0].get("name"), str)
+                or fold(local[0]["name"]) not in {brand, fold(legal_name)}
+                or item_url(local[0].get("url"), page.url) != item_url(page.url, page.url)):
+            return None
+        address = local[0].get("address")
+        registered = entity.get("forretningsadresse") or {}
+        postcode = registered.get("postnummer")
+        if (not postcode or not isinstance(address, dict) or address.get("addressCountry") != "NO"
+                or address.get("postalCode") != postcode or not registered.get("poststed")
+                or fold(address.get("addressLocality") if isinstance(address.get("addressLocality"), str) else "")
+                != fold(registered["poststed"])):
+            return None
+        for block in [footer, *footer.xpath(".//address|.//p|.//div")]:
+            text = " ".join(" ".join(block.itertext()).split())
+            if len(text) > 140:
+                continue
+            field, spans = contact_proof({"forretningsadresse": registered}, text)
+            if spans and re.fullmatch(re.escape(spans[0]) + r"\s*,?\s*(?:NO-)?"
+                                      + re.escape(postcode) + r"\s+" + re.escape(registered["poststed"]), text, re.I):
+                proof = {k: local[0][k] for k in ("@type", "name", "url") if k in local[0]}
+                proof["address"] = {k: address[k] for k in ("addressCountry", "postalCode", "addressLocality")}
+                fragment = json.dumps(proof, ensure_ascii=False)
+                if len(fragment) <= 600:
+                    return page.title, field, [*spans, fragment]
+        return None
+    if len(blocks) != 1 or blocks[0] is None:
+        return None
+    lines = [t.strip() for t in blocks[0].itertext() if t.strip()]
+    if not lines or fold(lines[0]) != fold(legal_name):
+        return None
+    text = " ".join(lines)
+    field, spans = contact_proof({"telefon": entity.get("telefon"), "postadresse": entity.get("postadresse")}, text)
+    if not spans:
+        addr = entity.get("postadresse") or {}
+        box = re.fullmatch(r"postboks\s+(\d+)", fold((addr.get("adresse") or [""])[0]))
+        postcode = addr.get("postnummer")
+        if box and postcode:
+            match = re.search(r"\bP\.?\s*O\.?\s*Box\s+" + box[1] + r"\b", text, re.I)
+            if match and re.search(r"\b" + re.escape(postcode) + r"\b", text):
+                field, spans = "postal_address", [match[0], postcode]
+    return (lines[0], field, spans) if spans else None
 
 
 class SiteVisit:
@@ -388,6 +474,9 @@ class SiteVisit:
         self.reason = ""
         self.proof_page: Page | None = None
         self.proof_span = ""
+        self.contact_field = ""
+        self.contact_spans: list[str] = []
+        self.address_entity = None
         self.foreign_orgs: set[str] = set()
         self.budget_incomplete = False
 
@@ -503,7 +592,15 @@ def visit_site(fetcher: Fetcher, candidate: str, source: str, org: str, entity: 
         visit.foreign_orgs |= others
         return False
 
-    if not scan(home):
+    proved_home = scan(home)
+    if (not proved_home and source == "registry_declared" and not redirected and not multi_entity
+            and not visit.foreign_orgs and not (set(name_tokens(legal_name)) & HOLDING_WORDS)
+            and (owner := address_owner(home, org, legal_name, entity))):
+        visit.proof_page, visit.address_entity = home, entity
+        visit.proof_span, visit.contact_field, visit.contact_spans = owner
+        visit.decision, visit.reason = "accepted", "exact legal name with matching registry contact and company operator evidence"
+        return visit
+    if not proved_home:
         # follow likely legal/contact pages on the same site
         seen = {home.url.rstrip("/")}
         targets = []
@@ -576,6 +673,32 @@ def visit_site(fetcher: Fetcher, candidate: str, source: str, org: str, entity: 
     match = [e for e in emails if registrable_domain(e.split("@", 1)[1]) == registrable_domain(home.url)]
     email = match[0] if match else ""
     email_domain_match = bool(match) and email.split("@", 1)[1] not in FREE_MAIL
+    if source == "registry_email_domain" and email_domain_match and home.doc is not None:
+        # The footer must identify its own homepage, in the operator's registered
+        # contact context. A customer link elsewhere on the site cannot qualify.
+        footers = home.doc.xpath("//div[contains(concat(' ',normalize-space(@class),' '),' footer-info ')]") or home.doc.xpath("//footer")
+        owner_name = (home.meta.get("og:site_name") or "").split("|", 1)[0].strip()
+        if len(footers) == 1 and fold(owner_name) == fold(legal_name):
+            footer = footers[0]
+            self_links = [a for a in footer.xpath(".//a[@href]") if
+                          item_url(a.get("href"), home.url) == item_url(home.url, home.url)
+                          and fold(a.text_content().strip()) == fold(legal_name)]
+            field, spans = contact_proof({"forretningsadresse": entity.get("forretningsadresse")},
+                                         " ".join(footer.itertext()))
+            operators = [n.get("legalName") or n.get("name") for n in home.identity_nodes
+                         if schema_types(n) & {"Organization", "Corporation", "LocalBusiness", "WebSite"}]
+            allowed = {fold(legal_name), fold(home.meta["og:site_name"])}
+            conflicts = any(isinstance(v, str) and fold(v) not in allowed for v in operators)
+            if self_links and spans and not conflicts and not re.search(
+                    r"managed by|forretningsforer|pa vegne av|on behalf of|website by|laget av",
+                    fold(footer.text_content())):
+                contact_spans = [*spans, home.meta["og:site_name"],
+                    etree.tostring(self_links[0], method="html", encoding="unicode", with_tail=False)]
+                if all(len(span) <= 600 for span in contact_spans):
+                    visit.proof_page, visit.proof_span = home, self_links[0].text_content().strip()
+                    visit.contact_field, visit.contact_spans = field, contact_spans
+                    visit.decision, visit.reason = "accepted", "registered email domain, exact operator self-link and registry business address"
+                    return visit
     if name_in_identity and email_domain_match:
         visit.decision = "accepted"
         visit.proof_page = visit.pages[0]
@@ -587,17 +710,19 @@ def visit_site(fetcher: Fetcher, candidate: str, source: str, org: str, entity: 
         linked = {item_url(url, home.url) for url, _ in home.links}
         contact_pages.extend(p for p in visit.pages[1:] if item_url(p.url, home.url) in linked
                              and urllib.parse.urlsplit(p.url).netloc == urllib.parse.urlsplit(home.url).netloc)
-    contact_page = next((p for p in contact_pages if p.identity_quote(legal_name)
-                         and (_phone_present(entity.get("telefon"), p.text)
-                              or _phone_present(entity.get("mobil"), p.text)
-                              or _address_present(entity, p.text))), None)
-    if contact_page and registrable_domain(home.url).endswith(".no"):
+    for contact_page in contact_pages:
+        if not registrable_domain(home.url).endswith(".no") or not contact_page.identity_quote(legal_name):
+            continue
+        field, spans = contact_proof(entity, contact_page.text)
+        if not spans:
+            continue
         visit.decision = "accepted"
+        visit.contact_field, visit.contact_spans = field, spans
         visit.proof_page = contact_page
         visit.proof_span = contact_page.identity_quote(legal_name)
         visit.reason += "legal name in the site's identity fields and registry phone/address on the site"
         return visit
-    if source in DECLARED_BY and home.identity_quote(legal_name):
+    if source in DECLARED_BY and home.identity_quote(legal_name, allow_title=False):
         visit.decision = "accepted"
         visit.proof_page = home
         visit.proof_span = home.identity_quote(legal_name)
@@ -696,13 +821,20 @@ def extract_company_owned(pb: ProfileBuilder, fetcher: Fetcher, visit: SiteVisit
     }
     ev_site = pb.add_evidence(Evidence(proof.url, "company_owned", proof.snap.retrieved_at, proof.snap.sha256, visit.proof_span or home.title,
                                        f"identity_gate:{visit.source}", identity_reason=visit.reason))
-    pb.add(Claim("website", "official_website", owned.url, [ev_site], label="Official website" if owned is home else "Verified company page",
+    support = [ev_site]
+    for span in visit.contact_spans:
+        support.append(pb.add_evidence(Evidence(proof.url, "company_owned", proof.snap.retrieved_at,
+                                               proof.snap.sha256, span, f"identity_contact:{visit.contact_field}")))
+    for c in pb.claims.values():
+        if c.field == visit.contact_field:
+            support.extend(c.evidence_ids)
+    pb.add(Claim("website", "official_website", owned.url, support, label="Official website" if owned is home else "Verified company page",
                  confidence=1.0 if "organisation number" in visit.reason else 0.9, note=f"discovered via {visit.source}"))
     pb.set_state("website", "available", visit.reason, visit.candidate)
 
     # public brand (site name differs from legal name)
     brand = home.meta.get("og:site_name") or next((n.get("name") for n in home.identity_nodes if isinstance(n.get("name"), str) and "Organization" in str(n.get("@type", ""))), None)
-    if brand and 2 < len(brand) < 60 and fold(brand) not in fold(legal_name) and fold(legal_name).split(" ")[0] not in fold(brand).split(" ")[:1]:
+    if owned is home and brand and 2 < len(brand) < 60 and fold(brand) not in fold(legal_name) and fold(legal_name).split(" ")[0] not in fold(brand).split(" ")[:1]:
         ev = pb.add_evidence(Evidence(home.url, "company_owned", home.snap.retrieved_at, home.snap.sha256, brand, "html_meta:og:site_name"))
         pb.add(Claim("identity", "public_brand", brand, [ev, ev_site], label="Public brand (from verified site)", confidence=0.9))
 
@@ -771,27 +903,40 @@ def enrich_company_owned(pb: ProfileBuilder, fetcher: Fetcher, visit: SiteVisit,
     domain = registrable_domain(home.url)
     origin = visit.origin
     # Discover individual ads from the company careers page within a small, bounded crawl.
-    job_links = [u for u, txt in home.links if registrable_domain(u) == domain and
-                 re.search(r"career|karriere|ledig|vacanc|jobb|/jobs", fold(u + " " + txt))]
-    job_links = [u for page in visit.pages for node in page.jsonld if "JobPosting" in schema_types(node)
-                 for u in [item_url(node.get("url"), page.url)] if u and registrable_domain(u) == domain] + job_links
+    eligible = [p for p in visit.pages if in_verified_scope(p, visit, pb.org, pb.extra.get("legal_name", ""))]
+    job_hint = re.compile(r"\b(?:careers?|karriere\w*|ledig\w*|vacanc\w*|jobb\w*|jobs?|stillingen|stillinger|stilling|available-positions)\b")
+    def careers_links(page):
+        return [(url, page.url) for raw, txt in page.links if (url := item_url(raw, page.url))
+                and urllib.parse.urlsplit(url).hostname == urllib.parse.urlsplit(home.url).hostname
+                and job_hint.search(fold(urllib.parse.urlsplit(url).path + " " + txt))]
+    job_links = [link for p in eligible for link in careers_links(p)]
+    job_links = [(u, p.url) for p in eligible for node in p.jsonld if "JobPosting" in schema_types(node)
+                 for u in [item_url(node.get("url"), p.url)] if u and registrable_domain(u) == domain] + job_links
+    if not job_links:
+        pb.trace_discovery("careers", home.url, home.url, "no_careers_link")
     fetched_jobs = set()
     try:
         while job_links and len(fetched_jobs) < 2:
-            url = job_links.pop(0)
+            url, linked_from = job_links.pop(0)
             if url in fetched_jobs or url in {p.url for p in visit.pages}:
                 continue
             fetched_jobs.add(url)
             job_snap = fetcher.get(url, phase="web_news")
+            pb.trace_discovery("careers", linked_from, url, "fetched" if job_snap.ok else "fetch_failed")
             if job_snap.ok and registrable_domain(job_snap.final_url) == domain:
                 job_page = Page(job_snap)
+                if not in_verified_scope(job_page, visit, pb.org, pb.extra.get("legal_name", "")):
+                    pb.trace_discovery("careers", linked_from, job_page.url, "identity_unproven")
+                    continue
                 visit.pages.append(job_page)
-                job_links.extend(u for u, _ in job_page.links if registrable_domain(u) == domain and
-                                 re.search(r"career|karriere|stilling|vacanc|jobb|/jobs", fold(u)) and single_item_url(u, "jobs"))
-                job_links.extend(u for node in job_page.jsonld if "JobPosting" in schema_types(node)
-                                 for u in [item_url(node.get("url"), job_page.url)] if u and registrable_domain(u) == domain)
+                details = [link for link in careers_links(job_page) if single_item_url(link[0], "jobs")]
+                structured = [(u, job_page.url) for node in job_page.jsonld if "JobPosting" in schema_types(node)
+                              for u in [item_url(node.get("url"), job_page.url)] if u and registrable_domain(u) == domain]
+                job_links[:0] = structured + details
+                if not any("JobPosting" in schema_types(n) for n in job_page.jsonld):
+                    html_vacancy(pb, visit, job_page, linked_from)
     except BudgetExhausted:
-        pass
+        pb.trace_discovery("careers", linked_from, url, "budget_exhausted")
     _site_jobs(pb, visit)
     from .ats import greenhouse_jobs
     greenhouse_jobs(pb, fetcher, visit.pages, pb.extra.get("legal_name", ""))
@@ -852,6 +997,129 @@ def _organization_excerpt(node: dict) -> dict:
     return excerpt
 
 
+def vacancy_day(text):
+    value = fold(text).strip()
+    months = "januar februar mars april mai juni juli august september oktober november desember".split()
+    match = re.fullmatch(r"(\d{1,2})\.?\s+(\w+)\s+(\d{4})", value)
+    if match and match[2] in months:
+        value = f"{match[3]}-{months.index(match[2]) + 1:02}-{int(match[1]):02}"
+    elif re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", value):
+        value = "-".join(reversed(value.split(".")))
+    return parse_job_date(value)
+
+
+def html_vacancy(pb, visit, page, origin):
+    """Read a single first-party ad reached through the careers traversal."""
+    def outcome(reason):
+        pb.trace_discovery("site_job", origin, page.url, reason)
+
+    name = pb.extra.get("legal_name", "")
+    if page.doc is None or not in_verified_scope(page, visit, pb.org, name):
+        return outcome("identity_unproven")
+    roots = page.doc.xpath("//main//article|//article[not(ancestor::main)]")
+    if not roots:
+        roots = page.doc.xpath("//main")
+    if len(roots) != 1:
+        return outcome("single_ad_unproven")
+    root = roots[0]
+    heads = root.xpath(".//h1")
+    if len(heads) != 1:
+        return outcome("single_ad_unproven")
+    title = " ".join(heads[0].text_content().split())
+    if fold(title) in {"ledig stilling", "ledige stillinger", "careers", "vacancies", "jobs"}:
+        roles = heads[0].xpath("following::*[self::h2 or self::h3 or self::h4 or self::h5][1]")
+        title = " ".join(roles[0].text_content().split()) if roles and root in roles[0].iterancestors() else ""
+    elements = root.xpath(".//*[self::p or self::li or self::dt or self::dd or self::div or self::span or self::strong or self::h4 or self::a or self::time][not(ancestor::nav or ancestor::aside or ancestor::footer)]")
+    lines = []
+    for el in elements:
+        if el.tag == "div" and len(el):
+            continue
+        value = " ".join(el.text_content().split())
+        if value and len(value) <= 600:
+            lines.append(value)
+    brand = re.sub(r"\s+(?:as|asa)$", "", fold(name))
+    names = {fold(name)}
+    if visit.address_entity and address_owner(page, pb.org, name, visit.address_entity):
+        names.add(brand)
+    labels = [fold(s).split(":", 1)[1].strip() for s in lines if re.match(r"^(arbeidsgiver|employer)\s*:", fold(s))]
+    employer = next((s for s in lines for n in names if re.fullmatch(
+        r"(?:arbeidsgiver|employer)\s*:\s*" + re.escape(n), fold(s)) or re.search(
+        r"(?:^" + re.escape(n) + r" soker\b|\bstillinger i " + re.escape(n) + r"[.!]?\s*$)", fold(s))), None)
+    employer_verified = employer and all(label in names for label in labels) and not any(
+        re.search(r"\b(?:pa vegne av|on behalf of|for var kunde|for our client)\b", fold(s)) for s in lines)
+    closure = next((line for line in lines if re.fullmatch(
+        r"(?:applications (?:are )?closed|this vacancy is no longer available|stillingen er (?:besatt|utlopt)|soknadsfristen er utlopt)[.!]?",
+        fold(line))), None)
+    if closure and title and single_item_url(page.url, "jobs"):
+        if not employer_verified:
+            return outcome("employer_unproven")
+        ids = [pb.add_evidence(Evidence(page.url, "company_owned", page.snap.retrieved_at,
+                                       page.snap.sha256, span, "html:vacancy_closure"))
+               for span in (title, employer, closure)]
+        pb.extra.setdefault("closed_jobs", {})[f"sitejob:{page.url}"] = {"title": title, "evidence_ids": ids}
+        return outcome("closed")
+    dates = {}
+    for el in elements:
+        line = " ".join(el.text_content().split())
+        if len(line) > 600:
+            continue
+        match = re.fullmatch(r"(søknadsfrist|application deadline|publisert|published|date posted)\s*:?\s*(.*)", line, re.I)
+        if match:
+            sibling = el.getnext()
+            raw = match[2] or (el.tail or "").strip() or (
+                sibling.text_content().strip() if sibling is not None and hasattr(sibling, "text_content") else "")
+            leading = re.match(r"(\d{2}\.\d{2}\.\d{4}|\d{4}-\d{2}-\d{2}|\d{1,2}\.?\s+[A-Za-zæøåÆØÅ]+\s+\d{4})(?=$|[.\s])", raw)
+            if not leading:
+                continue
+            raw = leading[1]
+            key = "deadline" if fold(match[1]) in {"soknadsfrist", "application deadline"} else "posted"
+            dates.setdefault(key, {}).setdefault(vacancy_day(raw), (line, raw))
+    now = datetime.now(timezone.utc)
+    deadlines = dates.get("deadline", {})
+    if len(deadlines) != 1 or not (deadline := next(iter(deadlines))):
+        return outcome("open_status_unproven")
+    if job_expired(deadline, now):
+        return outcome("expired")
+    if not title or not single_item_url(page.url, "jobs") or any(re.search(
+            r"applications? (?:are )?closed|no longer accepting|stillingen er (besatt|utlopt)|soknadsfristen er utlopt", fold(s)) for s in lines):
+        return outcome("single_open_ad_unproven")
+    applications = [el for el in elements if el.tag == "a" and fold(el.text_content().strip()) in
+                    {"sok her", "sok na", "sok pa stillingen", "apply", "apply now", "apply for this job"}
+                    and (item_url(el.get("href"), page.url) or (el.get("href") or "").startswith("mailto:"))]
+    destinations = {item_url(a.get("href"), page.url) or a.get("href") for a in applications}
+    if len(destinations) != 1 or any((a.get("href") or "").strip().startswith("#") for a in applications):
+        return outcome("application_route_unproven")
+    if not employer_verified:
+        return outcome("employer_unproven")
+    proofs = [title, employer, etree.tostring(applications[0], method="html", encoding="unicode", with_tail=False)]
+    proofs.extend(deadlines[deadline])
+    posted_rows = dates.get("posted", {})
+    if len(posted_rows) == 1:
+        posted = next(iter(posted_rows))
+        proofs.extend(posted_rows[posted])
+    elif not posted_rows:
+        nodes = [n for n in page.identity_nodes if "WebPage" in schema_types(n)
+                 and item_url(n.get("url") or n.get("@id"), page.url) == item_url(page.url, page.url)
+                 and isinstance(n.get("name"), str) and fold(n["name"]).split(" - ")[0] == fold(title)]
+        posted = parse_job_date(nodes[0].get("datePublished")) if len(nodes) == 1 else None
+        if posted:
+            proofs.append(json.dumps({"datePublished": nodes[0]["datePublished"]}, ensure_ascii=False))
+    else:
+        posted = None
+    if not posted or job_not_yet_published(posted, now) or any(len(s) > 600 for s in proofs):
+        return outcome("publication_unproven")
+    ids = [pb.add_evidence(Evidence(page.url, "company_owned", page.snap.retrieved_at, page.snap.sha256,
+                           s, "html:individual_vacancy", identity_reason="employer in verified vacancy"))
+           for s in dict.fromkeys(proofs)]
+    ids.extend(eid for c in pb.family_claims("website") for eid in c.evidence_ids)
+    value = dict(title=title, employer=name, url=page.url, published=posted.isoformat(),
+                 expires=deadline.isoformat(), source="company website")
+    pb.add(Claim("jobs", "job_posting", value, ids, label="Job posting (company website)",
+                 key=f"sitejob:{page.url}", effective_date=posted.isoformat()))
+    pb.set_state("jobs", "available", "open individual ad on verified company site", page.url)
+    outcome("published")
+
+
 def _site_jobs(pb: ProfileBuilder, visit: SiteVisit) -> None:
     """Publish distinct, dated ads with exact hiring-organization evidence."""
     now = datetime.now(timezone.utc)
@@ -882,20 +1150,34 @@ def _site_jobs(pb: ProfileBuilder, visit: SiteVisit) -> None:
             url = item_url(node.get("url") or page.url, page.url)
             if (closed and url and single_item_url(url, "jobs") and url == item_url(page.url, page.url)
                     and _employer_matches(node.get("hiringOrganization"), pb.org, legal_name)):
-                proof = json.dumps({"hiringOrganization": _organization_excerpt(node["hiringOrganization"])}, ensure_ascii=False)
+                if not isinstance(title, str) or not title.strip():
+                    continue
+                title_field = "title" if node.get("title") else "name"
+                proof = json.dumps({title_field: title, "hiringOrganization": _organization_excerpt(node["hiringOrganization"])}, ensure_ascii=False)
                 if len(proof) <= 600 and len(closure_text.strip()) <= 600:
                     ids = [pb.add_evidence(Evidence(page.url, "company_owned", page.snap.retrieved_at,
                            page.snap.sha256, span, method)) for span, method in
                            ((proof, "jsonld:JobPosting"), (closure_text.strip(), "job:explicit_closure"))]
-                    pb.extra.setdefault("closed_jobs", {})[f"sitejob:{url}"] = {"evidence_ids": ids}
+                    pb.extra.setdefault("closed_jobs", {})[f"sitejob:{url}"] = {
+                        "title": title.strip()[:160], "evidence_ids": ids}
                 continue
-            if (closed or not isinstance(title, str) or not title.strip() or not posted or job_not_yet_published(posted, now)
-                    or (node.get("validThrough") not in (None, "") and not valid) or (valid and job_expired(valid, now))
-                    or not url or not single_item_url(url, "jobs")
-                    or url != item_url(page.url, page.url)
-                    or not _employer_matches(node.get("hiringOrganization"), pb.org, legal_name)):
-                continue
-            if not valid and (node.get("directApply") is not True or job_expired(posted, now - timedelta(days=90))):
+            reason = None
+            if closed:
+                reason = "closed"
+            elif not isinstance(title, str) or not title.strip():
+                reason = "missing_title"
+            elif not posted or job_not_yet_published(posted, now):
+                reason = "invalid_publication_date"
+            elif (node.get("validThrough") not in (None, "") and not valid) or (valid and job_expired(valid, now)):
+                reason = "expired_or_invalid_deadline"
+            elif not url or not single_item_url(url, "jobs") or url != item_url(page.url, page.url):
+                reason = "not_detail"
+            elif not _employer_matches(node.get("hiringOrganization"), pb.org, legal_name):
+                reason = "wrong_employer"
+            elif not valid and (node.get("directApply") is not True or job_expired(posted, now - timedelta(days=90))):
+                reason = "open_status_unproven"
+            if reason:
+                pb.trace_discovery("site_job", page.url, url or page.url, reason)
                 continue
             title_field = "title" if node.get("title") else "name"
             proof = {key: node[key] for key in (title_field, "datePosted", "validThrough", "directApply") if key in node}
@@ -916,6 +1198,7 @@ def _site_jobs(pb: ProfileBuilder, visit: SiteVisit) -> None:
             pb.add(Claim("jobs", "job_posting", value, [ev], label="Job posting (company website)",
                          key=f"sitejob:{url}", effective_date=published))
             pb.set_state("jobs", "available", "dated job posting with exact hiring organization", page.url)
+            pb.trace_discovery("site_job", page.url, url, "published")
     # A bounded site crawl cannot establish that a missing old ad has closed.
     pb.extra.setdefault("incomplete_families", {})["jobs"] = "bounded website/NAV discovery is not an exhaustive vacancy inventory"
 
@@ -983,6 +1266,7 @@ def _news(pb: ProfileBuilder, fetcher: Fetcher, visit: SiteVisit, origin: str, m
         article_nodes = [n for n in page.jsonld if schema_types(n) & {"NewsArticle", "BlogPosting", "Article"}]
         relevant = [n for n in article_nodes if item_url(n.get("url") or page.url, page.url) == item_url(page.url, page.url)]
         if any(n.get("publisher") and not _employer_matches(_resolved_publisher(page, n["publisher"]), pb.org, legal_name) for n in relevant):
+            pb.trace_discovery("news", page.url, page.url, "publisher_conflict")
             pb.error("activity", "article publisher conflicts with the exact company", page.url)
             return
         for node in relevant:
@@ -1021,6 +1305,31 @@ def _news(pb: ProfileBuilder, fetcher: Fetcher, visit: SiteVisit, origin: str, m
                 node.get("url") or page.url, page, json.dumps(proof, ensure_ascii=False))
         if page.doc is None:
             return
+        headings = page.doc.xpath("//main//h1|//article//h1")
+        if len(headings) == 1:
+            # Some releases keep the displayed date in a sibling of the label.
+            heading = " ".join(headings[0].text_content().split())
+            for label in headings[0].getparent().xpath("./aside/*[not(*)]"):
+                day = label.getnext()
+                if (fold(label.text_content()).strip() not in {"published:", "publisert:"}
+                        or day is None or day.tag not in {"div", "span", "time", "p"} or len(day)):
+                    continue
+                parsed = vacancy_day(day.text_content())
+                if parsed:
+                    excerpt = etree.tostring(label, encoding="unicode", method="html") + etree.tostring(
+                        day, encoding="unicode", method="html", with_tail=False)
+                    add(publication_date(parsed.isoformat()), heading, page.url, page, excerpt)
+            # CMS pages sometimes expose the publication date as a labelled line.
+            # Bind a visible date to the headline block. Related cards on an undated
+            # article can carry their own genuine publication dates.
+            for el in headings[0].getparent().xpath("./*[not(*) and not(self::a)]"):
+                line = " ".join((el.text or "").split())
+                match = re.fullmatch(r"(?:published|publisert)\s*:\s*(\d{2}\.\d{2}\.\d{4}|\d{4}-\d{2}-\d{2})", line, re.I)
+                if match:
+                    raw = match[1]
+                    iso = "-".join(reversed(raw.split("."))) if "." in raw else raw
+                    add(publication_date(iso), headings[0].text_content().strip(), page.url, page,
+                        etree.tostring(el, encoding="unicode", method="html", with_tail=False))
         # Only an explicit publication date, never an unlabelled time or dateModified.
         date = publication_date(page.meta.get("article:published_time"))
         if date:
@@ -1053,6 +1362,7 @@ def _news(pb: ProfileBuilder, fetcher: Fetcher, visit: SiteVisit, origin: str, m
         from_page(page)
     home = visit.pages[0]
     # News feeds are discovery hints. Verify each target as an actual article; product feeds do not qualify.
+    sources = {}
     try:
         feeds = [f for f in home.feeds if same_site(f) and "comments" not in f]
         if feeds:
@@ -1074,8 +1384,17 @@ def _news(pb: ProfileBuilder, fetcher: Fetcher, visit: SiteVisit, origin: str, m
                             url = item_url(links[0].get("href") or links[0].text, snap.final_url)
                             if url and same_site(url):
                                 targets.append(url)
-        targets.extend(u for u, txt in home.links if item_url(u, home.url) and same_site(u)
-                       and (NEWS_HINTS.search(urllib.parse.urlsplit(u).path) or NEWS_HINTS.search(fold(txt))))
+                                sources.setdefault(url, snap.final_url)
+        for p in visit.pages:
+            if not in_verified_scope(p, visit, pb.org, legal_name):
+                continue
+            for u, txt in p.links:
+                if item_url(u, p.url) and same_site(u) and NEWS_HINTS.search(fold(urllib.parse.urlsplit(u).path + " " + txt)):
+                    targets.append(u)
+                    sources.setdefault(u, p.url)
+        # Prioritize individual releases ahead of generic investor navigation.
+        targets.sort(key=lambda u: not (single_item_url(u, "news") and re.search(
+            r"/(?:borsmelding|press-releases?|news|nyheter)/[^/]+", fold(urllib.parse.urlsplit(u).path))))
         def discover_maps():
             host = urllib.parse.urlsplit(home.url).hostname
             maps = [item_url(u, home.url) for u, _ in home.links
@@ -1106,6 +1425,7 @@ def _news(pb: ProfileBuilder, fetcher: Fetcher, visit: SiteVisit, origin: str, m
                         if (link and urllib.parse.urlsplit(link).hostname == host and single_item_url(link, "news")
                                 and NEWS_HINTS.search(urllib.parse.urlsplit(link).path) and link not in targets):
                             targets.append(link)
+                            sources.setdefault(link, snap.final_url)
                         if len(targets) >= 3:
                             break
         seen_pages = {p.url for p in visit.pages}
@@ -1125,19 +1445,24 @@ def _news(pb: ProfileBuilder, fetcher: Fetcher, visit: SiteVisit, origin: str, m
             seen_pages.add(url)
             snap = fetcher.get(url, phase="web_news")
             fetched += 1
+            pb.trace_discovery("news", sources.get(url, home.url), url, "fetched" if snap.ok else "fetch_failed")
             if not snap.ok or not same_site(snap.final_url):
                 continue
             page = Page(snap)
             from_page(page)
-            if not single_item_url(page.url, "news"):
-                targets.extend(u for u, _ in page.links if item_url(u, page.url) and same_site(u)
-                               and NEWS_HINTS.search(urllib.parse.urlsplit(u).path) and single_item_url(u, "news"))
+            if not single_item_url(page.url, "news") and in_verified_scope(page, visit, pb.org, legal_name):
+                children = [u for u, _ in page.links if item_url(u, page.url) and same_site(u)
+                            and NEWS_HINTS.search(urllib.parse.urlsplit(u).path) and single_item_url(u, "news")]
                 # Article-card links need not contain /news/ in their slug.
                 if page.doc is not None:
-                    targets.extend(item_url(a.get("href"), page.url) for a in page.doc.xpath(
+                    cards = [item_url(a.get("href"), page.url) for a in page.doc.xpath(
                         "//article//h2/a[@href]|//article//h3/a[@href]|//main//h2/a[@href]|//main//h3/a[@href]")
                         if item_url(a.get("href"), page.url) and same_site(item_url(a.get("href"), page.url))
-                        and single_item_url(item_url(a.get("href"), page.url), "news"))
+                        and single_item_url(item_url(a.get("href"), page.url), "news")]
+                    children = cards + children
+                for child in children:
+                    sources[child] = page.url
+                targets[:0] = list(dict.fromkeys(children))
     except BudgetExhausted:
         pb.extra.setdefault("incomplete_families", {})["activity"] = "news request budget exhausted"
     seen: set[str] = set()
@@ -1145,6 +1470,7 @@ def _news(pb: ProfileBuilder, fetcher: Fetcher, visit: SiteVisit, origin: str, m
         if url in seen:
             continue
         seen.add(url)
+        pb.trace_discovery("news", sources.get(url, home.url), url, "published")
         ev = pb.add_evidence(Evidence(page.url, "company_owned", page.snap.retrieved_at, page.snap.sha256, excerpt,
                                       "article:explicit_publication_date", identity_reason="dated article on the verified company website",
                                       reporting_period={"from": date, "to": date}))

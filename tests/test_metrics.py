@@ -110,6 +110,20 @@ def test_comparison_refuses_different_batches(tmp_path):
         metrics.compare(tmp_path / "a", tmp_path / "b")
 
 
+def test_registry_only_opportunities_do_not_unlock_external_recall(tmp_path):
+    rows = {str(i): [] for i in range(5)}
+    run_files(tmp_path / "run", rows)
+    labels = [{"organisation_number": org, "family": family, "field": field, "value": "x"}
+              for org in rows for family, field in (("activity", "registry_event"), ("industry", "industry_code"),
+                                                     ("identity", "legal_name"))]
+    pool = tmp_path / "pool.jsonl"
+    pool.write_text("\n".join(json.dumps(c) for c in labels))
+    result = metrics.measure(tmp_path / "run", pool)["local_pool"]
+    assert result["company_field_opportunities"] == 0
+    assert result["sparse_not_measured"]
+    assert all(f["weighted_recall"] is None for f in result["families"].values())
+
+
 def test_stale_claims_are_not_current_coverage(tmp_path):
     run_files(tmp_path / "run", {"one": [{"family": "jobs", "field": "job", "value": "old", "stale_since": "yesterday"}]})
     assert metrics.measure(tmp_path / "run")["families"]["jobs"]["company_coverage"] == 0

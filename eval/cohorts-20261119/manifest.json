@@ -1,0 +1,39 @@
+{
+  "seed": 20261119,
+  "source_sha256": "1c89710e5b01f8617e86d09fbdff4a52f2f8dbbba297e74f7164b5984f5a0384",
+  "prior_ids": 5024,
+  "exclusions": "First organisation_number per row from local uncompressed eval, reports and out-* JSONL files. Org-level only.",
+  "random_registry_site": 12,
+  "controls": [
+    {
+      "name": "VESTSIDEN HAGEBY IV BORETTSLAG",
+      "org": "888078622",
+      "seen_before": true,
+      "expectation": "Exclude gbbl.no as cooperative website"
+    },
+    {
+      "name": "OTIS AS",
+      "org": "919419105",
+      "seen_before": true,
+      "expectation": "Exclude global OtisElevatorCompany account and India page"
+    },
+    {
+      "name": "AKER BP ASA",
+      "org": "989795848",
+      "seen_before": false,
+      "expectation": "Dated 2026-10-29 release https://akerbp.com/en/borsmelding/third-quarter-2026-results/"
+    },
+    {
+      "name": "AASEN & FARSTAD AS",
+      "org": "810059672",
+      "seen_before": false,
+      "expectation": "Universe website blank and employees unspecified; inspect live evidence, do not infer absence or zero."
+    },
+    {
+      "name": "ENGLUND INVEST AS",
+      "org": "811576182",
+      "seen_before": false,
+      "expectation": "Universe website blank and employees unspecified; inspect live evidence, do not infer absence or zero."
+    }
+  ]
+}

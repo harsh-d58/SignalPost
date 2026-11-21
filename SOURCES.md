@@ -7,6 +7,12 @@ and any application deadline to remain open. `updated_at` is never used as a pub
 No application is submitted, no credentials are needed, and API responses are retained as evidence excerpts.
 Other ATS providers remain unsupported; their presence does not authorize scraping.
 
+A registered email-domain candidate can be supported by an exact legal-name link from its own footer contact block back to its homepage, corroborating operator metadata and a matching registry business address. The parser retains the link and registry contact evidence.
+
+On a registry-declared homepage the collector can also verify an exact legal name in the first title segment against the site's operator metadata, a homepage-linked LocalBusiness record with matching Norwegian locality and postcode, and a dedicated footer block matching the registered business street, postcode and locality. The resulting proof applies to the homepage. Subpages need their own ownership evidence.
+
+A registry-declared homepage may establish ownership through a labelled postal address containing the exact legal name and matching registry contact details. This route checks the address block again on each company page used for enrichment. The careers crawl also reads individual HTML vacancy pages. It retains the role, employer statement, explicit publication date, application link and deadline. Equivalent Norwegian date formats are normalized for comparison. An external application link is recorded as evidence on the company page.
+
 | Source | Endpoint(s) | Licence / terms | Access pattern |
 |---|---|---|---|
 | Enhetsregisteret | `data.brreg.no/enhetsregisteret/api/enheter?organisasjonsnummer=…` (≤100 per call), `/enheter/{org}/roller`, `/underenheter?overordnetEnhet={org}`, `/konsernstruktur/{org}`, `/oppdateringer/enheter`, `/oppdateringer/roller` | NLOD 2.0 open data | documented open API, ≤8 concurrent |
@@ -43,6 +49,8 @@ Artifacts under `<out>/snapshots/` are private run evidence, not copied to the g
 **Cutoff:** `--evidence-cutoff` excludes observations and claim-effective/reporting dates after the supplied timestamp. It cannot reconstruct a past website from a current fetch. An older evaluator cutoff therefore yields explicit gaps for current live observations. Retention-safe historical evidence must be supplied with its original observation time, not relabeled as a current discovery.
 
 **Official declarations:** no LLM, paid search, unofficial platform clients, independent review or sentiment source. External API cost is $0 for the default connector set, excluding compute, bandwidth and development tooling. NAV is blocked by default without an approved credential. Search-like and registry website candidates are never independent evidence of website ownership.
+
+Live refreshes with `--previous` can reuse complete Brreg entity-update pages for the same batch chunk. The private cursor manifest is content-addressed in the preceding validated run. Replayed events retain their original URL, observation time and response digest. Missing, expired-window-incompatible or corrupt baselines trigger dated lookups. Cutoff runs use the dated lookup. Roles and workplaces have distinct sources and are fetched independently.
 
 **Credential configuration:** [.env.example](.env.example) documents the optional `NAV_FEED_TOKEN` variable. The
 agent reads process environment variables; loading `.env` requires an explicit `uv run --env-file .env`.

@@ -89,7 +89,7 @@ def test_registry_malformed_batch_is_contained(bad):
 @pytest.mark.parametrize("value", [None, True, False, "100", float("nan"), float("inf"), {}, []])
 def test_invalid_financial_values_never_published(value):
     pb = ProfileBuilder(ORG)
-    accounts_claims(pb, json_snap([{"regnskapsperiode": {"fraDato": "2025-01-01", "tilDato": "2025-12-31"},
+    accounts_claims(pb, json_snap([{"regnskapstype": "SELSKAP", "valuta": "NOK", "regnskapsperiode": {"fraDato": "2025-01-01", "tilDato": "2025-12-31"},
                                   "eiendeler": {"sumEiendeler": value}}]))
     assert not pb.family_claims("financials")
 
@@ -97,7 +97,7 @@ def test_invalid_financial_values_never_published(value):
 @pytest.mark.parametrize("value", [0, -125, 100.5])
 def test_real_zero_negative_and_decimal_preserved(value):
     pb = ProfileBuilder(ORG)
-    accounts_claims(pb, json_snap([{"eiendeler": {"sumEiendeler": value}}]))
+    accounts_claims(pb, json_snap([{"regnskapstype": "SELSKAP", "valuta": "NOK", "regnskapsperiode": {"fraDato": "2025-01-01", "tilDato": "2025-12-31"}, "eiendeler": {"sumEiendeler": value}}]))
     assert pb.family_claims("financials")[0].value == value
 
 

@@ -148,6 +148,12 @@ class ProfileBuilder:
         self.evidence.setdefault(ev.id, ev)
         return ev.id
 
+    def trace_discovery(self, source: str, origin: str, url: str, outcome: str) -> None:
+        rows = self.extra.setdefault("discovery_trace", [])
+        row = {"source": source, "discovery_url": origin, "url": url, "outcome": outcome}
+        if len(rows) < 100 and row not in rows:
+            rows.append(row)
+
     def add(self, claim: Claim) -> Claim | None:
         if not claim.evidence_ids:
             raise ValueError(f"claim without evidence: {claim.field}")

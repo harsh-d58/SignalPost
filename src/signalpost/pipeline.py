@@ -21,6 +21,7 @@ import time
 import traceback
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +33,7 @@ from .evidence import SnapshotStore, instant
 from .jobs import JobFeed, job_claims
 from .model import FAMILIES, STATES, ProfileBuilder
 from .refresh import diff, load_previous
+from .update_cursor import EntityUpdateCursor
 from .registry import (ACCOUNTS_URL, GROUP_URL, HISTORY_URL, ROLES_URL, SUBUNITS_URL, accounts_claims, history_claims, pace_history, activity_claims, entity_claims,
                        fetch_activity, fetch_entities, group_claims, load_bulk, roles_claims, subunit_claims)
 from .synthesis import build_brief
@@ -128,7 +130,9 @@ class Runner:
         self.workers = workers
         if website_strategy not in {"auto", "legacy", "breadth"}:
             raise ValueError("Unknown website strategy")
-        self.website_strategy = "legacy" if website_strategy == "auto" else website_strategy
+        self.website_strategy = website_strategy
+        if website_strategy == "auto":
+            self.website_strategy = "breadth" if bulk_files else "legacy"
         self.web_enabled = web
         self.bulk_files = bulk_files
         self.events = events
@@ -171,6 +175,8 @@ class Runner:
         }
         self.bulk_mode = self.bulk_files
         self.bulk: dict[str, dict | None] = {"roles": None, "locations": None}
+        self.bulk_transfers: dict[str, dict] = {}
+        self.update_cursor = None
         if self.bulk_mode:
             # large batch: roles and workplaces come from Brreg's nightly bulk files (1 request each)
             self.notes.append(f"large batch ({n}): roles and workplaces from Brreg bulk files")
@@ -558,14 +564,20 @@ class Runner:
             for key, fn in (("roles", bulk_roles), ("locations", bulk_subunits)):
                 def job(key=key, fn=fn):
                     t1 = time.monotonic()
+                    progress = {"stage": "starting"}
+                    self.bulk_transfers[key] = progress
                     try:
-                        result = fn(wanted, self.budget)
+                        result = fn(wanted, self.budget, progress)
                         if not bulk_frozen.is_set():
                             self.bulk[key] = result
+                        progress["stage"] = "complete"
                         self.log(f"[bulk] {key}: {len(result)} companies in {time.monotonic() - t1:.0f}s")
                     except Exception as exc:  # fall back to per-company requests
+                        progress.update(failure_stage=progress["stage"], stage="failed", error=str(exc))
                         self.notes.append(f"bulk {key} failed: {type(exc).__name__}")
                         self.log(f"[bulk] {key} failed: {exc}")
+                    finally:
+                        progress["elapsed_seconds"] = round(time.monotonic() - t1, 2)
                 bulk_threads.append(threading.Thread(target=job, daemon=True))
                 bulk_threads[-1].start()
 
@@ -583,7 +595,11 @@ class Runner:
                 snap = self.fetcher.get_json(ACCOUNTS_URL.format(org=org), phase="accounts", retries=1)
                 return snap, self.fetcher.take_count()
             self.account_futures = {org: account_pool.submit(prefetch_account, org) for org in known}
-        ent_events, role_events, act_errors = fetch_activity(self.fetcher, known)
+        previous = load_previous(self.previous_path)
+        if not self.evidence_cutoff:
+            previous_id = next(iter(previous.values()), {}).get("run", {}).get("run_id")
+            self.update_cursor = EntityUpdateCursor(self.store, self.previous_path, previous_id)
+        ent_events, role_events, act_errors = fetch_activity(self.fetcher, known, cursor=self.update_cursor)
         for org in known:
             try:
                 for _, snap in ent_events.get(org, []) + role_events.get(org, []):
@@ -605,6 +621,25 @@ class Runner:
         except Exception as exc:
             self.log(f"[wikidata] skipped: {exc}")
 
+        # Warm only the normal per-origin robots cache. Ownership decisions still
+        # see the resolved leadership, workplaces and group records in company().
+        if self.web_enabled and bulk_threads:
+            from .http import check_url, UrlPolicyError
+            seen_origins = set()
+            for org in known:
+                if not any(th.is_alive() for th in bulk_threads) or self.budget.phase_remaining("web") < 4:
+                    break
+                for url, source in domain_candidates(self.entities[org], None, include_guesses=False):
+                    if source != "registry_declared":
+                        continue
+                    try:
+                        parts = check_url(url)
+                        origin = (parts.scheme, parts.netloc)
+                        if origin not in seen_origins:
+                            seen_origins.add(origin)
+                            self.fetcher.allowed_by_robots(url, "web")
+                    except (UrlPolicyError, BudgetExhausted):
+                        continue
         for th in bulk_threads:
             th.join(timeout=max(0.0, min(610.0, self.budget.time_left() - 90)))
         bulk_frozen.set()
@@ -668,7 +703,6 @@ class Runner:
         self.phase("tail", t)
 
         t = time.monotonic()
-        previous = load_previous(self.previous_path)
         completed_at = utc_now()
         envelopes = []
         for org in self.orgs:
@@ -710,6 +744,7 @@ class Runner:
             "closed_jobs": pb.extra.get("closed_jobs", {}),
             "website_identity": pb.extra.get("website_identity"),
             "discovery_diagnostics": {"news_rejections": pb.extra.get("news_rejections", [])[:30],
+                                      "routes": pb.extra.get("discovery_trace", []),
                                       "job_rejections": pb.extra.get("job_rejections", [])[:30]},
             "brief": {},
             "unpublished_candidates": pb.candidates[:20],
@@ -742,8 +777,9 @@ class Runner:
     def bind_evidence(self, env: dict) -> None:
         retained = []
         snapshots = {}
+        cutoff = instant(self.evidence_cutoff) if self.evidence_cutoff else None
         for ev in env["evidence"]:
-            if self.evidence_cutoff and instant(ev["retrieved_at"]) > instant(self.evidence_cutoff):
+            if cutoff and instant(ev["retrieved_at"]) > cutoff:
                 continue
             record = self.store.bind(ev)
             if record:
@@ -756,7 +792,15 @@ class Runner:
         dropped = set()
         for claim in env["claims"]:
             dates = [claim.get("effective_date"), (claim.get("period") or {}).get("to")]
-            future = self.evidence_cutoff and any(instant(str(d)) > instant(self.evidence_cutoff) for d in dates if d)
+            future = False
+            if cutoff:
+                try:
+                    future = any((date.fromisoformat(d) > cutoff.date() if len(d) == 10 else instant(d) > cutoff)
+                                 for d in dates if d)
+                    if claim["field"] == "filed_annual_accounts":
+                        future |= int(claim["value"]["year"]) > cutoff.year
+                except (ValueError, TypeError):
+                    future = True  # A malformed date cannot establish cutoff eligibility.
             if all(eid in ids for eid in claim["evidence_ids"]) and not future:
                 claims.append(claim)
             else:
@@ -873,6 +917,8 @@ class Runner:
             "family_states": fam_states,
             "family_coverage": coverage,
             "claims_total": sum(len(e["claims"]) for e in envelopes),
+            "current_published_claims": sum(c.get("availability", "available") == "available"
+                                            and not c.get("stale_since") for e in envelopes for c in e["claims"]),
             "identity_gate": gate,
             "identity_gate_by_source": dict(sorted(by_source.items())),
             "jobs_feed": {"pages": self.job_feed.pages, "ads_indexed": len(self.job_feed.ads), "window_days": self.job_feed.days, "error": self.job_feed.error},
@@ -883,6 +929,7 @@ class Runner:
             "configuration": {"bulk_files": self.bulk_files, "workers": self.workers,
                               "job_days": self.job_feed.days, "web_enabled": self.web_enabled, "website_strategy": self.website_strategy},
             "bulk_snapshot": self.bulk_meta,
+            "bulk_transfers": {key: dict(value) for key, value in self.bulk_transfers.items()},
             "registry_snapshot": self.snapshot_meta,
             "evidence_cutoff": self.evidence_cutoff,
             "source_policy_version": "signalpost-sources/2",
@@ -918,8 +965,17 @@ class Runner:
         report["discovery_rejections"] = {
             kind: dict(Counter(r["reason_code"] for pb in self.builders.values() for r in pb.extra.get(kind, [])))
             for kind in ("news_rejections", "job_rejections")}
+        report["discovery_routes"] = dict(Counter(
+            (row["source"] + ":" + row["outcome"]) for env in envelopes
+            for row in env.get("discovery_diagnostics", {}).get("routes", [])))
         (out / "website-diagnostics.json").write_text(json.dumps(diagnostics, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        (out / "run-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        if validation["passed"] and self.update_cursor and self.update_cursor.complete:
+            record = self.store.put(json.dumps(self.update_cursor.complete, sort_keys=True).encode())
+            report["entity_update_cursor"] = {"sha256": record["sha256"], "resumed_chunks": self.update_cursor.resumed,
+                                              "complete_chunks": len(self.update_cursor.complete)}
+        report_tmp = out / "run-report.json.tmp"
+        report_tmp.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        report_tmp.replace(out / "run-report.json")
         (out / "identity-audit.md").write_text(identity_audit(envelopes, self.run_id), encoding="utf-8")
         self.finished.set()
         return report
